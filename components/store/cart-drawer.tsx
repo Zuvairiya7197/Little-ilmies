@@ -137,6 +137,13 @@ export function CartDrawer() {
                   >
                     Proceed to Checkout
                   </Link>
+                  <Link
+                    href="/cart"
+                    onClick={closeCart}
+                    className="tap-target mt-3 flex w-full items-center justify-center text-sm font-semibold text-ink-400 hover:text-ink-600"
+                  >
+                    View full cart
+                  </Link>
                 </div>
               </>
             )}

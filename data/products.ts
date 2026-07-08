@@ -226,9 +226,7 @@ export const products: ProductSummary[] = [
     title: "Ashrah Al-Mubashsharah",
     shortDescription: "Meet the ten companions promised Paradise in this gentle keepsake e-book.",
     coverImage: "/images/products/ashrah-al-mubashsharah.svg",
-    // Intentionally left without a USD price to demonstrate the emergency
-    // INR fallback + admin warning path described in the pricing spec.
-    prices: regionalPrices({ inr: 44900, skipUsd: true }),
+    prices: regionalPrices({ inr: 44900, usd: 450 }),
     category: { slug: "ashrah-al-mubashsharah", name: "Ashrah Al-Mubashsharah" },
     ageRange: "9-12",
     pageCount: 50,
