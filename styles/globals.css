@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+
+    /* Little Ilmies brand palette, extracted from the live site
+       (littleilmies.com header, buttons, hero, footer, product cards).
+       Kept as the single source of truth for the brand hues; Tailwind
+       tokens in tailwind.config.ts point at the same values. */
+    --color-background: #F0F5FA;
+    --color-surface: #FFFFFF;
+    --color-primary: #4B449D;
+    --color-primary-hover: #3D3780;
+    --color-secondary: #2F2957;
+    --color-accent: #9E5D91;
+    --color-text-primary: #17142B;
+    --color-text-secondary: #636363;
+    --color-border: #E4ECF5;
+  }
+
+  * {
+    @apply border-ink-100;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-cream text-ink-500 antialiased;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-ink-600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Visible, accessible focus ring for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid theme("colors.gold.500");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: theme("colors.sage.200");
+    color: theme("colors.ink.700");
+  }
+}
+
+@layer components {
+  .container-content {
+    @apply mx-auto w-full max-w-content px-4 xs:px-5 sm:px-6 lg:px-8;
+  }
+
+  /* Minimum comfortable tap target on touch devices */
+  .tap-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .btn-primary {
+    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full bg-ink-400 px-6 py-3 text-sm font-semibold text-cream-50 shadow-soft transition-all duration-200 hover:bg-ink-500 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full border border-ink-200 bg-transparent px-6 py-3 text-sm font-semibold text-ink-400 transition-all duration-200 hover:border-ink-400 hover:bg-ink-50 active:scale-[0.98];
+  }
+
+  .btn-accent {
+    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full bg-gold-500 px-6 py-3 text-sm font-semibold text-cream-50 shadow-soft transition-all duration-200 hover:bg-gold-600 active:scale-[0.98];
+  }
+
+  .card-surface {
+    @apply rounded-3xl border border-ink-100 bg-cream-50 shadow-soft;
+  }
+
+  .section-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-sage-600;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
