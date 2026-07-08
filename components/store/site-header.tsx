@@ -9,7 +9,6 @@ import { SearchOverlay } from "@/components/store/search-overlay";
 import { CartDrawer } from "@/components/store/cart-drawer";
 import { MobileMenu } from "@/components/store/mobile-menu";
 import { IconBadge } from "@/components/store/icon-badge";
-import { CurrencySelector } from "@/components/store/currency-selector";
 import { primaryNav } from "@/lib/nav";
 import { useCartStore, selectCartCount } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
@@ -25,7 +24,7 @@ export function SiteHeader() {
   const cartCount = useCartStore(selectCartCount);
   const openCart = useCartStore((s) => s.openCart);
   const wishlistCount = useWishlistStore((s) => s.items.length);
-  const hydrateCurrency = useCurrencyStore((s) => s.hydrateFromDetection);
+  const hydrateCurrency = useCurrencyStore((s) => s.hydrate);
 
   useEffect(() => {
     setMounted(true);
@@ -75,8 +74,6 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-1 xs:gap-2">
-            {mounted && <CurrencySelector />}
-
             <button
               type="button"
               onClick={() => setSearchOpen(true)}

@@ -1,4 +1,3 @@
-import type { RegionalPrice } from "@/types/pricing";
 import { FALLBACK_CURRENCY, type CurrencyCode } from "@/types/pricing";
 import type { ProductSummary } from "@/types/catalog";
 
@@ -13,11 +12,19 @@ export interface ResolvedPrice {
 }
 
 /**
- * Resolves the price to display for a product given the customer's selected
- * currency. Fallback order per spec:
- *   1. Exact match for the requested currency (if active).
+ * Resolves the price to DISPLAY for a product given a currency. This is
+ * used both for the customer-facing display currency (frontend, informational
+ * only) and — with a backend-verified region instead of the frontend
+ * preference — for the actual checkout amount. The fallback order is the
+ * same either way:
+ *   1. Exact match for the given currency (if active).
  *   2. The product's default/international price (should be USD).
  *   3. INR, with `isEmergencyFallback: true` so the UI/admin can flag it.
+ *
+ * IMPORTANT: when called for checkout purposes, `requestedCurrency` must
+ * come from server-side region verification (IP → billing country →
+ * payment method country → verified account country), never from the
+ * client's display-currency preference. See README "Regional pricing".
  */
 export function resolveProductPrice(
   product: Pick<ProductSummary, "prices">,

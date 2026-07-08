@@ -31,12 +31,19 @@ export interface RegionalPrice {
   isActive?: boolean;
 }
 
-/** Maps ISO 3166-1 alpha-2 country codes to a currency code, for auto-detection only — never used for FX math. */
+/**
+ * Maps ISO 3166-1 alpha-2 country codes to a currency code, for
+ * auto-detection/display only — never used for FX math, and never the
+ * final authority on checkout price (the backend re-verifies region).
+ *
+ * Launch scope is deliberately two regions: India and everyone else
+ * ("International"). GBP/AED exist in the pricing model for later use
+ * but are not wired into auto-detection yet — adding a country here
+ * later is how you'd turn on a third verified region.
+ */
 export const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
   IN: "INR",
-  GB: "GBP",
-  AE: "AED",
-  // All other countries fall back to USD (the "international" price).
+  // All other countries resolve to USD (the "international" price).
 };
 
 export const FALLBACK_CURRENCY: CurrencyCode = "USD";

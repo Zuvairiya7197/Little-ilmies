@@ -4,27 +4,40 @@ import { FALLBACK_CURRENCY, type CurrencyCode } from "@/types/pricing";
 import { currencyFromCountryCode, detectInitialCurrency } from "@/lib/pricing/detect-currency";
 
 interface CurrencyState {
+  /**
+   * The currency shown to this customer, resolved automatically from IP/
+   * locale detection. There is no customer-facing control to change this —
+   * pricing region is backend/detection-controlled, not a shopper choice.
+   * (See README "Regional pricing": the real checkout backend re-verifies
+   * region server-side from IP → billing country → payment method country
+   * → verified account country and recomputes the charge independently of
+   * whatever this store shows.)
+   */
   currency: CurrencyCode;
-  /** True once the customer has explicitly picked a currency — stops auto-detection from overriding it. */
-  isManuallySet: boolean;
-  hasHydratedFromDetection: boolean;
-  setCurrency: (currency: CurrencyCode, manual?: boolean) => void;
-  hydrateFromDetection: () => Promise<void>;
+  hasHydrated: boolean;
+  hydrate: () => Promise<void>;
+  /**
+   * Called once a real checkout exists, after the backend has verified the
+   * billing region for the order. If it differs from the browsing-region
+   * currency above, the UI should show the one quiet mismatch message the
+   * spec allows ("Your checkout region is different from your browsing
+   * region, so the price has been updated.") — never a persistent notice
+   * when regions already agree.
+   */
+  checkoutCurrency: CurrencyCode | null;
+  setCheckoutCurrency: (currency: CurrencyCode) => void;
 }
 
 export const useCurrencyStore = create<CurrencyState>()(
   persist(
     (set, get) => ({
       currency: FALLBACK_CURRENCY,
-      isManuallySet: false,
-      hasHydratedFromDetection: false,
+      hasHydrated: false,
+      checkoutCurrency: null,
 
-      setCurrency: (currency, manual = true) =>
-        set({ currency, isManuallySet: manual || get().isManuallySet }),
-
-      hydrateFromDetection: async () => {
-        if (get().hasHydratedFromDetection || get().isManuallySet) return;
-        set({ hasHydratedFromDetection: true });
+      hydrate: async () => {
+        if (get().hasHydrated) return;
+        set({ hasHydrated: true });
 
         const cookieCountry =
           typeof document !== "undefined"
@@ -38,17 +51,18 @@ export const useCurrencyStore = create<CurrencyState>()(
           ? currencyFromCountryCode(cookieCountry)
           : await detectInitialCurrency();
 
-        if (!get().isManuallySet) {
-          set({ currency: detected });
-        }
+        set({ currency: detected });
       },
+
+      setCheckoutCurrency: (currency) => set({ checkoutCurrency: currency }),
     }),
     {
       name: "little-ilmies-currency",
-      partialize: (state) => ({
-        currency: state.currency,
-        isManuallySet: state.isManuallySet,
-      }),
+      partialize: (state) => ({ currency: state.currency }),
     }
   )
 );
+
+export function selectHasRegionMismatch(state: CurrencyState) {
+  return state.checkoutCurrency !== null && state.checkoutCurrency !== state.currency;
+}

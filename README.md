@@ -2,7 +2,7 @@
 
 A custom digital bookstore for Islamic and educational e-books for children — built with Next.js, TypeScript, Tailwind CSS, Prisma, and PostgreSQL.
 
-This is being built in phases. **Phase 1 (this commit): project setup, design system, layout, header, footer, and homepage.**
+This is being built in phases. **Phases 1–2 complete: project setup, design system, layout, header/footer, homepage, shop page with filters/sort/search, product detail page, and location-aware regional pricing.**
 
 ## Stack
 
@@ -70,12 +70,106 @@ private-uploads/        Full PDFs, sample previews, covers — never served dire
 ## Roadmap
 
 1. ✅ Project setup, design system, layout, header, footer, homepage
-2. Shop page, product grid, sorting, filters, search, product detail page
+2. ✅ Shop page, product grid, sorting, filters, search, product detail page
 3. Book-style preview, wishlist, cart drawer, checkout UI
 4. Buyer login/logout (OTP/magic link), account dashboard, purchase history, downloads
 5. Razorpay integration, payment verification, webhooks, protected PDF downloads
 6. Admin dashboard: products, categories, PDFs, orders, coupons
 7. SEO, schema markup, sitemap/robots, performance and accessibility polish
+
+## Regional pricing
+
+Pricing is **manual per-region**, not live currency conversion — an admin sets
+an intentional price per currency (e.g. INR 300 shown as USD 4, not a
+converted 300÷83). Launch scope is deliberately **two regions**: India (INR)
+and International (USD). GBP/AED exist in the data model for later use but
+are not shown or detected yet.
+
+**Security model — this is the part that matters:** pricing region is fully
+automatic and detection-controlled. There is **no customer-facing currency
+selector anywhere** — not in the header, not at checkout. A customer cannot
+pick a cheaper region and complete checkout at that price, because there is
+nothing for them to pick. Every surface (product cards, product page, cart)
+shows exactly one price, in exactly one currency, resolved from detection —
+never both INR and USD side by side.
+
+- **Detection**: `middleware.ts` reads `x-vercel-ip-country` / `cf-ipcountry`
+  into a cookie; `lib/pricing/detect-currency.ts` falls back to a client-side
+  IP lookup (local dev) and finally to `navigator.language` region if IP
+  detection fails. Only `IN → INR`, everything else `→ USD`
+  (`types/pricing.ts` `COUNTRY_TO_CURRENCY`). This frontend detection is for
+  *display* while browsing only — the real checkout backend (Phase 5)
+  re-verifies region server-side and is the actual source of truth.
+- **State**: `lib/store/use-currency-store.ts` (Zustand + localStorage) holds
+  one `currency` value, set once by `hydrate()` and never overridden by the
+  customer. It also exposes a `checkoutCurrency` slot and
+  `selectHasRegionMismatch()` for later: once real checkout exists and the
+  backend returns its verified region, if that differs from the browsing
+  currency, `components/store/region-mismatch-notice.tsx` shows the one
+  quiet, allowed message ("Your checkout region is different from your
+  browsing region, so the price has been updated.") — and shows nothing at
+  all when regions already agree. No proactive/persistent pricing disclaimer.
+- **Cart**: `lib/store/use-cart-store.ts` stores only product identity, never
+  a frozen price — `hooks/use-cart-line-items.ts` re-resolves every line's
+  price from the live product catalog against the detected `currency` on
+  every render, purely for on-screen presentation before checkout exists.
+
+### `product_prices` table (Phase 5 — Prisma schema not yet created)
+
+```
+product_prices
+  id              string   pk
+  product_id      string   fk -> products.id
+  pricing_region  string   e.g. "India", "International"
+  country_code    string?  ISO 3166-1 alpha-2, null for the international/default row
+  currency_code   string   ISO 4217 (INR, USD; GBP/AED reserved for later regions)
+  regular_price   int      minor units
+  sale_price      int?     minor units
+  is_default      boolean  true on exactly one row per product (the USD international fallback)
+  is_active       boolean
+```
+
+### Checkout pricing contract (Phase 5 — no `/checkout` backend exists yet)
+
+This is the core rule: **the backend silently decides the final price; the
+frontend price is informational only.** Concretely, when the checkout
+backend is built:
+
+- Region is determined server-side, in this priority order:
+  1. IP-based country detection (server-side, e.g. the same
+     `x-vercel-ip-country` header `middleware.ts` already reads).
+  2. Billing country entered/confirmed during checkout.
+  3. Payment method country, if the gateway exposes it (e.g. card BIN
+     country, UPI region).
+  4. A previously verified account country, if the buyer is logged in and
+     has one on file.
+- The frontend's detected `currency` (`lib/store/use-currency-store.ts`) is
+  never sent to checkout as authoritative — local storage, browser locale,
+  and whatever the customer was shown while browsing must never decide the
+  charged price.
+- On order creation, the server resolves each cart item's price from
+  `product_prices` using the *verified* region above (same fallback order as
+  `resolveProductPrice`: exact region match → international/USD default →
+  INR emergency fallback) and recomputes subtotal/discount/tax/total itself.
+  A client-submitted total or currency is never trusted.
+- This validation happens silently. If the verified billing region matches
+  the browsing-region currency the customer already saw, show nothing extra.
+  Only show `region-mismatch-notice.tsx`'s message when they genuinely
+  differ — never a generic "prices may vary" disclaimer.
+- Persist the final `currency_code` and final `amount` actually charged on
+  the order row. If a live FX rate is fetched for reporting/analytics, store
+  it in a separate `fx_rate_at_purchase` field — it must never feed into the
+  charged amount.
+- Payment verification (Razorpay webhook) must confirm the paid
+  amount/currency match the order the server created, not what the client
+  displayed.
+- Use Razorpay INR for Indian customers; only charge in another currency if
+  Razorpay international currency support is enabled on the account,
+  otherwise keep Stripe/PayPal as the optional path for non-INR charges.
+
+**Explicitly disallowed:** an open "pick any country" selector that changes
+the checkout price without server verification. A customer must not be able
+to select a cheaper region's currency and complete checkout at that price.
 
 ## Security notes (enforced from Phase 5 onward)
 
