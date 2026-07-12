@@ -73,7 +73,7 @@ export function SearchOverlay({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search books, categories, keywords..."
                 aria-label="Search books, categories, or keywords"
-                className="tap-target min-w-0 flex-1 bg-transparent font-sans text-base text-ink-600 placeholder:text-ink-300 focus:outline-none"
+                className="tap-target min-w-0 flex-1 bg-transparent font-sans text-base text-ink-600 placeholder:text-ink-300"
               />
               <button
                 type="button"

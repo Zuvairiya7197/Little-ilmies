@@ -4,6 +4,8 @@ import "@/styles/globals.css";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
+import { JsonLd } from "@/components/seo/json-ld";
+import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -43,12 +45,14 @@ export const metadata: Metadata = {
     description:
       "Authentic, printable, child-friendly Islamic and educational e-books for young Muslim hearts.",
     url: siteUrl,
+    images: [{ url: "/images/little_ilmies_logo.png", width: 1000, height: 1000, alt: "Little Ilmies" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Little Ilmies — Islamic & Educational E-Books for Young Hearts",
     description:
       "Authentic, printable, child-friendly Islamic and educational e-books for young Muslim hearts.",
+    images: ["/images/little_ilmies_logo.png"],
   },
   robots: {
     index: true,
@@ -69,6 +73,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${jakarta.variable}`}>
       <body className="flex min-h-screen flex-col bg-cream font-sans text-ink-500">
+        <JsonLd data={organizationSchema()} />
+        <JsonLd data={websiteSchema()} />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink-500 focus:px-5 focus:py-3 focus:text-cream-50"

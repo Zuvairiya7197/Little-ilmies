@@ -85,6 +85,22 @@
   .section-eyebrow {
     @apply text-xs font-semibold uppercase tracking-[0.2em] text-sage-600;
   }
+
+  /* Admin dashboard form controls */
+  .admin-input {
+    @apply tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 focus-visible:border-sage-400;
+  }
+
+  /* Legal/info page body content */
+  .prose-legal h2 {
+    @apply mt-2 font-display text-xl font-semibold text-ink-700;
+  }
+  .prose-legal ul {
+    @apply flex list-disc flex-col gap-2 pl-5;
+  }
+  .prose-legal a {
+    @apply text-sage-700 underline-offset-2 hover:underline;
+  }
 }
 
 @layer utilities {

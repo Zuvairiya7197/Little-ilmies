@@ -6,6 +6,8 @@ import { ProductGridSkeleton } from "@/components/store/shop/product-card-skelet
 import { products } from "@/data/products";
 import { categories } from "@/data/categories";
 import { categoryGroups, getCategoryGroupBySlug } from "@/data/category-groups";
+import { JsonLd } from "@/components/seo/json-ld";
+import { breadcrumbSchema } from "@/lib/seo/schema";
 
 interface PageProps {
   params: Promise<{ category: string }>;
@@ -62,13 +64,21 @@ export default async function CategoryShopPage({ params }: PageProps) {
 
   if (!resolved) notFound();
 
+  const breadcrumb = breadcrumbSchema([
+    { name: "Shop", path: "/shop" },
+    { name: resolved.title, path: `/shop/${category}` },
+  ]);
+
   return (
-    <Suspense fallback={<div className="container-content py-8"><ProductGridSkeleton /></div>}>
-      <ShopView
-        products={resolved.matchedProducts}
-        title={resolved.title}
-        description={resolved.description}
-      />
-    </Suspense>
+    <>
+      <JsonLd data={breadcrumb} />
+      <Suspense fallback={<div className="container-content py-8"><ProductGridSkeleton /></div>}>
+        <ShopView
+          products={resolved.matchedProducts}
+          title={resolved.title}
+          description={resolved.description}
+        />
+      </Suspense>
+    </>
   );
 }

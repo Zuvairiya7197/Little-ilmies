@@ -56,7 +56,7 @@ export function ShopView({
           defaultValue={filters.query ?? ""}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by title, category, or language..."
-          className="tap-target w-full rounded-full border border-ink-100 bg-cream-50 py-3 pl-11 pr-4 text-sm text-ink-600 placeholder:text-ink-300 focus:border-sage-400 focus:outline-none"
+          className="tap-target w-full rounded-full border border-ink-100 bg-cream-50 py-3 pl-11 pr-4 text-sm text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
         />
       </div>
 

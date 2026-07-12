@@ -25,7 +25,7 @@ export function SortSelect() {
         value={sort}
         onChange={(e) => setSort(e.target.value as SortOption)}
         aria-label="Sort books"
-        className="tap-target min-w-0 cursor-pointer appearance-none bg-transparent py-2 pr-1 text-sm font-semibold text-ink-600 focus:outline-none"
+        className="tap-target min-w-0 cursor-pointer appearance-none bg-transparent py-2 pr-1 text-sm font-semibold text-ink-600"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>

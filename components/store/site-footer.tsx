@@ -105,7 +105,7 @@ export function SiteFooter() {
               type="email"
               required
               placeholder="you@example.com"
-              className="tap-target min-w-0 flex-1 rounded-full border border-ink-100 bg-cream-100 px-4 text-sm text-ink-600 placeholder:text-ink-300 focus:border-sage-400 focus:outline-none"
+              className="tap-target min-w-0 flex-1 rounded-full border border-ink-100 bg-cream-100 px-4 text-sm text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
             />
             <button type="submit" className="btn-primary shrink-0 px-5">
               Join

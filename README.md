@@ -2,7 +2,7 @@
 
 A custom digital bookstore for Islamic and educational e-books for children — built with Next.js, TypeScript, Tailwind CSS, Prisma, and PostgreSQL.
 
-This is being built in phases. **Phases 1–5 complete: project setup, design system, layout, header/footer, homepage, shop page, product detail page, regional pricing, wishlist/cart/checkout UI, buyer/admin authentication with account dashboard, purchase history and downloads, and the Razorpay payment backend with protected PDF downloads.**
+This is being built in phases. **Phases 1–6 complete: project setup, design system, layout, header/footer, homepage, shop page, product detail page, regional pricing, wishlist/cart/checkout UI, buyer/admin authentication with account dashboard, purchase history and downloads, the Razorpay payment backend with protected PDF downloads, and the full admin dashboard (products, categories, orders, buyers, coupons, downloads report).**
 
 ## Stack
 
@@ -135,7 +135,7 @@ private-uploads/        Full PDFs, sample previews, covers — never served dire
 3. ✅ Book-style preview, wishlist, cart drawer + cart page, checkout UI
 4. ✅ Buyer login/logout (OTP/magic link), admin login (email+password), account dashboard, purchase history, downloads
 5. ✅ Razorpay integration, payment verification, webhooks, protected PDF downloads
-6. Admin dashboard: products, categories, PDFs, orders, coupons
+6. ✅ Admin dashboard: products, categories, PDFs, orders, coupons
 7. SEO, schema markup, sitemap/robots, performance and accessibility polish
 
 ## Regional pricing

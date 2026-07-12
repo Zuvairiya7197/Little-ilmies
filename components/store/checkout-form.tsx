@@ -123,7 +123,7 @@ export function CheckoutForm() {
               aria-invalid={Boolean(errors.fullName)}
               aria-describedby={errors.fullName ? "fullName-error" : undefined}
               {...register("fullName")}
-              className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus:border-sage-400 focus:outline-none"
+              className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
               placeholder="Amina Khan"
             />
             {errors.fullName && (
@@ -145,7 +145,7 @@ export function CheckoutForm() {
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? "email-error" : undefined}
               {...register("email")}
-              className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus:border-sage-400 focus:outline-none"
+              className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
               placeholder="you@example.com"
             />
             {errors.email && (

@@ -16,6 +16,8 @@ import {
 import { RelatedBooks } from "@/components/store/related-books";
 import { ProductMobilePrice } from "@/components/store/product-mobile-price";
 import { findPrice } from "@/lib/pricing/resolve-price";
+import { JsonLd } from "@/components/seo/json-ld";
+import { breadcrumbSchema } from "@/lib/seo/schema";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -86,12 +88,16 @@ export default async function ProductPage({ params }: PageProps) {
       : {}),
   };
 
+  const breadcrumb = breadcrumbSchema([
+    { name: "Shop", path: "/shop" },
+    { name: product.category.name, path: `/shop/${product.category.slug}` },
+    { name: product.title, path: `/product/${product.slug}` },
+  ]);
+
   return (
     <div className="pb-24 md:pb-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumb} />
 
       <div className="container-content py-6 xs:py-8 md:py-10">
         <div className="md:grid md:grid-cols-2 md:gap-12">
