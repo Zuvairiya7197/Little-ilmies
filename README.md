@@ -2,7 +2,7 @@
 
 A custom digital bookstore for Islamic and educational e-books for children — built with Next.js, TypeScript, Tailwind CSS, Prisma, and PostgreSQL.
 
-This is being built in phases. **Phases 1–4 complete: project setup, design system, layout, header/footer, homepage, shop page, product detail page, regional pricing, wishlist/cart/checkout UI, and buyer/admin authentication with account dashboard, purchase history, and downloads.**
+This is being built in phases. **Phases 1–5 complete: project setup, design system, layout, header/footer, homepage, shop page, product detail page, regional pricing, wishlist/cart/checkout UI, buyer/admin authentication with account dashboard, purchase history and downloads, and the Razorpay payment backend with protected PDF downloads.**
 
 ## Stack
 
@@ -10,7 +10,7 @@ This is being built in phases. **Phases 1–4 complete: project setup, design sy
 - Tailwind CSS
 - Prisma ORM + PostgreSQL
 - Auth.js / NextAuth (buyer OTP/magic-link login, admin email+password)
-- Razorpay for payments — added in Phase 5
+- Razorpay for payments
 - Zustand for cart/wishlist client state
 - Framer Motion for subtle interactions
 - Local private file storage for PDFs (`/private-uploads`), swappable for Cloudflare R2 later
@@ -88,21 +88,28 @@ To send real emails instead, fill in `EMAIL_SERVER_HOST` /
 
 ```
 app/                    Routes (App Router)
+  api/checkout/         create-order, verify-payment
+  api/webhooks/razorpay Razorpay webhook handler
+  api/download/[id]     Protected PDF download route
 components/
   ui/                   Low-level primitives
   store/                Storefront components (header, footer, product card, home sections)
-  book-preview/         Book-style e-book preview components (Phase 3)
-  account/              Buyer account/dashboard components (Phase 4)
+  book-preview/         Book-style e-book preview components
+  account/              Buyer account/dashboard components
   admin/                Admin dashboard components (Phase 6)
 lib/
-  db/                   Prisma client + queries (Phase 4+)
-  auth/                 Auth.js config (Phase 4)
-  storage/              Private PDF/preview/cover storage abstraction (Phase 5)
-  payments/             Razorpay integration (Phase 5)
+  db/                   Prisma client + queries
+  auth/                 Auth.js config
+  storage/              Private PDF/preview/cover storage abstraction (local disk; swap for R2 later)
+  payments/             Razorpay client, order creation, signature verification
+  checkout/             Shared order-fulfillment logic (used by both verify-payment and the webhook)
+  email/                Transactional email (order confirmation) + shared SMTP/dev-log sender
+  pricing/               Regional price resolution (display-side and DB-backed) + region verification
   seo/                  Structured data helpers (Phase 7)
-  store/                Zustand stores (cart, wishlist)
+  store/                Zustand stores (cart, wishlist, currency)
   utils/                Shared helpers (cn, formatting)
-data/                   Demo catalog data used until the database is wired up
+prisma/                 schema.prisma, migrations, seed.ts
+data/                   Demo catalog data (used to seed the database; not read at runtime)
 types/                  Shared TypeScript types
 styles/                 Global Tailwind styles
 private-uploads/        Full PDFs, sample previews, covers — never served directly
@@ -127,7 +134,7 @@ private-uploads/        Full PDFs, sample previews, covers — never served dire
 2. ✅ Shop page, product grid, sorting, filters, search, product detail page
 3. ✅ Book-style preview, wishlist, cart drawer + cart page, checkout UI
 4. ✅ Buyer login/logout (OTP/magic link), admin login (email+password), account dashboard, purchase history, downloads
-5. Razorpay integration, payment verification, webhooks, protected PDF downloads (download route's access-control checks already built — see `app/api/download/[productId]/route.ts` — only the actual file streaming is pending)
+5. ✅ Razorpay integration, payment verification, webhooks, protected PDF downloads
 6. Admin dashboard: products, categories, PDFs, orders, coupons
 7. SEO, schema markup, sitemap/robots, performance and accessibility polish
 
@@ -152,23 +159,24 @@ never both INR and USD side by side.
   IP lookup (local dev) and finally to `navigator.language` region if IP
   detection fails. Only `IN → INR`, everything else `→ USD`
   (`types/pricing.ts` `COUNTRY_TO_CURRENCY`). This frontend detection is for
-  *display* while browsing only — the real checkout backend (Phase 5)
-  re-verifies region server-side and is the actual source of truth.
+  *display* while browsing only — `lib/pricing/verify-region.ts` re-derives
+  region server-side at checkout and is the actual source of truth (see
+  below).
 - **State**: `lib/store/use-currency-store.ts` (Zustand + localStorage) holds
   one `currency` value, set once by `hydrate()` and never overridden by the
   customer. It also exposes a `checkoutCurrency` slot and
-  `selectHasRegionMismatch()` for later: once real checkout exists and the
-  backend returns its verified region, if that differs from the browsing
-  currency, `components/store/region-mismatch-notice.tsx` shows the one
-  quiet, allowed message ("Your checkout region is different from your
-  browsing region, so the price has been updated.") — and shows nothing at
-  all when regions already agree. No proactive/persistent pricing disclaimer.
+  `selectHasRegionMismatch()`: once the checkout API returns its verified
+  region, if that differs from the browsing currency,
+  `components/store/region-mismatch-notice.tsx` shows the one quiet, allowed
+  message ("Your checkout region is different from your browsing region, so
+  the price has been updated.") — and shows nothing at all when regions
+  already agree. No proactive/persistent pricing disclaimer.
 - **Cart**: `lib/store/use-cart-store.ts` stores only product identity, never
   a frozen price — `hooks/use-cart-line-items.ts` re-resolves every line's
   price from the live product catalog against the detected `currency` on
-  every render, purely for on-screen presentation before checkout exists.
+  every render, purely for on-screen presentation before checkout.
 
-### `product_prices` table (Phase 5 — Prisma schema not yet created)
+### `product_prices` table (`prisma/schema.prisma`)
 
 ```
 product_prices
@@ -183,50 +191,53 @@ product_prices
   is_active       boolean
 ```
 
-### Checkout pricing contract (Phase 5 — no `/checkout` backend exists yet)
+### Checkout pricing contract (implemented — `app/api/checkout/create-order`)
 
 This is the core rule: **the backend silently decides the final price; the
-frontend price is informational only.** Concretely, when the checkout
-backend is built:
+frontend price is informational only.**
 
-- Region is determined server-side, in this priority order:
-  1. IP-based country detection (server-side, e.g. the same
-     `x-vercel-ip-country` header `middleware.ts` already reads).
-  2. Billing country entered/confirmed during checkout.
-  3. Payment method country, if the gateway exposes it (e.g. card BIN
-     country, UPI region).
-  4. A previously verified account country, if the buyer is logged in and
-     has one on file.
+- Region is determined server-side via `lib/pricing/verify-region.ts`, in
+  this priority order:
+  1. IP-based country detection (`x-vercel-ip-country` / `cf-ipcountry`
+     header, read directly on the request — not from a client-supplied
+     value).
+  2. Billing country, if passed to `resolveVerifiedCurrency()` (extension
+     point — no billing-address collection step exists yet, so this is
+     currently always IP-based).
+  3. Payment method country — not exposed by Razorpay pre-payment, so not
+     wired up.
+  4. A previously verified account country (`Profile.countryCode`) — wired
+     into the schema, not yet read at checkout (buyer profile UI doesn't
+     collect it yet).
 - The frontend's detected `currency` (`lib/store/use-currency-store.ts`) is
-  never sent to checkout as authoritative — local storage, browser locale,
-  and whatever the customer was shown while browsing must never decide the
-  charged price.
-- On order creation, the server resolves each cart item's price from
+  never sent to `/api/checkout/create-order` — the request body carries only
+  product IDs, quantities, and buyer name/email, never a price or currency.
+- On order creation, `resolveProductPriceFromDb()`
+  (`lib/pricing/resolve-price-db.ts`) resolves each cart item's price from
   `product_prices` using the *verified* region above (same fallback order as
-  `resolveProductPrice`: exact region match → international/USD default →
-  INR emergency fallback) and recomputes subtotal/discount/tax/total itself.
-  A client-submitted total or currency is never trusted.
-- This validation happens silently. If the verified billing region matches
-  the browsing-region currency the customer already saw, show nothing extra.
-  Only show `region-mismatch-notice.tsx`'s message when they genuinely
-  differ — never a generic "prices may vary" disclaimer.
-- Persist the final `currency_code` and final `amount` actually charged on
-  the order row. If a live FX rate is fetched for reporting/analytics, store
-  it in a separate `fx_rate_at_purchase` field — it must never feed into the
-  charged amount.
-- Payment verification (Razorpay webhook) must confirm the paid
-  amount/currency match the order the server created, not what the client
-  displayed.
-- Use Razorpay INR for Indian customers; only charge in another currency if
-  Razorpay international currency support is enabled on the account,
-  otherwise keep Stripe/PayPal as the optional path for non-INR charges.
+  the display-side `resolveProductPrice`: exact region match →
+  international/USD default → INR emergency fallback) and computes
+  subtotal/total itself. A client-submitted total or currency is never read.
+- Persist the final `currencyCode` and `totalAmount` actually charged on the
+  `Order` row (`fxRateAtPurchase` exists for reporting only and is never
+  read back into pricing logic).
+- Payment verification (`app/api/checkout/verify-payment`, backed up by the
+  `app/api/webhooks/razorpay` webhook) confirms the Razorpay HMAC signature
+  before ever marking an order `PAID` — the frontend's "payment succeeded"
+  callback is never trusted on its own. Both paths converge on the same
+  `fulfillOrder()` (`lib/checkout/fulfill-order.ts`) so an order can't be
+  fulfilled twice.
+- Uses Razorpay INR by default; the Razorpay client/order-creation code is
+  currency-agnostic, so enabling Razorpay's international currency support
+  (or adding Stripe/PayPal) only requires touching `lib/payments/`.
 
-**Explicitly disallowed:** an open "pick any country" selector that changes
-the checkout price without server verification. A customer must not be able
-to select a cheaper region's currency and complete checkout at that price.
+**Explicitly disallowed and not present anywhere in this codebase:** an open
+"pick any country" selector that changes the checkout price without server
+verification.
 
-## Security notes (enforced from Phase 5 onward)
+## Security notes
 
-- Full PDF files are never stored in `/public` and never exposed by direct URL.
-- Downloads are streamed only through `/api/download/[productId]` after verifying: logged in, email verified, product owned, payment verified, download access exists.
-- Payment status is verified server-side and via webhook — never trusted from the frontend.
+- Full PDF files are never stored in `/public` and never exposed by direct URL — see `lib/storage/index.ts`, which resolves every stored path against `PRIVATE_UPLOADS_DIR` and rejects anything that would escape it.
+- Downloads are streamed only through `/api/download/[productId]` after verifying, in order: logged in → email verified → product owned via a `PAID` order → download access record exists → not expired. Verified end-to-end: an authenticated user with no purchase gets a 403, not a file.
+- Payment status is verified server-side (`verifyPaymentSignature`) and via the Razorpay webhook (`verifyWebhookSignature`) — the frontend's payment callback is informational only, never the trigger that marks an order paid.
+- `/api/checkout/create-order` fails fast (before writing anything to the database) if Razorpay isn't configured, and marks the order `FAILED` rather than leaving it `PENDING` if order creation fails after the local row already exists.

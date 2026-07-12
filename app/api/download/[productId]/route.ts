@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { Readable } from "node:stream";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { prisma } from "@/lib/db/prisma";
+import { streamPrivatePdf } from "@/lib/storage";
 
 interface RouteParams {
   params: Promise<{ productId: string }>;
@@ -8,10 +10,7 @@ interface RouteParams {
 
 /**
  * Protected PDF download route. Every check below must pass before any
- * file is streamed — see README security notes. Actual private-file
- * streaming (lib/storage) lands in Phase 5 alongside Cloudflare R2/local
- * disk storage; this route already enforces the full access-control
- * contract so that piece can be dropped in without touching auth logic.
+ * file is streamed — see README security notes.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { productId } = await params;
@@ -57,11 +56,27 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  // TODO(Phase 5): stream from lib/storage.streamPrivatePdf(download.product.privatePdfPath)
-  // instead of this placeholder, and increment download.downloadCount /
-  // lastDownloadedAt on success.
-  return NextResponse.json(
-    { error: "PDF streaming is not implemented yet (Phase 5)" },
-    { status: 501 }
-  );
+  let file: Awaited<ReturnType<typeof streamPrivatePdf>>;
+  try {
+    file = await streamPrivatePdf(download.product.privatePdfPath);
+  } catch {
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  }
+
+  await prisma.download.update({
+    where: { id: download.id },
+    data: { downloadCount: { increment: 1 }, lastDownloadedAt: new Date() },
+  });
+
+  const webStream = Readable.toWeb(file.stream) as ReadableStream;
+
+  return new NextResponse(webStream, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Length": String(file.size),
+      "Content-Disposition": `attachment; filename="${download.product.slug}.pdf"`,
+      "Cache-Control": "private, no-store",
+    },
+  });
 }
