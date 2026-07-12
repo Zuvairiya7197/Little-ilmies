@@ -1,0 +1,397 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Auth.js (NextAuth) core tables — buyer OTP/magic-link login.
+// Admins also live in `User` but authenticate via email+password (see
+// `passwordHash`, only ever set for admins) rather than the Auth.js
+// email provider used by buyers.
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  /// Only set for admin accounts; buyers authenticate via magic link and
+  /// never have a password.
+  passwordHash  String?
+  role          UserRole  @default(BUYER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  profile  Profile?
+  wishlist Wishlist?
+  cart     Cart?
+  orders   Order[]
+  reviews  Review[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  BUYER
+  ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+/// Extra buyer profile fields beyond what Auth.js's User needs — kept
+/// separate so the core auth table stays lean.
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  countryCode    String? // verified account country, used as a checkout region fallback
+  billingAddress String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  coverImage  String?
+  createdAt   DateTime @default(now())
+
+  products ProductCategory[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  shortDescription String
+  coverImage  String
+  /// Private, server-only path under PRIVATE_UPLOADS_DIR — never sent to the client.
+  privatePdfPath String?
+  /// Public sample-preview page image paths — safe to expose.
+  previewImagePaths String[]
+  ageRange    String
+  language    String
+  format      String
+  pageCount   Int
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  downloadCount Int    @default(0)
+  isBestseller Boolean @default(false)
+  isNewArrival Boolean @default(false)
+  hasFreePreview Boolean @default(true)
+  seoTitle    String?
+  seoDescription String?
+  ogImage     String?
+  status      ProductStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories  ProductCategory[]
+  prices      ProductPrice[]
+  wishlistedBy WishlistItem[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  downloads   Download[]
+  reviews     Review[]
+
+  @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@map("product_categories")
+}
+
+/// Manually curated regional price per product — NOT a live FX conversion.
+/// See README "Regional pricing": exactly one row should have
+/// isDefault = true (the USD international fallback); INR is the home-market
+/// row. Backend-verified region (never the client) picks which row applies
+/// at checkout.
+model ProductPrice {
+  id            String   @id @default(cuid())
+  productId     String
+  pricingRegion String // e.g. "India", "International"
+  countryCode   String? // ISO 3166-1 alpha-2; null for the international/default row
+  currencyCode  String // ISO 4217: INR, USD (GBP/AED reserved for later regions)
+  regularPrice  Int // minor units
+  salePrice     Int?
+  isDefault     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, currencyCode])
+  @@map("product_prices")
+}
+
+// ---------------------------------------------------------------------------
+// Wishlist / Cart — guest state lives in localStorage on the client; these
+// tables are only populated once a buyer logs in and their guest state is
+// merged in.
+// ---------------------------------------------------------------------------
+
+model Wishlist {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items WishlistItem[]
+
+  @@map("wishlists")
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  productId  String
+  addedAt    DateTime @default(now())
+
+  wishlist Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
+  @@map("wishlist_items")
+}
+
+model Cart {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now())
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+// ---------------------------------------------------------------------------
+// Orders / Payments / Downloads
+//
+// Security invariant (see README "Checkout pricing contract"): orders are
+// created with amounts resolved server-side from ProductPrice using a
+// backend-verified region — never a client-submitted total or currency.
+// ---------------------------------------------------------------------------
+
+model Order {
+  id              String      @id @default(cuid())
+  /// Nullable: a buyer can check out as a guest; the order is still linked
+  /// to their email and can be claimed on login with that same email.
+  userId          String?
+  buyerName       String
+  buyerEmail      String
+  currencyCode    String
+  subtotal        Int // minor units
+  discountAmount  Int         @default(0)
+  taxAmount       Int         @default(0)
+  totalAmount     Int
+  /// Live FX rate at time of purchase, stored for reporting/analytics only —
+  /// never used to compute totalAmount.
+  fxRateAtPurchase Float?
+  couponId       String?
+  status         OrderStatus @default(PENDING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user     User?       @relation(fields: [userId], references: [id])
+  coupon   Coupon?     @relation(fields: [couponId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+  downloads Download[]
+
+  @@index([buyerEmail])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model OrderItem {
+  id           String @id @default(cuid())
+  orderId      String
+  productId    String
+  /// Snapshot of price actually charged, in currencyCode above — never
+  /// re-derived from the live ProductPrice after purchase.
+  unitPrice    Int
+  quantity     Int    @default(1)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  orderId               String
+  provider              PaymentProvider @default(RAZORPAY)
+  providerOrderId        String? // Razorpay order_id
+  providerPaymentId      String? // Razorpay payment_id
+  providerSignature      String?
+  amount                Int // minor units, must match Order.totalAmount
+  currencyCode          String
+  status                PaymentStatus @default(CREATED)
+  /// Set only after webhook/server-side signature verification — never
+  /// trust a frontend "payment succeeded" callback alone.
+  verifiedAt            DateTime?
+  createdAt             DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  STRIPE
+  PAYPAL
+}
+
+enum PaymentStatus {
+  CREATED
+  VERIFIED
+  FAILED
+}
+
+model Download {
+  id            String   @id @default(cuid())
+  orderId       String
+  productId     String
+  downloadCount Int      @default(0)
+  lastDownloadedAt DateTime?
+  /// Signed-URL expiry when using Cloudflare R2 in production; null for
+  /// local disk storage where the protected route re-checks ownership
+  /// every request instead.
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([orderId, productId])
+  @@map("downloads")
+}
+
+model Coupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  type          CouponType
+  value         Int // percentage (0-100) or minor-units amount, per `type`
+  isActive      Boolean      @default(true)
+  maxRedemptions Int?
+  redemptionCount Int        @default(0)
+  expiresAt     DateTime?
+  createdAt     DateTime     @default(now())
+
+  orders Order[]
+
+  @@map("coupons")
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String?
+  authorName String
+  rating    Int
+  title     String?
+  body      String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}

@@ -2,33 +2,87 @@
 
 A custom digital bookstore for Islamic and educational e-books for children — built with Next.js, TypeScript, Tailwind CSS, Prisma, and PostgreSQL.
 
-This is being built in phases. **Phases 1–2 complete: project setup, design system, layout, header/footer, homepage, shop page with filters/sort/search, product detail page, and location-aware regional pricing.**
+This is being built in phases. **Phases 1–4 complete: project setup, design system, layout, header/footer, homepage, shop page, product detail page, regional pricing, wishlist/cart/checkout UI, and buyer/admin authentication with account dashboard, purchase history, and downloads.**
 
 ## Stack
 
 - Next.js App Router + TypeScript
 - Tailwind CSS
-- Prisma ORM + PostgreSQL (added in a later phase)
-- Auth.js / NextAuth (buyer OTP/magic-link login, admin email+password) — added in a later phase
-- Razorpay for payments — added in a later phase
+- Prisma ORM + PostgreSQL
+- Auth.js / NextAuth (buyer OTP/magic-link login, admin email+password)
+- Razorpay for payments — added in Phase 5
 - Zustand for cart/wishlist client state
 - Framer Motion for subtle interactions
 - Local private file storage for PDFs (`/private-uploads`), swappable for Cloudflare R2 later
 
 ## Getting started
 
+### 1. Install dependencies
+
 ```bash
 npm install
+```
+
+### 2. Set up PostgreSQL
+
+This project needs a running local PostgreSQL instance. If you don't already
+have one:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y postgresql postgresql-contrib
+sudo systemctl enable --now postgresql
+sudo -u postgres createuser --superuser "$USER"
+createdb little_ilmies
+```
+
+(Alternatively, use a free [Neon](https://neon.tech) Postgres database and
+skip straight to step 3 with Neon's connection string.)
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+`.env` is already filled in with working local defaults (a generated
+`NEXTAUTH_SECRET`, `DATABASE_URL` pointing at `little_ilmies` on
+`localhost:5432`). If you used Neon instead, replace `DATABASE_URL`.
+
+Email is intentionally left blank in `.env` for local dev — see "Buyer login
+in local development" below.
+
+### 4. Run migrations and seed demo data
+
+```bash
+npx prisma migrate dev --name init
+npm run db:seed
+```
+
+Seeding creates an admin account (`admin@littleilmies.com` / `changeme123`
+by default — override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` env
+vars before seeding) plus all demo categories, products, and regional
+prices from `data/`.
+
+### 5. Start the dev server
+
+```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Copy `.env.example` to `.env` before wiring up the database/auth/payments in later phases:
+### Buyer login in local development
 
-```bash
-cp .env.example .env
-```
+Buyers sign in via a magic link emailed to them — there's no password. Since
+`.env` has no SMTP server configured locally, the link is **printed to the
+terminal running `npm run dev`** instead of actually being emailed (see
+`lib/auth/config.ts`'s `sendVerificationRequest`). Enter any email on
+`/login`, then copy the link from the terminal into your browser.
+
+To send real emails instead, fill in `EMAIL_SERVER_HOST` /
+`EMAIL_SERVER_PORT` / `EMAIL_SERVER_USER` / `EMAIL_SERVER_PASSWORD` in
+`.env` with real SMTP credentials.
 
 ## Project structure
 
@@ -71,9 +125,9 @@ private-uploads/        Full PDFs, sample previews, covers — never served dire
 
 1. ✅ Project setup, design system, layout, header, footer, homepage
 2. ✅ Shop page, product grid, sorting, filters, search, product detail page
-3. Book-style preview, wishlist, cart drawer, checkout UI
-4. Buyer login/logout (OTP/magic link), account dashboard, purchase history, downloads
-5. Razorpay integration, payment verification, webhooks, protected PDF downloads
+3. ✅ Book-style preview, wishlist, cart drawer + cart page, checkout UI
+4. ✅ Buyer login/logout (OTP/magic link), admin login (email+password), account dashboard, purchase history, downloads
+5. Razorpay integration, payment verification, webhooks, protected PDF downloads (download route's access-control checks already built — see `app/api/download/[productId]/route.ts` — only the actual file streaming is pending)
 6. Admin dashboard: products, categories, PDFs, orders, coupons
 7. SEO, schema markup, sitemap/robots, performance and accessibility polish
 

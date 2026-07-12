@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, User } from "lucide-react";
+import { X, User, LogOut } from "lucide-react";
 import { primaryNav } from "@/lib/nav";
 
 export function MobileMenu({
@@ -13,6 +14,8 @@ export function MobileMenu({
   open: boolean;
   onClose: () => void;
 }) {
+  const { data: session, status } = useSession();
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -82,15 +85,31 @@ export function MobileMenu({
               </ul>
             </nav>
 
-            <div className="safe-bottom border-t border-ink-100 p-5">
-              <Link
-                href="/login"
-                onClick={onClose}
-                className="btn-secondary w-full"
-              >
-                <User className="h-4 w-4" aria-hidden="true" />
-                Login / Account
-              </Link>
+            <div className="safe-bottom flex flex-col gap-2 border-t border-ink-100 p-5">
+              {status === "authenticated" && session?.user ? (
+                <>
+                  <Link href="/account" onClick={onClose} className="btn-secondary w-full">
+                    <User className="h-4 w-4" aria-hidden="true" />
+                    My Account
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      signOut({ callbackUrl: "/" });
+                    }}
+                    className="tap-target flex w-full items-center justify-center gap-2 rounded-full border border-ink-100 py-3 text-sm font-semibold text-gold-700 transition-colors hover:bg-gold-50"
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" onClick={onClose} className="btn-secondary w-full">
+                  <User className="h-4 w-4" aria-hidden="true" />
+                  Login / Account
+                </Link>
+              )}
             </div>
           </motion.aside>
         </>

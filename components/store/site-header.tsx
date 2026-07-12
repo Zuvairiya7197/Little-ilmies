@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, Search, Heart, ShoppingBag, User } from "lucide-react";
+import { Menu, Search, Heart, ShoppingBag } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
 import { SearchOverlay } from "@/components/store/search-overlay";
 import { CartDrawer } from "@/components/store/cart-drawer";
 import { MobileMenu } from "@/components/store/mobile-menu";
 import { IconBadge } from "@/components/store/icon-badge";
+import { AccountMenu } from "@/components/store/account-menu";
 import { primaryNav } from "@/lib/nav";
 import { useCartStore, selectCartCount } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
@@ -102,13 +103,7 @@ export function SiteHeader() {
               {mounted && <IconBadge count={cartCount} />}
             </button>
 
-            <Link
-              href="/login"
-              aria-label="Account"
-              className="tap-target hidden items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink-50 sm:flex"
-            >
-              <User className="h-5 w-5" aria-hidden="true" />
-            </Link>
+            <AccountMenu />
           </div>
         </div>
       </div>

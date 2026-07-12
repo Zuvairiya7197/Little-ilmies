@@ -32,7 +32,7 @@ export function CheckoutView() {
   }
 
   return (
-    <div className="container-content pb-28 pt-6 xs:pt-8 md:pb-16 md:pt-10">
+    <div className="container-content pb-32 pt-6 xs:pt-8 md:pb-16 md:pt-10">
       <h1 className="mb-4 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
         Checkout
       </h1>
@@ -42,10 +42,10 @@ export function CheckoutView() {
       </div>
 
       <div className="md:flex md:flex-row-reverse md:items-start md:gap-10">
-        <div className="md:w-96 md:shrink-0">
+        <div className="order-2 mt-6 md:order-none md:mt-0 md:w-96 md:shrink-0">
           <CheckoutOrderSummary />
         </div>
-        <div className="mt-6 min-w-0 flex-1 md:mt-0">
+        <div className="order-1 min-w-0 flex-1">
           <CheckoutForm />
         </div>
       </div>

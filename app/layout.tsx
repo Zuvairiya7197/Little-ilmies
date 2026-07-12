@@ -3,6 +3,7 @@ import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
+import { AuthSessionProvider } from "@/components/providers/session-provider";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -74,11 +75,13 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <SiteHeader />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
+        <AuthSessionProvider>
+          <SiteHeader />
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
+          <SiteFooter />
+        </AuthSessionProvider>
       </body>
     </html>
   );
