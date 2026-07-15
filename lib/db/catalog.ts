@@ -119,6 +119,34 @@ export async function getAllPublishedProductSlugs(): Promise<string[]> {
   return products.map((p) => p.slug);
 }
 
+/**
+ * The one product an admin has flagged to feature in the homepage
+ * "See before you buy" flip-through showcase. Only real, uploaded preview
+ * page images are used — never the static placeholder fallback from
+ * data/product-details.ts, since showing a stand-in book as "the sample"
+ * would misrepresent which book you can actually flip through.
+ */
+export async function getHomepageSampleProduct(): Promise<{
+  slug: string;
+  title: string;
+  pageCount: number;
+  previewImages: string[];
+} | null> {
+  const product = await prisma.product.findFirst({
+    where: { status: "PUBLISHED", isHomepageSample: true },
+    select: { slug: true, title: true, pageCount: true, previewImagePaths: true },
+  });
+
+  if (!product || product.previewImagePaths.length === 0) return null;
+
+  return {
+    slug: product.slug,
+    title: product.title,
+    pageCount: product.pageCount,
+    previewImages: product.previewImagePaths,
+  };
+}
+
 export async function getAllCategories(): Promise<Category[]> {
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },

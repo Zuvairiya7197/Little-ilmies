@@ -96,31 +96,41 @@ export function FileDetails({ product }: { product: ProductDetail }) {
 }
 
 export function ProductReviews({ product }: { product: ProductDetail }) {
+  const hasReviews = product.reviewCount > 0 && product.reviews.length > 0;
+
   return (
     <section aria-labelledby="reviews-heading" className="scroll-mt-24">
       <div className="flex items-center justify-between">
         <h2 id="reviews-heading" className="font-display text-xl font-semibold text-ink-700">
           Reviews
         </h2>
-        <div className="flex items-center gap-2">
-          <StarRating rating={product.rating} size="md" />
-          <span className="text-sm font-semibold text-ink-600">{product.rating.toFixed(1)}</span>
-          <span className="text-sm text-ink-300">({product.reviewCount})</span>
-        </div>
+        {hasReviews && (
+          <div className="flex items-center gap-2">
+            <StarRating rating={product.rating} size="md" />
+            <span className="text-sm font-semibold text-ink-600">{product.rating.toFixed(1)}</span>
+            <span className="text-sm text-ink-300">({product.reviewCount})</span>
+          </div>
+        )}
       </div>
 
-      <ul className="mt-5 flex flex-col gap-5">
-        {product.reviews.map((review) => (
-          <li key={review.id} className="border-b border-ink-100 pb-5 last:border-b-0">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-ink-600">{review.author}</p>
-              <StarRating rating={review.rating} />
-            </div>
-            <p className="mt-2 text-sm font-semibold text-ink-600">{review.title}</p>
-            <p className="mt-1 text-sm leading-relaxed text-ink-400">{review.body}</p>
-          </li>
-        ))}
-      </ul>
+      {hasReviews ? (
+        <ul className="mt-5 flex flex-col gap-5">
+          {product.reviews.map((review) => (
+            <li key={review.id} className="border-b border-ink-100 pb-5 last:border-b-0">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-ink-600">{review.author}</p>
+                <StarRating rating={review.rating} />
+              </div>
+              <p className="mt-2 text-sm font-semibold text-ink-600">{review.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-ink-400">{review.body}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 text-sm text-ink-400">
+          No reviews yet — be the first to share what you think after your purchase.
+        </p>
+      )}
     </section>
   );
 }

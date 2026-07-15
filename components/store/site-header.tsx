@@ -7,6 +7,7 @@ import { Menu, Search, Heart, ShoppingBag } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
 import { SearchOverlay } from "@/components/store/search-overlay";
+import { HeaderGooeySearch } from "@/components/store/header-gooey-search";
 import { CartDrawer } from "@/components/store/cart-drawer";
 import { MobileMenu } from "@/components/store/mobile-menu";
 import { IconBadge } from "@/components/store/icon-badge";
@@ -80,11 +81,15 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-1 xs:gap-2">
+            <div className="md:hidden">
+              <HeaderGooeySearch />
+            </div>
+
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
-              className="tap-target flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
+              className="tap-target hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:flex"
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </button>

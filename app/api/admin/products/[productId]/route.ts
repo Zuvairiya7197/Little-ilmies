@@ -29,6 +29,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
 
+  // At most one product can be the homepage sample — clear any previous one.
+  if (productData.isHomepageSample && !current.isHomepageSample) {
+    await prisma.product.updateMany({
+      where: { isHomepageSample: true },
+      data: { isHomepageSample: false },
+    });
+  }
+
   await prisma.$transaction([
     prisma.productCategory.deleteMany({ where: { productId } }),
     prisma.product.update({

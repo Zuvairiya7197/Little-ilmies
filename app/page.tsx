@@ -7,7 +7,7 @@ import { WhyTrustSection } from "@/components/store/home/why-trust-section";
 import { BookPreviewShowcase } from "@/components/store/home/book-preview-showcase";
 import { BestsellersSection } from "@/components/store/home/bestsellers-section";
 import { ParentCta } from "@/components/store/home/parent-cta";
-import { getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
+import { getAllCategories, getHomepageSampleProduct, getPublishedProducts } from "@/lib/db/catalog";
 import { Reveal } from "@/components/ui/reveal";
 
 export const revalidate = 60;
@@ -22,7 +22,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, categories] = await Promise.all([getPublishedProducts(), getAllCategories()]);
+  const [products, categories, sampleProduct] = await Promise.all([
+    getPublishedProducts(),
+    getAllCategories(),
+    getHomepageSampleProduct(),
+  ]);
 
   return (
     <>
@@ -40,7 +44,7 @@ export default async function HomePage() {
         <WhyTrustSection />
       </Reveal>
       <Reveal>
-        <BookPreviewShowcase />
+        <BookPreviewShowcase product={sampleProduct} />
       </Reveal>
       <Reveal>
         <BestsellersSection products={products} />

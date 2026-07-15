@@ -24,6 +24,7 @@ export const productFormSchema = z.object({
   isBestseller: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
   hasFreePreview: z.boolean().default(true),
+  isHomepageSample: z.boolean().default(false),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
   seoTitle: z.string().trim().optional(),
   seoDescription: z.string().trim().optional(),

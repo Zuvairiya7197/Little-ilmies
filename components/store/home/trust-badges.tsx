@@ -1,7 +1,7 @@
 import { BookOpenCheck, Download, Printer, Baby, ShieldCheck } from "lucide-react";
 
 const badges = [
-  { icon: BookOpenCheck, label: "Authentic Islamic Content" },
+  { icon: BookOpenCheck, label: "Islamic & Educational Books" },
   { icon: Download, label: "Instant PDF Download" },
   { icon: Printer, label: "Printable at Home" },
   { icon: Baby, label: "Made for Kids" },

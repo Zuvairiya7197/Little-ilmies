@@ -96,11 +96,15 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         </Link>
 
         <div className="mt-1.5 flex items-center gap-2 text-xs text-ink-300">
-          <span className="flex items-center gap-1">
-            <Star className="h-3.5 w-3.5 fill-gold-400 text-gold-400" aria-hidden="true" />
-            {product.rating.toFixed(1)}
-          </span>
-          <span aria-hidden="true">·</span>
+          {product.reviewCount > 0 && (
+            <>
+              <span className="flex items-center gap-1">
+                <Star className="h-3.5 w-3.5 fill-gold-400 text-gold-400" aria-hidden="true" />
+                {product.rating.toFixed(1)}
+              </span>
+              <span aria-hidden="true">·</span>
+            </>
+          )}
           <span>Ages {product.ageRange}</span>
           <span aria-hidden="true">·</span>
           <span>{product.pageCount}pg</span>

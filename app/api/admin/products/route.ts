@@ -18,6 +18,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A product with this slug already exists" }, { status: 409 });
   }
 
+  // At most one product can be the homepage sample — clear any previous one.
+  if (productData.isHomepageSample) {
+    await prisma.product.updateMany({
+      where: { isHomepageSample: true },
+      data: { isHomepageSample: false },
+    });
+  }
+
   const product = await prisma.product.create({
     data: {
       ...productData,

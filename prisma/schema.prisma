@@ -136,6 +136,11 @@ model Product {
   isBestseller Boolean @default(false)
   isNewArrival Boolean @default(false)
   hasFreePreview Boolean @default(true)
+  /// At most one product should have this set — it's the book featured in
+  /// the homepage "See before you buy" flip-through showcase. Enforced at
+  /// the application layer (unsetting any previous sample before setting a
+  /// new one), not by the database.
+  isHomepageSample Boolean @default(false)
   seoTitle    String?
   seoDescription String?
   ogImage     String?

@@ -1,8 +1,41 @@
+"use client";
+
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Category } from "@/types/catalog";
 
 export function FeaturedCategories({ categories }: { categories: Category[] }) {
+  const scrollerRef = useRef<HTMLUListElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  function updateScrollState() {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }
+
+  useEffect(() => {
+    updateScrollState();
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      el.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [categories]);
+
+  function scrollByAmount(direction: 1 | -1) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * el.clientWidth * 0.7, behavior: "smooth" });
+  }
+
   return (
     <section aria-labelledby="categories-heading" className="py-12 xs:py-14 md:py-20">
       <div className="container-content">
@@ -21,35 +54,55 @@ export function FeaturedCategories({ categories }: { categories: Category[] }) {
           </Link>
         </div>
 
-        <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:grid md:grid-cols-4 md:gap-5 md:overflow-visible md:px-0 lg:grid-cols-5">
-          {categories.map((cat) => (
-            <li
-              key={cat.slug}
-              className="w-[42vw] shrink-0 snap-start xs:w-[34vw] sm:w-[28vw] md:w-auto"
+        <div className="relative md:px-10">
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scrollByAmount(-1)}
+              aria-label="Scroll categories left"
+              className="tap-target absolute left-0 top-[2.5rem] z-10 hidden -translate-y-1/2 items-center justify-center rounded-full bg-cream-50 text-ink-600 shadow-clay md:flex xs:top-12"
             >
-              <Link href={`/shop/${cat.slug}`} className="group block transition-transform duration-300 hover:-translate-y-1">
-                <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream-200 shadow-soft transition-shadow duration-300 group-hover:shadow-clay">
-                  <Image
-                    src={cat.coverImage}
-                    alt=""
-                    fill
-                    sizes="(max-width: 768px) 40vw, 20vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink-700/60 via-transparent to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-3">
-                    <p className="text-xs font-semibold text-cream-50 xs:text-sm">
-                      {cat.name}
-                    </p>
-                    <p className="text-[11px] text-cream-200">
-                      {cat.bookCount} books
-                    </p>
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => scrollByAmount(1)}
+              aria-label="Scroll categories right"
+              className="tap-target absolute right-0 top-[2.5rem] z-10 hidden -translate-y-1/2 items-center justify-center rounded-full bg-cream-50 text-ink-600 shadow-clay md:flex xs:top-12"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
+
+          <ul
+            ref={scrollerRef}
+            className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 xs:gap-6 md:mx-0 md:px-0"
+          >
+            {categories.map((cat) => (
+              <li key={cat.slug} className="w-20 shrink-0 snap-start xs:w-24">
+                <Link
+                  href={`/shop/${cat.slug}`}
+                  className="group flex flex-col items-center gap-2"
+                >
+                  <div className="relative aspect-square w-20 overflow-hidden rounded-full bg-cream-200 shadow-soft transition-shadow duration-300 group-hover:shadow-clay xs:w-24">
+                    <Image
+                      src={cat.coverImage}
+                      alt=""
+                      fill
+                      sizes="96px"
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
                   </div>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  <p className="line-clamp-2 text-center text-xs font-semibold leading-tight text-ink-600 xs:text-sm">
+                    {cat.name}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div className="mt-6 text-center md:hidden">
           <Link

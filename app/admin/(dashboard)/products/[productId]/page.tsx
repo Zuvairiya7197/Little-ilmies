@@ -51,6 +51,7 @@ export default async function EditProductPage({ params }: PageProps) {
           isBestseller: product.isBestseller,
           isNewArrival: product.isNewArrival,
           hasFreePreview: product.hasFreePreview,
+          isHomepageSample: product.isHomepageSample,
           status: product.status,
           seoTitle: product.seoTitle ?? undefined,
           seoDescription: product.seoDescription ?? undefined,

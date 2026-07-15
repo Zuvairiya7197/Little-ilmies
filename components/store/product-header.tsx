@@ -26,12 +26,16 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
       </h1>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-400">
-        <span className="flex items-center gap-1.5">
-          <StarRating rating={product.rating} />
-          <span className="font-semibold text-ink-600">{product.rating.toFixed(1)}</span>
-          <span>({product.reviewCount} reviews)</span>
-        </span>
-        <span aria-hidden="true">·</span>
+        {product.reviewCount > 0 && (
+          <>
+            <span className="flex items-center gap-1.5">
+              <StarRating rating={product.rating} />
+              <span className="font-semibold text-ink-600">{product.rating.toFixed(1)}</span>
+              <span>({product.reviewCount} reviews)</span>
+            </span>
+            <span aria-hidden="true">·</span>
+          </>
+        )}
         <span>Ages {product.ageRange}</span>
         <span aria-hidden="true">·</span>
         <span>{product.pageCount} pages</span>

@@ -1,4 +1,4 @@
-import type { ProductDetail, ProductReview } from "@/types/catalog";
+import type { ProductDetail } from "@/types/catalog";
 import { getProductBySlug, getRelatedProducts, products } from "@/data/products";
 
 export type DetailExtra = Pick<
@@ -6,33 +6,9 @@ export type DetailExtra = Pick<
   "description" | "whatsInside" | "learningBenefits" | "bestFor" | "previewImages" | "reviews"
 >;
 
-const sampleReviews = (names: [string, string, string]): ProductReview[] => [
-  {
-    id: "rev_1",
-    author: names[0],
-    rating: 5,
-    date: "2026-05-12",
-    title: "My kids ask for this every night",
-    body: "The illustrations are gorgeous and the language is simple enough for my 5-year-old to follow along. Printed a copy for our homeschool binder too.",
-  },
-  {
-    id: "rev_2",
-    author: names[1],
-    rating: 5,
-    date: "2026-04-02",
-    title: "Beautifully done and authentic",
-    body: "I appreciated that the stories are sourced carefully. Great addition to our home library, and the instant download meant we started reading the same evening.",
-  },
-  {
-    id: "rev_3",
-    author: names[2],
-    rating: 4,
-    date: "2026-02-19",
-    title: "Lovely, would love a sequel",
-    body: "Really well made. Only wish it was a bit longer — my daughter finished it in two sittings and wants more.",
-  },
-];
-
+// No reviews are seeded — there are no real customer reviews yet. Every
+// product starts with an empty review list; real reviews should only ever
+// come from actual buyers (see the reviews table in prisma/schema.prisma).
 export const detailExtras: Record<string, DetailExtra> = {
   "asma-ul-husna-99-names-of-allah": {
     description:
@@ -54,7 +30,7 @@ export const detailExtras: Record<string, DetailExtra> = {
       "/images/previews/stories-of-the-prophets-2.svg",
       "/images/previews/stories-of-the-prophets-3.svg",
     ],
-    reviews: sampleReviews(["Amina K.", "Yusuf R.", "Fatima S."]),
+    reviews: [],
   },
   "stories-of-the-prophets": {
     description:
@@ -76,7 +52,7 @@ export const detailExtras: Record<string, DetailExtra> = {
       "/images/previews/stories-of-the-prophets-2.svg",
       "/images/previews/stories-of-the-prophets-3.svg",
     ],
-    reviews: sampleReviews(["Layla M.", "Ibrahim T.", "Zainab A."]),
+    reviews: [],
   },
 };
 
@@ -99,7 +75,7 @@ export const defaultExtra = (title: string): DetailExtra => ({
     "/images/previews/stories-of-the-prophets-2.svg",
     "/images/previews/stories-of-the-prophets-3.svg",
   ],
-  reviews: sampleReviews(["Sara N.", "Ahmed B.", "Maryam H."]),
+  reviews: [],
 });
 
 export function getProductDetailBySlug(slug: string): ProductDetail | undefined {

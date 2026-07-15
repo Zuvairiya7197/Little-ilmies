@@ -190,7 +190,16 @@ export function ProductForm({
           <Checkbox label="Bestseller" {...register("isBestseller")} />
           <Checkbox label="New Arrival" {...register("isNewArrival")} />
           <Checkbox label="Has Free Preview" {...register("hasFreePreview")} />
+          <Checkbox
+            label="Feature as homepage sample"
+            {...register("isHomepageSample")}
+          />
         </div>
+        <p className="mt-2 text-xs text-ink-300">
+          &quot;Feature as homepage sample&quot; shows this book&apos;s uploaded preview pages in the
+          homepage &quot;See before you buy&quot; section. Only one product can be featured at a
+          time — selecting it here unfeatures any other product.
+        </p>
 
         <div className="mt-4">
           <Field label="Status">
