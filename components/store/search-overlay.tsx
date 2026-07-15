@@ -93,7 +93,7 @@ export function SearchOverlay({
                     key={term}
                     type="button"
                     onClick={() => setQuery(term)}
-                    className="tap-target rounded-full border border-ink-100 bg-cream-100 px-4 py-2 text-sm text-ink-500 transition-colors hover:border-sage-300 hover:bg-sage-50"
+                    className="chip px-4 py-2"
                   >
                     {term}
                   </button>

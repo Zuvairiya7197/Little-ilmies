@@ -33,7 +33,7 @@ export function AccountMenu() {
       <Link
         href="/login"
         aria-label="Login"
-        className="tap-target hidden items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink-50 sm:flex"
+        className="tap-target hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm sm:flex"
       >
         <User className="h-5 w-5" aria-hidden="true" />
       </Link>
@@ -48,7 +48,7 @@ export function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="tap-target flex items-center justify-center rounded-full bg-sage-50 text-sage-700 transition-colors hover:bg-sage-100"
+        className="tap-target flex items-center justify-center rounded-full bg-sage-50 text-sage-700 shadow-clay-sm transition-all duration-200 hover:shadow-clay-pressed"
       >
         <User className="h-5 w-5" aria-hidden="true" />
       </button>
@@ -56,7 +56,7 @@ export function AccountMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-40 mt-2 w-60 overflow-hidden rounded-2xl border border-ink-100 bg-cream-50 py-1.5 shadow-lifted"
+          className="absolute right-0 z-40 mt-2 w-60 overflow-hidden rounded-2xl border-0 bg-cream-100 py-1.5 shadow-clay"
         >
           <p className="truncate border-b border-ink-100 px-4 py-2.5 text-xs text-ink-300">
             {session.user.email}

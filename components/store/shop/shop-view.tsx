@@ -9,15 +9,17 @@ import { ProductGrid } from "@/components/store/shop/product-grid";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { filterProducts, sortProducts } from "@/lib/catalog";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
-import type { ProductSummary } from "@/types/catalog";
+import type { Category, ProductSummary } from "@/types/catalog";
 
 export function ShopView({
   products,
+  categories,
   title,
   description,
   hideCategoryFilter,
 }: {
   products: ProductSummary[];
+  categories: Category[];
   title: string;
   description?: string;
   hideCategoryFilter?: boolean;
@@ -56,12 +58,12 @@ export function ShopView({
           defaultValue={filters.query ?? ""}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by title, category, or language..."
-          className="tap-target w-full rounded-full border border-ink-100 bg-cream-50 py-3 pl-11 pr-4 text-sm text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
+          className="store-input rounded-full py-3 pl-11 pr-4 text-sm"
         />
       </div>
 
       <div className="md:flex md:items-start md:gap-8">
-        {!hideCategoryFilter && <FilterSidebar />}
+        {!hideCategoryFilter && <FilterSidebar categories={categories} />}
 
         <div className="min-w-0 flex-1">
           <ShopToolbar resultCount={results.length} onOpenFilters={() => setFiltersOpen(true)} />
@@ -75,6 +77,7 @@ export function ShopView({
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
         resultCount={results.length}
+        categories={categories}
       />
     </div>
   );

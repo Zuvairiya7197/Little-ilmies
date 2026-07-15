@@ -20,7 +20,7 @@ export function ShopToolbar({
         <button
           type="button"
           onClick={onOpenFilters}
-          className="tap-target relative flex items-center gap-2 rounded-full border border-ink-100 bg-cream-50 px-4 py-2 text-sm font-semibold text-ink-600 md:hidden"
+          className="chip relative px-4 py-2 font-semibold md:hidden"
         >
           <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
           Filters

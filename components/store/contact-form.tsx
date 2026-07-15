@@ -73,7 +73,7 @@ export function ContactForm() {
           autoComplete="name"
           aria-invalid={Boolean(errors.name)}
           {...register("name")}
-          className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
+          className="store-input rounded-xl"
           placeholder="Your name"
         />
         {errors.name && <p className="mt-1.5 text-xs text-gold-700">{errors.name.message}</p>}
@@ -90,7 +90,7 @@ export function ContactForm() {
           inputMode="email"
           aria-invalid={Boolean(errors.email)}
           {...register("email")}
-          className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
+          className="store-input rounded-xl"
           placeholder="you@example.com"
         />
         {errors.email && <p className="mt-1.5 text-xs text-gold-700">{errors.email.message}</p>}
@@ -105,7 +105,7 @@ export function ContactForm() {
           rows={5}
           aria-invalid={Boolean(errors.message)}
           {...register("message")}
-          className="w-full resize-none rounded-xl border border-ink-100 bg-cream-50 px-4 py-3 text-base text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
+          className="store-input resize-none rounded-xl py-3"
           placeholder="How can we help?"
         />
         {errors.message && <p className="mt-1.5 text-xs text-gold-700">{errors.message.message}</p>}

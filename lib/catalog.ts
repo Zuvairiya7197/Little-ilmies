@@ -76,6 +76,18 @@ export function sortProducts(
   }
 }
 
+export function getFeaturedProducts(items: ProductSummary[], limit = 8) {
+  return items.slice(0, limit);
+}
+
+export function getBestsellers(items: ProductSummary[], limit = 8) {
+  return items.filter((p) => p.isBestseller).slice(0, limit);
+}
+
+export function getNewArrivals(items: ProductSummary[], limit = 8) {
+  return items.filter((p) => p.isNewArrival).slice(0, limit);
+}
+
 export const sortLabels: Record<SortOption, string> = {
   featured: "Featured",
   newest: "Newest",

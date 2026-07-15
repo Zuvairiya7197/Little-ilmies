@@ -12,7 +12,7 @@ export default async function AdminDashboardLayout({
   if (!session) redirect("/admin/login");
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+    <div data-admin className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
       <AdminMobileNav />
       <aside className="hidden w-64 shrink-0 border-r border-ink-100 bg-cream-50 lg:block">
         <div className="sticky top-0">

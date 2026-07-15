@@ -9,7 +9,12 @@ const styles: Record<string, string> = {
 
 export function OrderStatusBadge({ status }: { status: string }) {
   return (
-    <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", styles[status] ?? styles.FAILED)}>
+    <span
+      className={cn(
+        "rounded-full px-2.5 py-1 text-xs font-bold shadow-clay-sm",
+        styles[status] ?? styles.FAILED
+      )}
+    >
       {status}
     </span>
   );

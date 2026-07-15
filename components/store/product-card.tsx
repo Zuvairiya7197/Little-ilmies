@@ -22,8 +22,8 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   const isOnSale = Boolean(resolvedPrice.salePrice);
 
   return (
-    <div className="group relative flex flex-col">
-      <div className="relative overflow-hidden rounded-2xl bg-cream-200 shadow-soft">
+    <div className="group relative flex flex-col transition-transform duration-300 hover:-translate-y-1">
+      <div className="relative overflow-hidden rounded-2xl bg-cream-200 shadow-soft transition-shadow duration-300 group-hover:shadow-clay">
         <Link
           href={`/product/${product.slug}`}
           className="relative block aspect-[3/4]"
@@ -34,7 +34,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
             alt={`${product.title} book cover`}
             fill
             sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-110"
           />
         </Link>
 
@@ -65,7 +65,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           }
           aria-pressed={isWishlisted}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className="tap-target absolute right-2 top-2 flex items-center justify-center rounded-full bg-cream-50/90 text-ink-500 shadow-soft backdrop-blur transition-transform hover:scale-105"
+          className="tap-target absolute right-2 top-2 flex items-center justify-center rounded-full bg-cream-50/90 text-ink-500 shadow-soft backdrop-blur transition-transform duration-200 hover:scale-125 active:scale-90"
         >
           <Heart
             className={cn(

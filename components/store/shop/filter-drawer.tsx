@@ -5,15 +5,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { FilterPanel } from "@/components/store/shop/filter-panel";
 import { useShopFilters } from "@/hooks/use-shop-filters";
+import type { Category } from "@/types/catalog";
 
 export function FilterDrawer({
   open,
   onClose,
   resultCount,
+  categories,
 }: {
   open: boolean;
   onClose: () => void;
   resultCount: number;
+  categories: Category[];
 }) {
   const { clearAll } = useShopFilters();
 
@@ -71,7 +74,7 @@ export function FilterDrawer({
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-5">
-              <FilterPanel showHeading={false} />
+              <FilterPanel categories={categories} showHeading={false} />
             </div>
 
             <div className="safe-bottom flex gap-3 border-t border-ink-100 p-5">

@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
       <h2>How we use your information</h2>
       <ul>
         <li>To deliver your purchased e-books and manage your account</li>
-        <li>To send order confirmations and, if you opt in, occasional newsletters</li>
+        <li>To send order confirmations and account-related emails</li>
         <li>To detect and prevent fraud or unauthorized access to purchased content</li>
       </ul>
 

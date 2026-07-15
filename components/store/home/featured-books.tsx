@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/store/product-card";
-import { getFeaturedProducts } from "@/data/products";
+import { getFeaturedProducts } from "@/lib/catalog";
+import type { ProductSummary } from "@/types/catalog";
 
-export function FeaturedBooks() {
-  const books = getFeaturedProducts(8);
+export function FeaturedBooks({ products }: { products: ProductSummary[] }) {
+  const books = getFeaturedProducts(products, 8);
 
   return (
     <section aria-labelledby="featured-heading" className="bg-beige-light py-12 xs:py-14 md:py-20">

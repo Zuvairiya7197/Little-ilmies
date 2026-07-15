@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, Search, Heart, ShoppingBag } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
@@ -17,6 +18,8 @@ import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { cn } from "@/lib/utils/cn";
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const isHomeHero = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -43,8 +46,10 @@ export function SiteHeader() {
       <AnnouncementBar />
       <div
         className={cn(
-          "border-b bg-cream-50/95 backdrop-blur transition-shadow duration-200",
-          scrolled ? "border-ink-100 shadow-soft" : "border-transparent"
+          "transition-all duration-200",
+          isHomeHero && !scrolled
+            ? "bg-transparent shadow-none"
+            : "bg-cream-100/95 shadow-clay-sm backdrop-blur"
         )}
       >
         <div className="container-content flex h-16 items-center justify-between gap-3 xs:h-18">
@@ -52,7 +57,7 @@ export function SiteHeader() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="tap-target -ml-2 flex items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink-50 md:hidden"
+            className="tap-target -ml-2 flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:hidden"
           >
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
@@ -65,7 +70,7 @@ export function SiteHeader() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="rounded-full px-4 py-2 text-sm font-medium text-ink-500 transition-colors hover:bg-sage-50 hover:text-ink-700"
+                    className="rounded-full px-4 py-2 text-sm font-medium text-ink-500 transition-all duration-200 hover:text-ink-700 hover:shadow-clay-sm"
                   >
                     {item.label}
                   </Link>
@@ -79,7 +84,7 @@ export function SiteHeader() {
               type="button"
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
-              className="tap-target flex items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink-50"
+              className="tap-target flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -87,7 +92,7 @@ export function SiteHeader() {
             <Link
               href="/wishlist"
               aria-label={`Wishlist${mounted && wishlistCount > 0 ? `, ${wishlistCount} items` : ""}`}
-              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink-50"
+              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
             >
               <Heart className="h-5 w-5" aria-hidden="true" />
               {mounted && <IconBadge count={wishlistCount} />}
@@ -97,7 +102,7 @@ export function SiteHeader() {
               type="button"
               onClick={openCart}
               aria-label={`Cart${mounted && cartCount > 0 ? `, ${cartCount} items` : ""}`}
-              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-colors hover:bg-ink-50"
+              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
             >
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               {mounted && <IconBadge count={cartCount} />}

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/store/product-card";
-import { getBestsellers, getNewArrivals } from "@/data/products";
+import { getBestsellers, getNewArrivals } from "@/lib/catalog";
+import type { ProductSummary } from "@/types/catalog";
 
-export function BestsellersSection() {
-  const bestsellers = getBestsellers(6);
-  const newArrivals = getNewArrivals(6);
+export function BestsellersSection({ products }: { products: ProductSummary[] }) {
+  const bestsellers = getBestsellers(products, 6);
+  const newArrivals = getNewArrivals(products, 6);
 
   return (
     <section aria-labelledby="bestsellers-heading" className="py-12 xs:py-14 md:py-20">

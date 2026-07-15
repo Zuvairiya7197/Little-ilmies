@@ -1,7 +1,7 @@
 import type { ProductDetail, ProductReview } from "@/types/catalog";
 import { getProductBySlug, getRelatedProducts, products } from "@/data/products";
 
-type DetailExtra = Pick<
+export type DetailExtra = Pick<
   ProductDetail,
   "description" | "whatsInside" | "learningBenefits" | "bestFor" | "previewImages" | "reviews"
 >;
@@ -33,7 +33,7 @@ const sampleReviews = (names: [string, string, string]): ProductReview[] => [
   },
 ];
 
-const detailExtras: Record<string, DetailExtra> = {
+export const detailExtras: Record<string, DetailExtra> = {
   "asma-ul-husna-99-names-of-allah": {
     description:
       "Asma Ul-Husna introduces children to the 99 Names of Allah through gentle illustrations, simple meanings, and memorable rhymes. Each spread pairs a Name with a short reflection children can carry into daily life.",
@@ -80,7 +80,7 @@ const detailExtras: Record<string, DetailExtra> = {
   },
 };
 
-const defaultExtra = (title: string): DetailExtra => ({
+export const defaultExtra = (title: string): DetailExtra => ({
   description: `${title} is a beautifully illustrated, authentically sourced e-book crafted for young Muslim learners. Designed with a warm, child-friendly tone, it's ready to read on screen or print at home.`,
   whatsInside: [
     "Full-colour illustrated pages",

@@ -13,7 +13,7 @@ export default async function AdminLoginPage() {
   if (session) redirect("/admin");
 
   return (
-    <div className="container-content flex min-h-[70vh] items-center justify-center py-12">
+    <div data-admin className="container-content flex min-h-[70vh] items-center justify-center py-12">
       <div className="card-surface w-full max-w-sm p-6 xs:p-8">
         <AdminLoginForm />
       </div>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { Baloo_2, Nunito } from "next/font/google";
 import "@/styles/globals.css";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
@@ -7,17 +7,17 @@ import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
 
-const fraunces = Fraunces({
+const baloo = Baloo_2({
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["500", "600", "700"],
+  weight: ["500", "600", "700", "800"],
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const nunito = Nunito({
   subsets: ["latin"],
   variable: "--font-sans",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -71,7 +71,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${jakarta.variable}`}>
+    <html lang="en" className={`${baloo.variable} ${nunito.variable}`}>
       <body className="flex min-h-screen flex-col bg-cream font-sans text-ink-500">
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />

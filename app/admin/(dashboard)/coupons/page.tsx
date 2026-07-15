@@ -37,7 +37,7 @@ export default async function AdminCouponsPage() {
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                  className={`rounded-full px-2.5 py-1 text-xs font-bold shadow-clay-sm ${
                     coupon.isActive ? "bg-sage-50 text-sage-700" : "bg-ink-100 text-ink-500"
                   }`}
                 >

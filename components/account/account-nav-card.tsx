@@ -18,9 +18,9 @@ export function AccountNavCard({
   return (
     <Link
       href={href}
-      className="card-surface tap-target flex items-center gap-4 p-4 transition-colors hover:border-sage-300 xs:p-5"
+      className="card-surface tap-target flex items-center gap-4 p-4 transition-all duration-200 hover:shadow-clay-sm xs:p-5"
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage-50 text-sage-600">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage-50 text-sage-600 shadow-clay-sm">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
@@ -28,7 +28,7 @@ export function AccountNavCard({
         <p className="mt-0.5 text-sm text-ink-400">{description}</p>
       </div>
       {badge !== undefined && (
-        <span className="shrink-0 rounded-full bg-gold-50 px-2.5 py-1 text-xs font-bold text-gold-700">
+        <span className="shrink-0 rounded-full bg-gold-50 px-2.5 py-1 text-xs font-bold text-gold-700 shadow-clay-sm">
           {badge}
         </span>
       )}

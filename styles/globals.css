@@ -54,6 +54,33 @@
     background-color: theme("colors.sage.200");
     color: theme("colors.ink.700");
   }
+
+  /* Kid-friendly icon weight on the storefront — chunkier, rounder strokes
+     than Lucide's default 2px. [data-admin] (the admin dashboard) resets
+     back down to the thinner, more businesslike default. */
+  svg.lucide {
+    stroke-width: 2.5px;
+  }
+
+  [data-admin] svg.lucide {
+    stroke-width: 2px;
+  }
+
+  /* Continuous idle animations (float/bounce/breathe/wiggle) are decorative
+     motion, not functional feedback — disable them for users who've asked
+     the OS for reduced motion. One-shot entrance/interaction animations
+     (fade-up, heart-pop, scroll reveals) are handled separately since they
+     communicate state, not just ambience. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .animate-float-sm,
+    .animate-float-delayed,
+    .animate-gentle-bounce,
+    .animate-breathe,
+    .animate-wiggle {
+      animation: none;
+    }
+  }
 }
 
 @layer components {
@@ -67,19 +94,19 @@
   }
 
   .btn-primary {
-    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full bg-ink-400 px-6 py-3 text-sm font-semibold text-cream-50 shadow-soft transition-all duration-200 hover:bg-ink-500 active:scale-[0.98];
+    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full bg-ink-400 px-6 py-3 text-sm font-semibold text-cream-50 shadow-clay-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-ink-500 hover:shadow-lifted active:translate-y-0 active:scale-95 active:shadow-clay-pressed;
   }
 
   .btn-secondary {
-    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full border border-ink-200 bg-transparent px-6 py-3 text-sm font-semibold text-ink-400 transition-all duration-200 hover:border-ink-400 hover:bg-ink-50 active:scale-[0.98];
+    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full border-0 bg-cream-100 px-6 py-3 text-sm font-semibold text-ink-500 shadow-clay-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-ink-700 hover:shadow-clay active:translate-y-0 active:scale-95 active:shadow-clay-pressed;
   }
 
   .btn-accent {
-    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full bg-gold-500 px-6 py-3 text-sm font-semibold text-cream-50 shadow-soft transition-all duration-200 hover:bg-gold-600 active:scale-[0.98];
+    @apply tap-target inline-flex items-center justify-center gap-2 rounded-full bg-gold-500 px-6 py-3 text-sm font-semibold text-cream-50 shadow-clay-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-gold-600 hover:shadow-lifted active:translate-y-0 active:scale-95 active:shadow-clay-pressed;
   }
 
   .card-surface {
-    @apply rounded-3xl border border-ink-100 bg-cream-50 shadow-soft;
+    @apply rounded-3xl border-0 bg-cream-100 shadow-clay;
   }
 
   .section-eyebrow {
@@ -88,7 +115,18 @@
 
   /* Admin dashboard form controls */
   .admin-input {
-    @apply tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 focus-visible:border-sage-400;
+    @apply tap-target w-full rounded-xl border-0 bg-cream-100 px-4 text-base text-ink-600 shadow-clay-pressed transition-shadow duration-200 focus-visible:shadow-clay-pressed;
+  }
+
+  /* Storefront text inputs — same pressed-clay well as admin-input, kept
+     separate since storefront inputs vary between rounded-xl and rounded-full. */
+  .store-input {
+    @apply tap-target w-full border-0 bg-cream-100 px-4 text-base text-ink-600 placeholder:text-ink-300 shadow-clay-pressed transition-shadow duration-200;
+  }
+
+  /* Pill-shaped chip/tag — popular categories, sort control, filter toggle. */
+  .chip {
+    @apply tap-target inline-flex items-center gap-2 rounded-full border-0 bg-cream-100 px-4 py-2 text-sm font-medium text-ink-500 shadow-clay-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-ink-700 hover:shadow-clay active:translate-y-0 active:scale-95 active:shadow-clay-pressed;
   }
 
   /* Legal/info page body content */

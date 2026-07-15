@@ -1,11 +1,10 @@
 "use client";
 
 import { useShopFilters } from "@/hooks/use-shop-filters";
-import { categories } from "@/data/categories";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
-import type { AgeRange, Language, ProductFormat } from "@/types/catalog";
+import type { AgeRange, Category, Language, ProductFormat } from "@/types/catalog";
 import { cn } from "@/lib/utils/cn";
 
 const ageRanges: AgeRange[] = ["0-3", "3-6", "6-9", "9-12", "12+"];
@@ -32,9 +31,11 @@ function getPriceBuckets(currency: CurrencyCode) {
 }
 
 export function FilterPanel({
+  categories,
   onApply,
   showHeading = true,
 }: {
+  categories: Category[];
   onApply?: () => void;
   showHeading?: boolean;
 }) {
@@ -241,10 +242,10 @@ function FilterChip({
       onClick={onChange}
       aria-pressed={checked}
       className={cn(
-        "tap-target rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+        "tap-target rounded-full border-0 px-4 py-2 text-sm font-medium transition-all duration-200",
         checked
-          ? "border-sage-500 bg-sage-500 text-cream-50"
-          : "border-ink-100 bg-cream-50 text-ink-500 hover:border-sage-300"
+          ? "bg-sage-500 text-cream-50 shadow-clay-pressed"
+          : "bg-cream-100 text-ink-500 shadow-clay-sm hover:text-ink-700"
       )}
     >
       {label}

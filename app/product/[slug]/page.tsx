@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAllProductSlugs, getProductDetailBySlug } from "@/data/product-details";
-import { products } from "@/data/products";
+import {
+  getAllPublishedProductSlugs,
+  getPublishedProductDetailBySlug,
+  getRelatedProductsBySlug,
+} from "@/lib/db/catalog";
 import { BookPreviewCard } from "@/components/book-preview/book-preview-card";
 import { ProductHeader } from "@/components/store/product-header";
 import { ProductBuyBox } from "@/components/store/product-buy-box";
@@ -18,18 +21,22 @@ import { ProductMobilePrice } from "@/components/store/product-mobile-price";
 import { findPrice } from "@/lib/pricing/resolve-price";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
+import { Reveal } from "@/components/ui/reveal";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
-  return getAllProductSlugs().map((slug) => ({ slug }));
+  const slugs = await getAllPublishedProductSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductDetailBySlug(slug);
+  const product = await getPublishedProductDetailBySlug(slug);
   if (!product) return {};
 
   return {
@@ -49,13 +56,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = getProductDetailBySlug(slug);
+  const product = await getPublishedProductDetailBySlug(slug);
 
   if (!product) notFound();
 
-  const relatedProducts = product.relatedSlugs
-    .map((relatedSlug) => products.find((p) => p.slug === relatedSlug))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p));
+  const relatedProducts = await getRelatedProductsBySlug(slug, 4);
 
   const inrPrice = findPrice(product, "INR");
   const schemaPrice = inrPrice
@@ -122,15 +127,27 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
 
         <div className="mt-12 flex flex-col gap-10 md:mt-16 md:max-w-3xl">
-          <ProductOverview product={product} />
-          <WhatsInside product={product} />
-          <LearningBenefits product={product} />
-          <FileDetails product={product} />
-          <ProductReviews product={product} />
+          <Reveal>
+            <ProductOverview product={product} />
+          </Reveal>
+          <Reveal>
+            <WhatsInside product={product} />
+          </Reveal>
+          <Reveal>
+            <LearningBenefits product={product} />
+          </Reveal>
+          <Reveal>
+            <FileDetails product={product} />
+          </Reveal>
+          <Reveal>
+            <ProductReviews product={product} />
+          </Reveal>
         </div>
 
         <div className="mt-12 md:mt-16">
-          <RelatedBooks products={relatedProducts} />
+          <Reveal>
+            <RelatedBooks products={relatedProducts} />
+          </Reveal>
         </div>
       </div>
 

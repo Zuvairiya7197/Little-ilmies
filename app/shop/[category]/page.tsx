@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { ShopView } from "@/components/store/shop/shop-view";
 import { ProductGridSkeleton } from "@/components/store/shop/product-card-skeleton";
-import { products } from "@/data/products";
-import { categories } from "@/data/categories";
+import { getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
 import { categoryGroups, getCategoryGroupBySlug } from "@/data/category-groups";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
@@ -13,15 +13,18 @@ interface PageProps {
   params: Promise<{ category: string }>;
 }
 
-function resolveCategory(slug: string) {
+export const revalidate = 60;
+
+const resolveCategory = cache(async (slug: string) => {
   const group = getCategoryGroupBySlug(slug);
+  const [products, categories] = await Promise.all([getPublishedProducts(), getAllCategories()]);
+
   if (group) {
     return {
       title: group.name,
       description: group.description,
-      matchedProducts: products.filter((p) =>
-        group.categorySlugs.includes(p.category.slug)
-      ),
+      matchedProducts: products.filter((p) => group.categorySlugs.includes(p.category.slug)),
+      categories,
     };
   }
 
@@ -31,13 +34,15 @@ function resolveCategory(slug: string) {
       title: category.name,
       description: category.description ?? `Browse ${category.name} e-books.`,
       matchedProducts: products.filter((p) => p.category.slug === slug),
+      categories,
     };
   }
 
   return null;
-}
+});
 
 export async function generateStaticParams() {
+  const categories = await getAllCategories();
   return [
     ...categoryGroups.map((g) => ({ category: g.slug })),
     ...categories.map((c) => ({ category: c.slug })),
@@ -46,7 +51,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { category } = await params;
-  const resolved = resolveCategory(category);
+  const resolved = await resolveCategory(category);
   if (!resolved) return {};
 
   return {
@@ -60,7 +65,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CategoryShopPage({ params }: PageProps) {
   const { category } = await params;
-  const resolved = resolveCategory(category);
+  const resolved = await resolveCategory(category);
 
   if (!resolved) notFound();
 
@@ -75,6 +80,7 @@ export default async function CategoryShopPage({ params }: PageProps) {
       <Suspense fallback={<div className="container-content py-8"><ProductGridSkeleton /></div>}>
         <ShopView
           products={resolved.matchedProducts}
+          categories={resolved.categories}
           title={resolved.title}
           description={resolved.description}
         />

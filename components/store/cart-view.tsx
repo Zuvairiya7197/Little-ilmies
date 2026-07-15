@@ -108,7 +108,7 @@ export function CartView() {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="Enter code"
-                    className="tap-target w-full rounded-full border border-ink-100 bg-cream-100 py-2 pl-9 pr-3 text-sm text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
+                    className="store-input rounded-full py-2 pl-9 pr-3 text-sm"
                   />
                 </div>
                 <button type="submit" className="btn-secondary px-4 text-sm">

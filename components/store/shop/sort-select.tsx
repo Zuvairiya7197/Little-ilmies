@@ -19,7 +19,7 @@ export function SortSelect() {
   const { sort, setSort } = useShopFilters();
 
   return (
-    <label className="tap-target flex items-center gap-2 rounded-full border border-ink-100 bg-cream-50 px-4 text-sm font-medium text-ink-600">
+    <label className="chip">
       <span className="hidden text-ink-300 xs:inline">Sort by</span>
       <select
         value={sort}

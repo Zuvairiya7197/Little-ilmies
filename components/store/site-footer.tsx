@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Instagram, Facebook, Mail } from "lucide-react";
 import { Logo } from "@/components/store/logo";
-import { categories } from "@/data/categories";
+import { getAllCategories } from "@/lib/db/catalog";
 
 const shopLinks = [
   { label: "All Books", href: "/shop" },
@@ -25,7 +25,9 @@ const legalLinks = [
   { label: "Digital Delivery Policy", href: "/digital-delivery-policy" },
 ];
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const categories = await getAllCategories();
+
   return (
     <footer className="border-t border-ink-100 bg-beige-light">
       <div className="container-content py-12 xs:py-14 md:py-16">
@@ -44,7 +46,7 @@ export function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Little Ilmies on Instagram"
-                className="tap-target flex items-center justify-center rounded-full border border-ink-100 text-ink-400 transition-colors hover:border-sage-300 hover:text-sage-600"
+                className="tap-target flex items-center justify-center rounded-full border-0 text-ink-400 shadow-clay-sm transition-all duration-200 hover:text-sage-600"
               >
                 <Instagram className="h-4 w-4" aria-hidden="true" />
               </a>
@@ -53,14 +55,14 @@ export function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Little Ilmies on Facebook"
-                className="tap-target flex items-center justify-center rounded-full border border-ink-100 text-ink-400 transition-colors hover:border-sage-300 hover:text-sage-600"
+                className="tap-target flex items-center justify-center rounded-full border-0 text-ink-400 shadow-clay-sm transition-all duration-200 hover:text-sage-600"
               >
                 <Facebook className="h-4 w-4" aria-hidden="true" />
               </a>
               <a
                 href="mailto:hello@littleilmies.com"
                 aria-label="Email Little Ilmies"
-                className="tap-target flex items-center justify-center rounded-full border border-ink-100 text-ink-400 transition-colors hover:border-sage-300 hover:text-sage-600"
+                className="tap-target flex items-center justify-center rounded-full border-0 text-ink-400 shadow-clay-sm transition-all duration-200 hover:text-sage-600"
               >
                 <Mail className="h-4 w-4" aria-hidden="true" />
               </a>
@@ -79,38 +81,12 @@ export function SiteFooter() {
               <Link
                 key={cat.slug}
                 href={`/shop/${cat.slug}`}
-                className="tap-target rounded-full border border-ink-100 bg-cream-50 px-4 py-2 text-xs font-medium text-ink-500 transition-colors hover:border-sage-300 hover:bg-sage-50"
+                className="chip px-4 py-2 text-xs"
               >
                 {cat.name}
               </Link>
             ))}
           </div>
-        </div>
-
-        <div className="mt-10 rounded-3xl border border-ink-100 bg-cream-50 p-6 xs:flex xs:items-center xs:justify-between xs:gap-6">
-          <div>
-            <p className="font-display text-lg font-semibold text-ink-600">
-              Join our newsletter
-            </p>
-            <p className="mt-1 text-sm text-ink-400">
-              New releases and gentle reminders, straight to your inbox.
-            </p>
-          </div>
-          <form className="mt-4 flex gap-2 xs:mt-0 xs:w-72" aria-label="Newsletter signup">
-            <label htmlFor="footer-newsletter-email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="footer-newsletter-email"
-              type="email"
-              required
-              placeholder="you@example.com"
-              className="tap-target min-w-0 flex-1 rounded-full border border-ink-100 bg-cream-100 px-4 text-sm text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
-            />
-            <button type="submit" className="btn-primary shrink-0 px-5">
-              Join
-            </button>
-          </form>
         </div>
 
         <div className="mt-10 flex flex-col gap-2 text-xs text-ink-300 xs:flex-row xs:items-center xs:justify-between">

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ShopView } from "@/components/store/shop/shop-view";
 import { ProductGridSkeleton } from "@/components/store/shop/product-card-skeleton";
-import { products } from "@/data/products";
+import { getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Shop All Books",
@@ -13,10 +15,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const [products, categories] = await Promise.all([getPublishedProducts(), getAllCategories()]);
+
   return (
     <Suspense fallback={<div className="container-content py-8"><ProductGridSkeleton /></div>}>
-      <ShopView products={products} title="All Books" description="Browse our full collection of Islamic and educational e-books for children." />
+      <ShopView
+        products={products}
+        categories={categories}
+        title="All Books"
+        description="Browse our full collection of Islamic and educational e-books for children."
+      />
     </Suspense>
   );
 }

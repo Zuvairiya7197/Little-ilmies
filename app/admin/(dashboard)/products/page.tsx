@@ -58,7 +58,7 @@ export default async function AdminProductsPage() {
                     )}
                   </div>
                   <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold shadow-clay-sm ${
                       product.status === "PUBLISHED" ? "bg-sage-50 text-sage-700" : "bg-ink-100 text-ink-500"
                     }`}
                   >

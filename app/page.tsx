@@ -7,6 +7,10 @@ import { WhyTrustSection } from "@/components/store/home/why-trust-section";
 import { BookPreviewShowcase } from "@/components/store/home/book-preview-showcase";
 import { BestsellersSection } from "@/components/store/home/bestsellers-section";
 import { ParentCta } from "@/components/store/home/parent-cta";
+import { getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
+import { Reveal } from "@/components/ui/reveal";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Islamic & Educational E-Books for Young Hearts",
@@ -17,17 +21,33 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [products, categories] = await Promise.all([getPublishedProducts(), getAllCategories()]);
+
   return (
     <>
       <HeroSection />
-      <TrustBadges />
-      <FeaturedCategories />
-      <FeaturedBooks />
-      <WhyTrustSection />
-      <BookPreviewShowcase />
-      <BestsellersSection />
-      <ParentCta />
+      <Reveal>
+        <TrustBadges />
+      </Reveal>
+      <Reveal>
+        <FeaturedCategories categories={categories} />
+      </Reveal>
+      <Reveal>
+        <FeaturedBooks products={products} />
+      </Reveal>
+      <Reveal>
+        <WhyTrustSection />
+      </Reveal>
+      <Reveal>
+        <BookPreviewShowcase />
+      </Reveal>
+      <Reveal>
+        <BestsellersSection products={products} />
+      </Reveal>
+      <Reveal>
+        <ParentCta />
+      </Reveal>
     </>
   );
 }

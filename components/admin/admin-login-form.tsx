@@ -67,7 +67,7 @@ export function AdminLoginForm() {
           aria-invalid={Boolean(errors.email)}
           {...register("email")}
           placeholder="admin@littleilmies.com"
-          className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
+          className="store-input rounded-xl"
         />
         {errors.email && (
           <p role="alert" className="mt-1.5 text-xs text-gold-700">
@@ -87,7 +87,7 @@ export function AdminLoginForm() {
           aria-invalid={Boolean(errors.password)}
           {...register("password")}
           placeholder="••••••••"
-          className="tap-target w-full rounded-xl border border-ink-100 bg-cream-50 px-4 text-base text-ink-600 placeholder:text-ink-300 focus-visible:border-sage-400"
+          className="store-input rounded-xl"
         />
         {errors.password && (
           <p role="alert" className="mt-1.5 text-xs text-gold-700">

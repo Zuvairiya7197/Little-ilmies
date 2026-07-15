@@ -108,7 +108,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                       <p className="text-xs text-ink-300">{payment.providerPaymentId ?? payment.providerOrderId}</p>
                     </div>
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                      className={`rounded-full px-2.5 py-1 text-xs font-bold shadow-clay-sm ${
                         payment.status === "VERIFIED"
                           ? "bg-sage-50 text-sage-700"
                           : payment.status === "FAILED"

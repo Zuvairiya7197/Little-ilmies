@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { categories } from "@/data/categories";
+import type { Category } from "@/types/catalog";
 
-export function FeaturedCategories() {
+export function FeaturedCategories({ categories }: { categories: Category[] }) {
   return (
     <section aria-labelledby="categories-heading" className="py-12 xs:py-14 md:py-20">
       <div className="container-content">
@@ -27,14 +27,14 @@ export function FeaturedCategories() {
               key={cat.slug}
               className="w-[42vw] shrink-0 snap-start xs:w-[34vw] sm:w-[28vw] md:w-auto"
             >
-              <Link href={`/shop/${cat.slug}`} className="group block">
-                <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream-200 shadow-soft">
+              <Link href={`/shop/${cat.slug}`} className="group block transition-transform duration-300 hover:-translate-y-1">
+                <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream-200 shadow-soft transition-shadow duration-300 group-hover:shadow-clay">
                   <Image
                     src={cat.coverImage}
                     alt=""
                     fill
                     sizes="(max-width: 768px) 40vw, 20vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-ink-700/60 via-transparent to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-3">
