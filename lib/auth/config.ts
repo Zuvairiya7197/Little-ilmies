@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 
-const hasSmtpConfig = Boolean(process.env.EMAIL_SERVER_HOST);
+const hasResendConfig = Boolean(process.env.RESEND_API_KEY);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -23,25 +23,21 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     // Buyer login: no password, ever — a magic link is emailed to the
-    // address the buyer types in. In local dev without SMTP configured,
-    // the link is logged to the terminal instead of actually emailed
-    // (see sendVerificationRequest below) so login is testable without a
-    // mail provider.
+    // address the buyer types in, via Resend's HTTP API (not SMTP — Vercel
+    // blocks/restricts outbound SMTP, which silently failed sends in
+    // production even with valid Gmail SMTP credentials). In local dev
+    // without RESEND_API_KEY configured, the link is logged to the
+    // terminal instead of actually emailed (see sendVerificationRequest
+    // below) so login is testable without a mail provider.
     EmailProvider({
-      server: hasSmtpConfig
-        ? {
-            host: process.env.EMAIL_SERVER_HOST,
-            port: Number(process.env.EMAIL_SERVER_PORT ?? 587),
-            auth: {
-              user: process.env.EMAIL_SERVER_USER,
-              pass: process.env.EMAIL_SERVER_PASSWORD,
-            },
-          }
-        : { host: "localhost", port: 25 },
+      // Only used by NextAuth to build its internal nodemailer transport,
+      // which we never actually invoke — sendVerificationRequest below
+      // fully overrides delivery, so this is a required-but-unused stub.
+      server: { host: "localhost", port: 25 },
       from: process.env.EMAIL_FROM ?? "Little Ilmies <hello@littleilmies.com>",
       maxAge: 15 * 60, // magic link valid for 15 minutes
       async sendVerificationRequest({ identifier, url }) {
-        if (!hasSmtpConfig) {
+        if (!hasResendConfig) {
           console.log("\n=================================================");
           console.log(`Magic link for ${identifier}:`);
           console.log(url);
@@ -49,23 +45,20 @@ export const authOptions: NextAuthOptions = {
           return;
         }
 
-        const nodemailer = await import("nodemailer");
-        const transport = nodemailer.createTransport({
-          host: process.env.EMAIL_SERVER_HOST,
-          port: Number(process.env.EMAIL_SERVER_PORT ?? 587),
-          auth: {
-            user: process.env.EMAIL_SERVER_USER,
-            pass: process.env.EMAIL_SERVER_PASSWORD,
-          },
-        });
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
-        await transport.sendMail({
+        const { error } = await resend.emails.send({
           to: identifier,
-          from: process.env.EMAIL_FROM,
+          from: process.env.EMAIL_FROM ?? "Little Ilmies <hello@littleilmies.com>",
           subject: "Your Little Ilmies sign-in link",
           text: `Sign in to Little Ilmies: ${url}`,
           html: `<p>Tap below to sign in to Little Ilmies:</p><p><a href="${url}">Sign in to Little Ilmies</a></p><p>This link expires in 15 minutes.</p>`,
         });
+
+        if (error) {
+          throw new Error(`Resend failed to send magic link: ${error.message}`);
+        }
       },
     }),
 
