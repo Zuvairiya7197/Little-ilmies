@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, Heart, ShoppingBag } from "lucide-react";
+import { Search, Heart, ShoppingBag } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
 import { SearchOverlay } from "@/components/store/search-overlay";
 import { HeaderGooeySearch } from "@/components/store/header-gooey-search";
 import { CartDrawer } from "@/components/store/cart-drawer";
-import { MobileMenu } from "@/components/store/mobile-menu";
 import { IconBadge } from "@/components/store/icon-badge";
 import { AccountMenu } from "@/components/store/account-menu";
 import { primaryNav } from "@/lib/nav";
@@ -23,7 +22,6 @@ export function SiteHeader() {
   const isHomeHero = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const cartCount = useCartStore(selectCartCount);

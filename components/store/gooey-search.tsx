@@ -155,6 +155,10 @@ export interface GooeySearchProps {
   debounceMs?: number;
   /** Maximum number of results to render. Defaults to 5. */
   maxResults?: number;
+  /** Mounts already expanded (step 2) instead of the collapsed pill —
+   * use when a separate trigger (e.g. a plain icon button) controls when
+   * this component appears at all. */
+  startExpanded?: boolean;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -168,6 +172,7 @@ export function GooeySearch({
   className,
   debounceMs = 500,
   maxResults = 5,
+  startExpanded = false,
 }: GooeySearchProps) {
   const uid = useId().replace(/:/g, "_");
   const filterId = `gooey-search-${uid}`;
