@@ -178,7 +178,7 @@ export function GooeySearch({
   const filterId = `gooey-search-${uid}`;
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(startExpanded ? 2 : 1);
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);

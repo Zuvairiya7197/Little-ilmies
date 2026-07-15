@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { HeroVideoBackground } from "@/components/store/home/hero-video-background";
 
 export function HeroSection() {
@@ -8,12 +7,7 @@ export function HeroSection() {
       <HeroVideoBackground />
 
       <div className="container-content relative flex flex-col items-center px-4 pb-16 pt-10 text-center xs:pt-14 md:pt-20">
-        <span className="section-eyebrow animate-fade-up animate-float-sm inline-flex items-center gap-2 rounded-full border border-sage-200 bg-cream-50/80 px-4 py-1.5 shadow-soft backdrop-blur-md">
-          <Sparkles className="h-3.5 w-3.5 text-sage-600" aria-hidden="true" />
-          Islamic &amp; educational e-books for kids
-        </span>
-
-        <h1 className="animate-fade-up mt-6 max-w-3xl font-display text-[2.25rem] font-semibold leading-[1.1] text-ink-700 [animation-delay:80ms] xs:text-[2.75rem] md:text-6xl">
+        <h1 className="animate-fade-up max-w-3xl font-display text-[2.25rem] font-semibold leading-[1.1] text-ink-700 [animation-delay:80ms] xs:text-[2.75rem] md:text-6xl">
           Beautiful Islamic &amp; Educational{" "}
           <span className="italic text-sage-700">E-Books</span> for Young
           Hearts
