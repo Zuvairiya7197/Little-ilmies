@@ -49,7 +49,7 @@ export function SiteHeader() {
           "transition-all duration-200",
           isHomeHero && !scrolled
             ? "bg-transparent shadow-none"
-            : "bg-cream-100/95 shadow-clay-sm backdrop-blur"
+            : "bg-cream-50/95 shadow-clay-sm backdrop-blur"
         )}
       >
         <div className="container-content flex h-16 items-center justify-between gap-3 xs:h-18">

@@ -32,9 +32,8 @@ export function HeroVideoBackground() {
         preload="auto"
         className="h-full w-full object-cover"
       />
-      {/* Soft edge fades into the page's cream background only — no wash over the video itself */}
+      {/* Soft edge fade into the page's cream background at the top only — no wash over the video itself */}
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-cream-50 to-transparent xs:h-28" />
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-cream-50 to-transparent xs:h-36" />
     </div>
   );
 }

@@ -30,8 +30,17 @@ interface PageProps {
 export const revalidate = 60;
 
 export async function generateStaticParams() {
-  const slugs = await getAllPublishedProductSlugs();
-  return slugs.map((slug) => ({ slug }));
+  // If the DB is unreachable at build time (e.g. first deploy before
+  // DATABASE_URL is configured), skip pre-rendering rather than failing the
+  // whole build — revalidate = 60 means every slug still renders correctly
+  // on first request and gets cached from then on (dynamicParams defaults
+  // to true).
+  try {
+    const slugs = await getAllPublishedProductSlugs();
+    return slugs.map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

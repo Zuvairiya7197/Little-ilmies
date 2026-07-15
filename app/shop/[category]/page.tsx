@@ -42,11 +42,18 @@ const resolveCategory = cache(async (slug: string) => {
 });
 
 export async function generateStaticParams() {
-  const categories = await getAllCategories();
-  return [
-    ...categoryGroups.map((g) => ({ category: g.slug })),
-    ...categories.map((c) => ({ category: c.slug })),
-  ];
+  // If the DB is unreachable at build time, fall back to just the static
+  // category groups — revalidate = 60 covers any DB-backed category slug
+  // on first request. See app/product/[slug]/page.tsx for the same pattern.
+  try {
+    const categories = await getAllCategories();
+    return [
+      ...categoryGroups.map((g) => ({ category: g.slug })),
+      ...categories.map((c) => ({ category: c.slug })),
+    ];
+  } catch {
+    return categoryGroups.map((g) => ({ category: g.slug }));
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
