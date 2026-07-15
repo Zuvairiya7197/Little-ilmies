@@ -11,6 +11,7 @@ import {
   Users,
   Ticket,
   Download,
+  Settings,
   LogOut,
   ExternalLink,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/admin/buyers", label: "Buyers", icon: Users },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
   { href: "/admin/downloads", label: "Downloads", icon: Download },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminSidebar() {
