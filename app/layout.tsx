@@ -3,6 +3,7 @@ import { Baloo_2, Nunito } from "next/font/google";
 import "@/styles/globals.css";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
+import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
@@ -83,10 +84,11 @@ export default function RootLayout({
         </a>
         <AuthSessionProvider>
           <SiteHeader />
-          <main id="main-content" className="flex-1">
+          <main id="main-content" className="flex-1 pb-16 md:pb-0">
             {children}
           </main>
           <SiteFooter />
+          <MobileBottomNav />
         </AuthSessionProvider>
       </body>
     </html>

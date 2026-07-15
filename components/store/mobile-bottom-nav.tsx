@@ -13,6 +13,12 @@ import { cn } from "@/lib/utils/cn";
 /** Amazon/Flipkart-style persistent bottom tab bar, mobile only. Replaces
  * the hamburger drawer + header wishlist/cart icons — the mobile header now
  * carries just the logo and search (see site-header.tsx). */
+// Pages with their own contextual sticky action bar at the bottom of the
+// screen (product buy bar, checkout pay bar) — the persistent tab bar hides
+// there rather than stacking two fixed bottom bars, matching the pattern
+// Amazon/Flipkart use for PDP and checkout.
+const HIDDEN_ON_PREFIXES = ["/product/", "/checkout"];
+
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { status } = useSession();
@@ -26,6 +32,10 @@ export function MobileBottomNav() {
     setMounted(true);
   }, []);
 
+  if (HIDDEN_ON_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+    return null;
+  }
+
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   const tabClass = (active: boolean) =>
@@ -36,7 +46,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label="Primary mobile"
       className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex border-t border-ink-100 bg-cream-50/95 shadow-clay-sm backdrop-blur md:hidden"
     >
       <Link href="/" className={tabClass(isActive("/") && pathname === "/")}>

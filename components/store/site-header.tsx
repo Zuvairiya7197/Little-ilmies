@@ -52,15 +52,6 @@ export function SiteHeader() {
         )}
       >
         <div className="container-content flex h-16 items-center justify-between gap-3 xs:h-18">
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            className="tap-target -ml-2 flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:hidden"
-          >
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
-
           <Logo />
 
           <nav aria-label="Primary" className="hidden md:block">
@@ -95,7 +86,7 @@ export function SiteHeader() {
             <Link
               href="/wishlist"
               aria-label={`Wishlist${mounted && wishlistCount > 0 ? `, ${wishlistCount} items` : ""}`}
-              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
+              className="tap-target relative hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:flex"
             >
               <Heart className="h-5 w-5" aria-hidden="true" />
               {mounted && <IconBadge count={wishlistCount} />}
@@ -105,20 +96,21 @@ export function SiteHeader() {
               type="button"
               onClick={openCart}
               aria-label={`Cart${mounted && cartCount > 0 ? `, ${cartCount} items` : ""}`}
-              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
+              className="tap-target relative hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:flex"
             >
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               {mounted && <IconBadge count={cartCount} />}
             </button>
 
-            <AccountMenu />
+            <div className="hidden md:block">
+              <AccountMenu />
+            </div>
           </div>
         </div>
       </div>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer />
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </header>
   );
 }
