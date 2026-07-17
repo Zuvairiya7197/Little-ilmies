@@ -135,7 +135,7 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-10 md:mt-16 md:max-w-3xl">
+        <div className="mt-12 flex flex-col gap-6 md:mt-16">
           <Reveal>
             <ProductOverview product={product} />
           </Reveal>

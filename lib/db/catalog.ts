@@ -1,5 +1,13 @@
 import { prisma } from "@/lib/db/prisma";
-import type { AgeRange, Category, Language, ProductDetail, ProductFormat, ProductSummary } from "@/types/catalog";
+import type {
+  AgeRange,
+  BundleSummary,
+  Category,
+  Language,
+  ProductDetail,
+  ProductFormat,
+  ProductSummary,
+} from "@/types/catalog";
 import type { CurrencyCode } from "@/types/pricing";
 import { Prisma } from "@prisma/client";
 import { defaultExtra, detailExtras } from "@/data/product-details";
@@ -145,6 +153,48 @@ export async function getHomepageSampleProduct(): Promise<{
     pageCount: product.pageCount,
     previewImages: product.previewImagePaths,
   };
+}
+
+export async function getProductsByAgeRange(ageRange: AgeRange, limit = 8): Promise<ProductSummary[]> {
+  const products = await prisma.product.findMany({
+    where: { status: "PUBLISHED", ageRange },
+    orderBy: { publishedAt: "desc" },
+    take: limit,
+    ...productWithRelations,
+  });
+  return products.map(toProductSummary);
+}
+
+export async function getActiveBundles(): Promise<BundleSummary[]> {
+  const bundles = await prisma.bundle.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" },
+    include: { products: { include: { product: productWithRelations } } },
+  });
+
+  return bundles.map((bundle) => ({
+    id: bundle.id,
+    slug: bundle.slug,
+    name: bundle.name,
+    description: bundle.description ?? undefined,
+    coverImage: bundle.coverImage ?? undefined,
+    products: bundle.products.map((bp) => toProductSummary(bp.product)),
+    prices: [
+      ...(bundle.bundlePriceInr != null
+        ? [{ currencyCode: "INR" as CurrencyCode, regularPrice: bundle.bundlePriceInr, isActive: true }]
+        : []),
+      ...(bundle.bundlePriceUsd != null
+        ? [
+            {
+              currencyCode: "USD" as CurrencyCode,
+              regularPrice: bundle.bundlePriceUsd,
+              isDefault: true,
+              isActive: true,
+            },
+          ]
+        : []),
+    ],
+  }));
 }
 
 export async function getAllCategories(): Promise<Category[]> {

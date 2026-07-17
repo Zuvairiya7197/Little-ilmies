@@ -1,8 +1,10 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { formatPrice } from "@/lib/utils/format";
+import { getCategoryIcon } from "@/lib/category-icons";
 import type { CurrencyCode } from "@/types/pricing";
 import type { AgeRange, Category, Language, ProductFormat } from "@/types/catalog";
 import { cn } from "@/lib/utils/cn";
@@ -58,13 +60,13 @@ export function FilterPanel({
   return (
     <div className="flex flex-col gap-7">
       {showHeading && (
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink-600">Filters</h2>
+        <div className="flex items-center justify-between border-b border-ink-100 pb-4">
+          <h2 className="font-display text-xl font-bold text-ink-700">Filters</h2>
           {activeFilterCount > 0 && (
             <button
               type="button"
               onClick={clearAll}
-              className="text-xs font-semibold text-sage-700 underline-offset-2 hover:underline"
+              className="text-sm font-semibold text-ink-500 underline-offset-2 hover:text-ink-700 hover:underline"
             >
               Clear all
             </button>
@@ -78,6 +80,7 @@ export function FilterPanel({
             <FilterCheckbox
               key={cat.slug}
               label={cat.name}
+              icon={getCategoryIcon(cat.slug)}
               checked={isArrayValueActive("category", cat.slug)}
               onChange={() => {
                 toggleArrayValue("category", cat.slug);
@@ -209,19 +212,22 @@ function FilterCheckbox({
   label,
   checked,
   onChange,
+  icon: Icon,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  icon?: LucideIcon;
 }) {
   return (
-    <label className="tap-target flex cursor-pointer items-center gap-3 rounded-lg px-1 py-1.5 text-sm text-ink-500 hover:bg-cream-100">
+    <label className="tap-target flex cursor-pointer items-center gap-2.5 rounded-lg px-1 py-1.5 text-sm text-ink-500 hover:bg-cream-100">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         className="h-4 w-4 shrink-0 rounded border-ink-200 text-sage-600 focus:ring-sage-400"
       />
+      {Icon && <Icon className="h-4 w-4 shrink-0 text-ink-300" aria-hidden="true" />}
       <span>{label}</span>
     </label>
   );

@@ -237,7 +237,7 @@ export function GooeySearch({
           transform-origin: center center;
         }
         @keyframes gooeySearchSpin { to { transform: rotate(180deg); } }
-        .gooey-search-input::placeholder { color: #FFFFFF; opacity: 0.55; }
+        .gooey-search-input::placeholder { color: #2F2957; opacity: 0.4; }
       `}</style>
 
       {/* SVG gooey filter — zero size, no layout impact */}
@@ -290,11 +290,11 @@ export function GooeySearch({
                   exit="exit"
                   transition={getResultTransition(index)}
                   style={{
-                    backgroundColor: "#2F2957",
+                    backgroundColor: "#FFFFFF",
                     borderRadius: 40,
                     padding: resultPadding,
                     width: "100%",
-                    color: "#FFFFFF",
+                    color: "#2F2957",
                     position: "absolute",
                     left: isUnsupported ? 0 : -30,
                     fontSize: 14,
@@ -330,8 +330,8 @@ export function GooeySearch({
           role={step === 1 ? "button" : undefined}
           aria-label={step === 1 ? "Open search" : undefined}
           style={{
-            backgroundColor: "#2F2957",
-            color: "#FFFFFF",
+            backgroundColor: "#FFFFFF",
+            color: "#2F2957",
             cursor: "pointer",
             letterSpacing: -0.5,
             outline: "none",
@@ -347,7 +347,7 @@ export function GooeySearch({
                 textAlign: "center",
                 position: "relative",
                 left: 4,
-                color: "#FFFFFF",
+                color: "#2F2957",
                 opacity: 0.72,
                 fontSize: 14,
                 display: "block",
@@ -368,7 +368,7 @@ export function GooeySearch({
                 backgroundColor: "transparent",
                 outline: "none",
                 border: "none",
-                color: "#FFFFFF",
+                color: "#2F2957",
                 fontSize: 14,
               }}
             />
@@ -387,7 +387,7 @@ export function GooeySearch({
               transition={{ delay: 0.1, duration: 0.85, type: "spring", bounce: 0.15 }}
               style={{
                 position: "absolute",
-                backgroundColor: "#2F2957",
+                backgroundColor: "#FFFFFF",
                 width: isUnsupported ? 36 : 46,
                 height: isUnsupported ? 36 : 46,
                 right: -5,
@@ -396,7 +396,7 @@ export function GooeySearch({
                 justifyContent: "center",
                 alignItems: "center",
                 borderRadius: 9999,
-                color: "#FFFFFF",
+                color: "#2F2957",
               }}
             >
               {isLoading ? <LoadingSvgIcon /> : <SearchSvgIcon isUnsupported={isUnsupported} />}

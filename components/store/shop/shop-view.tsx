@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { FilterSidebar } from "@/components/store/shop/filter-sidebar";
 import { FilterDrawer } from "@/components/store/shop/filter-drawer";
 import { ShopToolbar } from "@/components/store/shop/shop-toolbar";
@@ -35,9 +35,10 @@ export function ShopView({
 
   return (
     <div className="container-content py-6 xs:py-8 md:py-10">
-      <div className="mb-6 xs:mb-8">
-        <h1 className="font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
+      <div className="relative mb-6 overflow-hidden xs:mb-8">
+        <h1 className="inline-flex items-center gap-2 font-display text-3xl font-bold text-ink-700 xs:text-4xl">
           {title}
+          <Sparkles className="h-6 w-6 text-lemon-400" aria-hidden="true" />
         </h1>
         {description && (
           <p className="mt-2 max-w-xl text-sm text-ink-400 xs:text-base">{description}</p>
@@ -58,7 +59,7 @@ export function ShopView({
           defaultValue={filters.query ?? ""}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by title, category, or language..."
-          className="store-input rounded-full py-3 pl-11 pr-4 text-sm"
+          className="tap-target w-full rounded-full border-0 bg-cream-50 py-3.5 pl-12 pr-4 text-sm text-ink-600 placeholder:text-ink-300 shadow-clay transition-shadow focus-visible:shadow-clay-pressed"
         />
       </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Heart, ShieldCheck, Download, Printer, AlertTriangle } from "lucide-react";
+import { Heart, CheckCircle2, ShoppingCart, AlertTriangle } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
@@ -35,7 +35,7 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
   }
 
   return (
-    <div className="card-surface hidden p-6 md:block">
+    <div className="hidden rounded-3xl bg-cream-50 p-6 shadow-clay md:block">
       <div className="flex items-baseline gap-3">
         <span className="font-display text-3xl font-semibold text-ink-700">
           {formatPrice(displayPrice, resolvedPrice.currencyCode)}
@@ -60,6 +60,7 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
 
       <div className="mt-5 flex gap-3">
         <button type="button" onClick={addToCart} className="btn-secondary flex-1">
+          <ShoppingCart className="h-4 w-4" aria-hidden="true" />
           Add to Cart
         </button>
         <button type="button" onClick={buyNow} className="btn-primary flex-1">
@@ -87,17 +88,17 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
         {isWishlisted ? "Saved to Wishlist" : "Add to Wishlist"}
       </button>
 
-      <ul className="mt-6 flex flex-col gap-2.5 border-t border-ink-100 pt-5 text-sm text-ink-400">
+      <ul className="mt-6 flex flex-col gap-2.5 border-t border-ink-100 pt-5 text-sm text-ink-500">
         <li className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-sage-600" aria-hidden="true" />
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-sage-600" aria-hidden="true" />
           Secure checkout via Razorpay
         </li>
         <li className="flex items-center gap-2">
-          <Download className="h-4 w-4 text-sage-600" aria-hidden="true" />
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-sage-600" aria-hidden="true" />
           Instant download, no waiting
         </li>
         <li className="flex items-center gap-2">
-          <Printer className="h-4 w-4 text-sage-600" aria-hidden="true" />
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-sage-600" aria-hidden="true" />
           Printable at home, unlimited copies for your family
         </li>
       </ul>

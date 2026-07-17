@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Search, Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Moon, Languages, GraduationCap, PenTool, HandHeart, Star } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
 import { SearchOverlay } from "@/components/store/search-overlay";
@@ -11,23 +10,31 @@ import { HeaderGooeySearch } from "@/components/store/header-gooey-search";
 import { CartDrawer } from "@/components/store/cart-drawer";
 import { IconBadge } from "@/components/store/icon-badge";
 import { AccountMenu } from "@/components/store/account-menu";
-import { primaryNav } from "@/lib/nav";
 import { useCartStore, selectCartCount } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
+import { useSearchStore } from "@/lib/store/use-search-store";
 import { cn } from "@/lib/utils/cn";
 
+const chipNav = [
+  { label: "Islamic", href: "/shop/islamic-books", icon: Moon },
+  { label: "Arabic", href: "/shop/arabic-for-kids", icon: Languages },
+  { label: "Educational", href: "/shop/educational-books", icon: GraduationCap },
+  { label: "Activities", href: "/shop/coloring-books", icon: PenTool },
+  { label: "Duas", href: "/shop/dua-and-prayers-for-kids", icon: HandHeart },
+  { label: "Best Sellers", href: "/shop?sort=bestselling", icon: Star },
+] as const;
+
 export function SiteHeader() {
-  const pathname = usePathname();
-  const isHomeHero = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const cartCount = useCartStore(selectCartCount);
   const openCart = useCartStore((s) => s.openCart);
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const hydrateCurrency = useCurrencyStore((s) => s.hydrate);
+  const searchOpen = useSearchStore((s) => s.isOpen);
+  const closeSearch = useSearchStore((s) => s.closeSearch);
 
   useEffect(() => {
     setMounted(true);
@@ -46,7 +53,7 @@ export function SiteHeader() {
       <div
         className={cn(
           "transition-all duration-200",
-          isHomeHero && !scrolled
+          !scrolled
             ? "bg-transparent shadow-none"
             : "bg-cream-50/95 shadow-clay-sm backdrop-blur"
         )}
@@ -54,14 +61,15 @@ export function SiteHeader() {
         <div className="container-content flex h-16 items-center justify-between gap-3 xs:h-18">
           <Logo />
 
-          <nav aria-label="Primary" className="hidden md:block">
-            <ul className="flex items-center gap-1">
-              {primaryNav.map((item) => (
+          <nav aria-label="Primary" className="hidden lg:block">
+            <ul className="flex items-center gap-2">
+              {chipNav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="rounded-full px-4 py-2 text-sm font-medium text-ink-500 transition-all duration-200 hover:text-ink-700 hover:shadow-clay-sm"
+                    className="tap-target flex items-center gap-1.5 rounded-full bg-cream-50 px-3.5 py-2 text-sm font-semibold text-ink-600 shadow-clay-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-clay"
                   >
+                    <item.icon className="h-4 w-4 text-ink-400" aria-hidden="true" />
                     {item.label}
                   </Link>
                 </li>
@@ -70,18 +78,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-1 xs:gap-2">
-            <div className="md:hidden">
-              <HeaderGooeySearch />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search"
-              className="tap-target hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:flex"
-            >
-              <Search className="h-5 w-5" aria-hidden="true" />
-            </button>
+            <HeaderGooeySearch />
 
             <Link
               href="/wishlist"
@@ -109,7 +106,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchOverlay open={searchOpen} onClose={closeSearch} />
       <CartDrawer />
     </header>
   );

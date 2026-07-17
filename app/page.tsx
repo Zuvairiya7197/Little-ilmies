@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/store/home/hero-section";
-import { TrustBadges } from "@/components/store/home/trust-badges";
-import { FeaturedCategories } from "@/components/store/home/featured-categories";
-import { FeaturedBooks } from "@/components/store/home/featured-books";
-import { WhyTrustSection } from "@/components/store/home/why-trust-section";
-import { BookPreviewShowcase } from "@/components/store/home/book-preview-showcase";
-import { BestsellersSection } from "@/components/store/home/bestsellers-section";
+import { HeroCategoryStrip } from "@/components/store/home/hero-category-strip";
+import { FeaturedCollections } from "@/components/store/home/featured-collections";
+import { BestSellers } from "@/components/store/home/best-sellers";
+import { NewArrivals } from "@/components/store/home/new-arrivals";
+import { ShopByLearningGoal } from "@/components/store/home/shop-by-learning-goal";
+import { ShopByAge } from "@/components/store/home/shop-by-age";
+import { BundleCollections } from "@/components/store/home/bundle-collections";
+import { RecommendedBooks } from "@/components/store/home/recommended-books";
+import { WhyParentsChoose } from "@/components/store/home/why-parents-choose";
+import { ExploreMore } from "@/components/store/home/explore-more";
 import { ParentCta } from "@/components/store/home/parent-cta";
-import { getAllCategories, getHomepageSampleProduct, getPublishedProducts } from "@/lib/db/catalog";
+import { getActiveBundles, getPublishedProducts } from "@/lib/db/catalog";
 import { Reveal } from "@/components/ui/reveal";
 
 export const revalidate = 60;
@@ -22,32 +26,43 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, categories, sampleProduct] = await Promise.all([
+  const [products, bundles] = await Promise.all([
     getPublishedProducts(),
-    getAllCategories(),
-    getHomepageSampleProduct(),
+    getActiveBundles(),
   ]);
 
   return (
     <>
-      <HeroSection />
+      <HeroSection products={products} />
+      <HeroCategoryStrip />
       <Reveal>
-        <TrustBadges />
+        <FeaturedCollections />
       </Reveal>
       <Reveal>
-        <FeaturedCategories categories={categories} />
+        <BestSellers products={products} />
       </Reveal>
       <Reveal>
-        <FeaturedBooks products={products} />
+        <NewArrivals products={products} />
       </Reveal>
       <Reveal>
-        <WhyTrustSection />
+        <ShopByLearningGoal />
       </Reveal>
       <Reveal>
-        <BookPreviewShowcase product={sampleProduct} />
+        <ShopByAge />
+      </Reveal>
+      {bundles.length > 0 && (
+        <Reveal>
+          <BundleCollections bundles={bundles} />
+        </Reveal>
+      )}
+      <Reveal>
+        <RecommendedBooks products={products} />
       </Reveal>
       <Reveal>
-        <BestsellersSection products={products} />
+        <WhyParentsChoose />
+      </Reveal>
+      <Reveal>
+        <ExploreMore />
       </Reveal>
       <Reveal>
         <ParentCta />

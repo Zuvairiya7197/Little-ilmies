@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { categories } from "../data/categories";
 import { products } from "../data/products";
+import { bundles } from "../data/bundles";
 
 const prisma = new PrismaClient();
 
@@ -91,6 +92,37 @@ async function main() {
     }
   }
   console.log(`Seeded ${products.length} products with regional prices.`);
+
+  for (const bundle of bundles) {
+    const bundleProducts = await prisma.product.findMany({
+      where: { slug: { in: bundle.productSlugs } },
+      select: { id: true },
+    });
+
+    const created = await prisma.bundle.upsert({
+      where: { slug: bundle.slug },
+      update: {
+        name: bundle.name,
+        description: bundle.description,
+        bundlePriceInr: bundle.bundlePriceInr,
+        bundlePriceUsd: bundle.bundlePriceUsd,
+      },
+      create: {
+        slug: bundle.slug,
+        name: bundle.name,
+        description: bundle.description,
+        bundlePriceInr: bundle.bundlePriceInr,
+        bundlePriceUsd: bundle.bundlePriceUsd,
+      },
+    });
+
+    await prisma.bundleProduct.deleteMany({ where: { bundleId: created.id } });
+    await prisma.bundleProduct.createMany({
+      data: bundleProducts.map((p) => ({ bundleId: created.id, productId: p.id })),
+      skipDuplicates: true,
+    });
+  }
+  console.log(`Seeded ${bundles.length} bundles.`);
 }
 
 main()

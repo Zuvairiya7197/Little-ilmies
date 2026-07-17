@@ -7,15 +7,17 @@ const shopLinks = [
   { label: "All Books", href: "/shop" },
   { label: "Islamic E-Books", href: "/shop/islamic-books" },
   { label: "Educational E-Books", href: "/shop/educational-books" },
-  { label: "Gifts & Games", href: "/shop/gifts-games" },
+  { label: "Printable Activities", href: "/shop/coloring-books" },
+  { label: "Bundles", href: "/shop?bundle=all" },
   { label: "Wishlist", href: "/wishlist" },
 ];
 
-const accountLinks = [
+const supportLinks = [
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
   { label: "My Account", href: "/account" },
   { label: "Purchase History", href: "/account/purchase-history" },
   { label: "Downloads", href: "/account/downloads" },
-  { label: "Login", href: "/login" },
 ];
 
 const legalLinks = [
@@ -70,7 +72,7 @@ export async function SiteFooter() {
           </div>
 
           <FooterColumn title="Shop" links={shopLinks} />
-          <FooterColumn title="Account" links={accountLinks} />
+          <FooterColumn title="Customer Support" links={supportLinks} />
           <FooterColumn title="Legal" links={legalLinks} />
         </div>
 

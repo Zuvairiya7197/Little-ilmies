@@ -1,6 +1,6 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, BookOpen } from "lucide-react";
 import { SortSelect } from "@/components/store/shop/sort-select";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { IconBadge } from "@/components/store/icon-badge";
@@ -30,8 +30,9 @@ export function ShopToolbar({
             </span>
           )}
         </button>
-        <p className="text-sm text-ink-400">
-          <span className="font-semibold text-ink-600">{resultCount}</span>{" "}
+        <p className="flex items-center gap-1.5 text-sm text-ink-500">
+          <BookOpen className="h-4 w-4 text-ink-400" aria-hidden="true" />
+          <span className="font-semibold text-ink-700">{resultCount}</span>{" "}
           {resultCount === 1 ? "book" : "books"}
         </p>
       </div>

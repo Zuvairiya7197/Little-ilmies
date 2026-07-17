@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Home, BookOpen, Heart, ShoppingBag, User } from "lucide-react";
+import { Home, LayoutGrid, Search, Heart, ShoppingBag } from "lucide-react";
 import { IconBadge } from "@/components/store/icon-badge";
 import { useCartStore, selectCartCount } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
+import { useSearchStore } from "@/lib/store/use-search-store";
 import { cn } from "@/lib/utils/cn";
 
 /** Amazon/Flipkart-style persistent bottom tab bar, mobile only. Replaces
  * the hamburger drawer + header wishlist/cart icons — the mobile header now
- * carries just the logo and search (see site-header.tsx). */
+ * carries just the logo and search (see site-header.tsx). Account access
+ * lives in the header/account menu only. */
 // Pages with their own contextual sticky action bar at the bottom of the
 // screen (product buy bar, checkout pay bar) — the persistent tab bar hides
 // there rather than stacking two fixed bottom bars, matching the pattern
@@ -21,12 +22,12 @@ const HIDDEN_ON_PREFIXES = ["/product/", "/checkout"];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { status } = useSession();
   const [mounted, setMounted] = useState(false);
 
   const cartCount = useCartStore(selectCartCount);
   const openCart = useCartStore((s) => s.openCart);
   const wishlistCount = useWishlistStore((s) => s.items.length);
+  const openSearch = useSearchStore((s) => s.openSearch);
 
   useEffect(() => {
     setMounted(true);
@@ -54,10 +55,15 @@ export function MobileBottomNav() {
         Home
       </Link>
 
-      <Link href="/shop" className={tabClass(isActive("/shop"))}>
-        <BookOpen className="h-5 w-5" aria-hidden={true} />
-        Shop
+      <Link href="/shop#categories" className={tabClass(isActive("/shop"))}>
+        <LayoutGrid className="h-5 w-5" aria-hidden={true} />
+        Categories
       </Link>
+
+      <button type="button" onClick={openSearch} className={tabClass(false)}>
+        <Search className="h-5 w-5" aria-hidden={true} />
+        Search
+      </button>
 
       <Link
         href="/wishlist"
@@ -87,14 +93,6 @@ export function MobileBottomNav() {
           </span>
         )}
       </button>
-
-      <Link
-        href={status === "authenticated" ? "/account" : "/login"}
-        className={tabClass(isActive("/account") || isActive("/login"))}
-      >
-        <User className="h-5 w-5" aria-hidden={true} />
-        Account
-      </Link>
     </nav>
   );
 }

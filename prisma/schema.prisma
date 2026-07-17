@@ -156,6 +156,7 @@ model Product {
   orderItems  OrderItem[]
   downloads   Download[]
   reviews     Review[]
+  bundles     BundleProduct[]
 
   @@map("products")
 }
@@ -174,6 +175,38 @@ model ProductCategory {
 
   @@id([productId, categoryId])
   @@map("product_categories")
+}
+
+/// A curated multi-product collection sold at a discount off the sum of its
+/// products' regular prices (e.g. "Ramadan Bundle"). Prices are set manually
+/// per currency, same philosophy as ProductPrice — never computed from a
+/// live discount percentage.
+model Bundle {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  coverImage  String?
+  bundlePriceInr Int?
+  bundlePriceUsd Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products BundleProduct[]
+
+  @@map("bundles")
+}
+
+model BundleProduct {
+  bundleId  String
+  productId String
+
+  bundle  Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([bundleId, productId])
+  @@map("bundle_products")
 }
 
 /// Manually curated regional price per product — NOT a live FX conversion.

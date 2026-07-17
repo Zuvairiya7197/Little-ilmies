@@ -60,6 +60,17 @@ export interface ProductDetail extends ProductSummary {
   relatedSlugs: string[];
 }
 
+export interface BundleSummary {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  coverImage?: string;
+  products: ProductSummary[];
+  /** Manually curated regional bundle prices, same shape/philosophy as ProductSummary.prices. */
+  prices: RegionalPrice[];
+}
+
 export type SortOption =
   | "featured"
   | "newest"

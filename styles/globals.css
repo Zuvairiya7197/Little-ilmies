@@ -153,4 +153,16 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* 3D flip-book transforms (InteractiveBook) — Tailwind v3 has no built-in
+     preserve-3d/backface-visibility/rotateY utilities. */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
 }
