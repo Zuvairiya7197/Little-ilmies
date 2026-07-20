@@ -1,76 +1,97 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Heart, BookOpen, HandHeart, Landmark, Languages, Sparkles, Moon, ChevronRight, Star } from "lucide-react";
+import {
+  GraduationCap,
+  Moon,
+  FlaskConical,
+  BookOpen,
+  Heart,
+  Feather,
+  Palette,
+  Lightbulb,
+  ArrowRight,
+} from "lucide-react";
 
 const goals = [
   {
-    label: "Learn About Allah",
-    description: "Building love and understanding of Allah.",
-    href: "/shop/dua-and-prayers-for-kids",
-    icon: Heart,
-    cardBg: "bg-ink-50",
-    iconBg: "bg-ink-100",
-    iconColor: "text-ink-600",
-    titleColor: "text-ink-700",
+    title: "Early Learning",
+    description: "Fun activities and books to build skills for a bright start.",
+    href: "/shop/preschool-learning",
+    icon: GraduationCap,
+    image: "/images/goal-early-learning.png",
+    cardBg: "bg-sage-50",
+    iconBg: "bg-sage-500",
+    titleColor: "text-sage-800",
   },
   {
-    label: "Stories of the Prophets",
-    description: "Inspiring stories from our beloved prophets.",
-    href: "/shop/stories-of-the-prophets",
-    icon: BookOpen,
+    title: "Islamic Studies",
+    description: "Learn about Islam through engaging stories, lessons and activities.",
+    href: "/shop/islamic-books",
+    icon: Moon,
+    image: "/images/goal-islamic-studies.png",
     cardBg: "bg-sunny-50",
-    iconBg: "bg-sunny-200",
-    iconColor: "text-sunny-800",
+    iconBg: "bg-sunny-500",
     titleColor: "text-sunny-800",
   },
   {
-    label: "Good Manners",
-    description: "Building beautiful habits for a better tomorrow.",
-    href: "/shop/islamic-manners-and-character",
-    icon: HandHeart,
-    cardBg: "bg-sage-50",
-    iconBg: "bg-sage-100",
-    iconColor: "text-sage-700",
-    titleColor: "text-sage-800",
-  },
-  {
-    label: "Daily Duas",
-    description: "Duas for everyday moments and success.",
-    href: "/shop/dua-and-prayers-for-kids",
-    icon: Landmark,
-    cardBg: "bg-teal-50",
-    iconBg: "bg-teal-100",
-    iconColor: "text-teal-700",
+    title: "STEM Learning",
+    description: "Explore science, technology, engineering and math in a fun way.",
+    href: "/shop/math-for-kids",
+    icon: FlaskConical,
+    image: "/images/goal-stem-learning.png",
+    cardBg: "bg-ink-50",
+    iconBg: "bg-ink-500",
     titleColor: "text-ink-700",
   },
   {
-    label: "Arabic Learning",
-    description: "First steps to reading and loving Arabic.",
+    title: "Quran & Arabic",
+    description: "Help your child love the Quran and the beauty of Arabic.",
     href: "/shop/arabic-for-kids",
-    icon: Languages,
+    icon: BookOpen,
+    image: "/images/goal-quran-arabic.png",
+    cardBg: "bg-teal-50",
+    iconBg: "bg-teal-500",
+    titleColor: "text-teal-800",
+  },
+  {
+    title: "Character Building",
+    description: "Stories and activities that build good values and habits.",
+    href: "/shop/islamic-manners-and-character",
+    icon: Heart,
+    image: "/images/goal-character-building.png",
     cardBg: "bg-blossom-50",
-    iconBg: "bg-blossom-200",
-    iconColor: "text-blossom-700",
+    iconBg: "bg-blossom-500",
     titleColor: "text-blossom-700",
   },
   {
-    label: "Islamic Activities",
-    description: "Fun activities that make Islamic learning joyful.",
-    href: "/shop/kids-islamic-activity-books",
-    icon: Sparkles,
+    title: "Islamic Stories",
+    description: "Inspiring stories of the Prophets and great muslim role models.",
+    href: "/shop/stories-of-the-prophets",
+    icon: Feather,
+    image: "/images/goal-islamic-stories.png",
+    cardBg: "bg-sunny-50",
+    iconBg: "bg-sunny-500",
+    titleColor: "text-sunny-800",
+  },
+  {
+    title: "Creative Arts",
+    description: "Encourage creativity with art, crafts and imaginative activities.",
+    href: "/shop/coloring-books",
+    icon: Palette,
+    image: "/images/goal-creative-arts.png",
     cardBg: "bg-sage-50",
-    iconBg: "bg-sage-100",
-    iconColor: "text-sage-700",
+    iconBg: "bg-sage-500",
     titleColor: "text-sage-800",
   },
   {
-    label: "Ramadan Learning",
-    description: "Prepare, learn and grow in the blessed month.",
-    href: "/shop/dua-and-prayers-for-kids",
-    icon: Moon,
-    cardBg: "bg-ink-50",
-    iconBg: "bg-ink-100",
-    iconColor: "text-ink-600",
-    titleColor: "text-ink-700",
+    title: "Life Skills",
+    description: "Practical books and activities for everyday life and confidence.",
+    href: "/shop/kids-islamic-activity-books",
+    icon: Lightbulb,
+    image: "/images/goal-life-skills.png",
+    cardBg: "bg-lemon-50",
+    iconBg: "bg-lemon-500",
+    titleColor: "text-lemon-800",
   },
 ] as const;
 
@@ -78,39 +99,54 @@ export function ShopByLearningGoal() {
   return (
     <section aria-labelledby="learning-goal-heading" className="py-10 xs:py-12 md:py-16">
       <div className="container-content">
-        <div className="mx-auto mb-8 max-w-xl text-center xs:mb-10">
+        <div className="mx-auto mb-8 max-w-2xl text-center xs:mb-10">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-cream-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-sage-600 shadow-clay-sm">
-            <Star className="h-3.5 w-3.5 fill-lemon-400 text-lemon-400" aria-hidden="true" />
-            Guided by Learning Goals
+            <GraduationCap className="h-3.5 w-3.5 text-ink-500" aria-hidden="true" />
+            Shop by Learning Goal
           </span>
           <h2 id="learning-goal-heading" className="mt-3 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
-            What do you want your child to <span className="text-ink-400">learn?</span>
+            What do you want your child to <span className="text-blossom-600">learn?</span>
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-ink-400 xs:text-base">
-            Choose a topic and explore books &amp; activities that make
-            learning meaningful.
+            Browse by topic and find the perfect books and activities for
+            their growing minds and hearts.
           </p>
         </div>
 
         <ul className="-mx-4 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-4">
-          {goals.map(({ label, description, href, icon: Icon, cardBg, iconBg, iconColor, titleColor }) => (
-            <li key={label} className="w-64 shrink-0 snap-start xs:w-72 sm:w-auto">
+          {goals.map(({ title, description, href, icon: Icon, image, cardBg, iconBg, titleColor }) => (
+            <li key={title} className="w-64 shrink-0 snap-start xs:w-72 sm:w-auto">
               <Link
                 href={href}
-                className={`tap-target group flex h-full items-center gap-3 rounded-2xl p-4 shadow-clay-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-clay ${cardBg}`}
+                className={`group relative flex h-64 items-stretch gap-2 overflow-hidden rounded-3xl p-4 shadow-clay-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-clay xs:h-72 ${cardBg}`}
               >
-                <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
-                  <Icon className={`h-5 w-5 ${iconColor}`} aria-hidden="true" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className={`font-display text-sm font-semibold leading-snug xs:text-base ${titleColor}`}>
-                    {label}
-                  </p>
-                  <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-ink-400">{description}</p>
+                <div className="flex w-[55%] shrink-0 flex-col">
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-cream-50 shadow-soft ${iconBg}`}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+
+                  <h3 className={`mt-3 font-display text-base font-semibold leading-snug xs:text-lg ${titleColor}`}>
+                    {title}
+                  </h3>
+                  <p className="mt-1 line-clamp-4 text-xs leading-snug text-ink-500 xs:text-sm">{description}</p>
+
+                  <span className="tap-target mt-auto inline-flex w-fit items-center gap-1 rounded-full bg-cream-50 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-soft transition-transform group-hover:translate-x-0.5">
+                    Explore
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </span>
                 </div>
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cream-50 text-ink-500 shadow-soft transition-transform group-hover:translate-x-0.5">
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </span>
+
+                {image && (
+                  <div className="relative -my-4 -mr-4 h-[calc(100%+2rem)] w-[45%] shrink-0">
+                    <Image
+                      src={image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 480px) 45vw, 200px"
+                      className="object-contain object-bottom transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                )}
               </Link>
             </li>
           ))}

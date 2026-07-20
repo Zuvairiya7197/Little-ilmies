@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Clock } from "lucide-react";
 import { BookPreviewModal } from "@/components/book-preview/book-preview-modal";
 
 export function BookPreviewCard({
@@ -21,6 +21,7 @@ export function BookPreviewCard({
   hasFreePreview: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const previewAvailable = hasFreePreview && previewImages.length > 0;
 
   return (
     <div id="preview">
@@ -45,7 +46,7 @@ export function BookPreviewCard({
           />
         </div>
 
-        {hasFreePreview && (
+        {previewAvailable ? (
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -54,10 +55,15 @@ export function BookPreviewCard({
             <BookOpen className="h-4 w-4 text-ink-500" aria-hidden="true" />
             Flip Through Sample Pages
           </button>
+        ) : (
+          <span className="tap-target mx-auto mt-4 flex items-center justify-center gap-2 rounded-full bg-cream-100 px-5 py-2.5 text-sm font-semibold text-ink-300">
+            <Clock className="h-4 w-4" aria-hidden="true" />
+            Sample Pages Coming Soon
+          </span>
         )}
       </div>
 
-      {hasFreePreview && (
+      {previewAvailable && (
         <BookPreviewModal
           open={open}
           onClose={() => setOpen(false)}
