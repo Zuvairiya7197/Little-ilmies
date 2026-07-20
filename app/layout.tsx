@@ -84,10 +84,12 @@ export default function RootLayout({
         </a>
         <AuthSessionProvider>
           <SiteHeader />
-          <main id="main-content" className="flex-1 pb-16 md:pb-0">
+          <main id="main-content" className="flex-1">
             {children}
           </main>
-          <SiteFooter />
+          <div className="pb-20 md:pb-0">
+            <SiteFooter />
+          </div>
           <MobileBottomNav />
         </AuthSessionProvider>
       </body>
