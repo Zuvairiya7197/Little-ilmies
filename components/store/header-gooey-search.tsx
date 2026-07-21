@@ -1,71 +1,123 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
-import { GooeySearch } from "@/components/store/gooey-search";
+import { Search } from "lucide-react";
 
 interface SearchResult {
   slug: string;
   title: string;
 }
 
-/** Wires GooeySearch to the real product search API and navigates to the
- * selected product. Renders as a plain icon button — matching the other
- * header icons (Wishlist, Cart) — that reveals the gooey input already
- * expanded on tap, rather than the widget's own capsule/pill trigger. */
+/** Expanding header search — matches the plain-icon look of the other header
+ * actions (Wishlist, Cart) in both states: a transparent circular icon button
+ * collapsed, and the same transparent/ink styling once expanded, rather than
+ * a separately-styled widget. Closes on outside click, Escape, or selecting
+ * a result. */
 export function HeaderGooeySearch() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const lastResultsRef = useRef<SearchResult[]>([]);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  async function handleSearch(query: string): Promise<string[]> {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    lastResultsRef.current = data.results as SearchResult[];
-    return lastResultsRef.current.map((r) => r.title);
-  }
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
 
-  function handleSelect(title: string) {
-    const match = lastResultsRef.current.find((r) => r.title === title);
-    if (match) {
-      setOpen(false);
-      router.push(`/product/${match.slug}`);
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(e: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        close();
+      }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") close();
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setResults([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
+      if (!res.ok || cancelled) return;
+      const data = await res.json();
+      if (!cancelled) setResults(data.results as SearchResult[]);
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  function close() {
+    setOpen(false);
+    setQuery("");
+    setResults([]);
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Search"
-        className="tap-target flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
-      >
-        <Search className="h-5 w-5" aria-hidden="true" />
-      </button>
-    );
+  function handleSelect(slug: string) {
+    close();
+    router.push(`/product/${slug}`);
   }
 
   return (
-    <div className="flex items-center gap-1">
-      <GooeySearch
-        onSearch={handleSearch}
-        onSelect={handleSelect}
-        placeholder="Search books..."
-        debounceMs={350}
-        maxResults={5}
-        startExpanded
-      />
+    <div ref={containerRef} className="relative flex items-center">
+      {open && (
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search books..."
+          aria-label="Search books"
+          className="tap-target w-32 min-w-0 bg-transparent text-sm text-ink-600 placeholder:text-ink-300 focus:outline-none xs:w-44"
+        />
+      )}
+
       <button
         type="button"
-        onClick={() => setOpen(false)}
-        aria-label="Close search"
-        className="tap-target flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Search"
+        className="tap-target flex shrink-0 items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
       >
-        <X className="h-5 w-5" aria-hidden="true" />
+        <Search className="h-5 w-5" aria-hidden="true" />
       </button>
+
+      {open && results.length > 0 && (
+        <ul
+          role="listbox"
+          aria-label="Search results"
+          className="absolute right-0 top-full z-10 mt-2 w-64 overflow-hidden rounded-2xl bg-cream-50 py-1.5 shadow-clay"
+        >
+          {results.map((result) => (
+            <li key={result.slug}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={false}
+                onClick={() => handleSelect(result.slug)}
+                className="tap-target flex w-full items-center px-4 py-2.5 text-left text-sm text-ink-600 hover:bg-ink-50"
+              >
+                {result.title}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
