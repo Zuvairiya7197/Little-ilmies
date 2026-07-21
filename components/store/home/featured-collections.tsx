@@ -107,11 +107,60 @@ function CollectionCard({
   );
 }
 
+function CollectionTile({ title, href, image, cardBg, titleColor }: (typeof collections)[number]) {
+  return (
+    <Link
+      href={href}
+      className={`group flex aspect-[4/5] w-[42vw] shrink-0 snap-start flex-col overflow-hidden rounded-2xl pb-3 shadow-clay-sm xs:w-36 ${cardBg}`}
+    >
+      <div className="relative min-h-0 flex-1">
+        <Image
+          src={image}
+          alt=""
+          fill
+          sizes="45vw"
+          className="scale-125 object-contain p-1 transition-transform duration-300 group-hover:scale-[1.35]"
+        />
+      </div>
+      <p className={`px-2 text-center text-sm font-semibold leading-tight ${titleColor}`}>{title}</p>
+    </Link>
+  );
+}
+
 export function FeaturedCollections() {
   return (
     <section aria-labelledby="collections-heading" className="py-10 xs:py-12 md:py-16">
       <div className="container-content">
-        <div className="mx-auto mb-8 max-w-xl text-center xs:mb-10">
+        {/* Mobile & tablet: compact heading + View all, matches app-style home design */}
+        <div className="mb-5 flex items-end justify-between gap-4 md:hidden">
+          <div>
+            <p className="section-eyebrow inline-flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              Featured Collections
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-semibold text-ink-700">
+              Curated for every learning moment
+            </h2>
+          </div>
+          <Link
+            href="/shop"
+            className="shrink-0 text-sm font-semibold text-sage-700 underline-offset-4 hover:underline"
+          >
+            View all
+          </Link>
+        </div>
+
+        <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 no-scrollbar md:hidden">
+          {collections.map((collection) => (
+            <li key={collection.title}>
+              <CollectionTile {...collection} />
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: full card grid with description + CTA, unchanged */}
+        <div className="mx-auto mb-8 hidden max-w-xl text-center md:block xs:mb-10">
           <p className="section-eyebrow inline-flex items-center gap-1.5 justify-center">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             Featured Collections
@@ -126,12 +175,12 @@ export function FeaturedCollections() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-3">
+        <div className="hidden grid-cols-1 gap-4 xs:grid-cols-2 md:grid lg:grid-cols-3">
           {collections.slice(0, 3).map((collection) => (
             <CollectionCard key={collection.title} {...collection} />
           ))}
         </div>
-        <div className="mx-auto mt-4 grid grid-cols-1 gap-4 xs:grid-cols-2 lg:w-2/3">
+        <div className="mx-auto mt-4 hidden grid-cols-1 gap-4 xs:grid-cols-2 md:grid lg:w-2/3">
           {collections.slice(3).map((collection) => (
             <CollectionCard key={collection.title} {...collection} />
           ))}

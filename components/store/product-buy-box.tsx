@@ -35,7 +35,39 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
   }
 
   return (
-    <div className="hidden rounded-3xl bg-cream-50 p-6 shadow-clay md:block">
+    <>
+      {/* Mobile & tablet: just Add to Cart + Add to Wishlist, matches app-style PDP design */}
+      <div className="flex gap-3 md:hidden">
+        <button
+          type="button"
+          onClick={addToCart}
+          className="tap-target flex flex-1 items-center justify-center gap-2 rounded-full bg-ink-600 py-3.5 text-sm font-semibold text-cream-50 transition-all active:scale-95"
+        >
+          <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+          Add to Cart
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            toggleWishlist({
+              productId: product.id,
+              slug: product.slug,
+              title: product.title,
+              coverImage: product.coverImage,
+            })
+          }
+          aria-pressed={isWishlisted}
+          className="tap-target flex flex-1 items-center justify-center gap-2 rounded-full bg-cream-100 py-3.5 text-sm font-semibold text-ink-600 transition-all active:scale-95"
+        >
+          <Heart
+            className={cn("h-4 w-4", isWishlisted ? "fill-blossom-500 text-blossom-500" : "text-ink-500")}
+            aria-hidden="true"
+          />
+          {isWishlisted ? "Saved" : "Add to Wishlist"}
+        </button>
+      </div>
+
+      <div className="hidden rounded-3xl bg-cream-50 p-6 shadow-clay md:block">
       <div className="flex items-baseline gap-3">
         <span className="font-display text-3xl font-semibold text-ink-700">
           {formatPrice(displayPrice, resolvedPrice.currencyCode)}
@@ -103,5 +135,6 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
         </li>
       </ul>
     </div>
+    </>
   );
 }

@@ -14,9 +14,15 @@ export interface CartLineItem {
   coverImage: string;
   quantity: number;
   unitPrice: number;
+  regularUnitPrice: number;
   lineTotal: number;
   currencyCode: CurrencyCode;
   isFallbackPrice: boolean;
+  isOnSale: boolean;
+  ageRange: string;
+  pageCount: number;
+  isBestseller?: boolean;
+  isNewArrival?: boolean;
 }
 
 /**
@@ -45,9 +51,15 @@ export function useCartLineItems() {
           coverImage: item.coverImage,
           quantity: item.quantity,
           unitPrice,
+          regularUnitPrice: resolved.regularPrice,
           lineTotal: unitPrice * item.quantity,
           currencyCode: resolved.currencyCode,
           isFallbackPrice: resolved.isFallback,
+          isOnSale: Boolean(resolved.salePrice),
+          ageRange: product.ageRange,
+          pageCount: product.pageCount,
+          isBestseller: product.isBestseller,
+          isNewArrival: product.isNewArrival,
         },
       ];
     });

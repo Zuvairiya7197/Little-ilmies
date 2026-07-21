@@ -13,8 +13,11 @@ export function BestSellers({ products }: { products: ProductSummary[] }) {
       <div className="container-content">
         <div className="mb-5 flex flex-wrap items-start justify-between gap-4 xs:mb-6">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-cream-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-sage-600 shadow-clay-sm">
-              <Star className="h-3.5 w-3.5 fill-blossom-400 text-blossom-400" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-sage-600 md:rounded-full md:bg-cream-50 md:px-3.5 md:py-1.5 md:shadow-clay-sm">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blossom-50 md:hidden">
+                <Star className="h-3.5 w-3.5 fill-blossom-400 text-blossom-400" aria-hidden="true" />
+              </span>
+              <Star className="hidden h-3.5 w-3.5 fill-blossom-400 text-blossom-400 md:block" aria-hidden="true" />
               Best Sellers
             </span>
             <h2 id="bestsellers-heading" className="mt-3 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
@@ -26,24 +29,15 @@ export function BestSellers({ products }: { products: ProductSummary[] }) {
           </div>
           <Link
             href="/shop?sort=bestselling"
-            className="tap-target hidden shrink-0 items-center gap-2 rounded-full bg-cream-50 px-4 py-2.5 text-sm font-semibold text-ink-600 shadow-clay-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-clay md:flex"
+            className="tap-target flex shrink-0 items-center gap-1.5 text-sm font-semibold text-ink-600 md:rounded-full md:bg-cream-50 md:px-4 md:py-2.5 md:shadow-clay-sm md:transition-all md:duration-200 md:hover:-translate-y-0.5 md:hover:shadow-clay"
           >
-            View all books
+            View all
+            <span className="hidden md:inline">books</span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
         <ProductCarousel products={bestsellers} />
-
-        <div className="mt-5 text-center md:hidden">
-          <Link
-            href="/shop?sort=bestselling"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-sage-700 underline-offset-4 hover:underline"
-          >
-            View all books
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </div>
       </div>
     </section>
   );

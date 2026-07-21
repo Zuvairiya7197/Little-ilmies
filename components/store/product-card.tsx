@@ -102,7 +102,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
             type="button"
             onClick={() => setQuickViewOpen(true)}
             aria-label={`Quick view ${product.title}`}
-            className="tap-target flex items-center justify-center rounded-full bg-cream-50 p-2 text-ink-600 shadow-soft transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+            className="tap-target hidden items-center justify-center rounded-full bg-cream-50 p-2 text-ink-600 shadow-soft transition-opacity sm:flex sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
           >
             <Search className="h-3.5 w-3.5" aria-hidden="true" />
           </button>

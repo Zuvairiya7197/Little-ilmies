@@ -25,7 +25,7 @@ export function BookPreviewCard({
 
   return (
     <div id="preview">
-      <div className="group relative mx-auto max-w-sm">
+      <div className="group relative mx-auto hidden max-w-sm md:block">
         <div
           className="pointer-events-none absolute inset-x-0 top-2 -right-2 aspect-[3/4] rounded-2xl bg-sage-200/60"
           aria-hidden="true"
@@ -62,6 +62,17 @@ export function BookPreviewCard({
           </span>
         )}
       </div>
+
+      {previewAvailable && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="tap-target mx-auto mt-4 flex items-center justify-center gap-2 rounded-full bg-cream-50 px-5 py-2.5 text-sm font-semibold text-ink-600 shadow-clay-sm md:hidden"
+        >
+          <BookOpen className="h-4 w-4 text-ink-500" aria-hidden="true" />
+          Flip Through Sample Pages
+        </button>
+      )}
 
       {previewAvailable && (
         <BookPreviewModal

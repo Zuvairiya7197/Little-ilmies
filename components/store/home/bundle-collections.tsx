@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Gift, CheckCircle2, ArrowRight, Languages, Heart, Landmark, Moon, type LucideIcon } from "lucide-react";
+import { Gift, CheckCircle2, ArrowRight, Languages, Heart, Landmark, Moon, Sparkles, Star, type LucideIcon } from "lucide-react";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import { formatPrice } from "@/lib/utils/format";
@@ -100,14 +100,48 @@ export function BundleCollections({ bundles }: { bundles: BundleSummary[] }) {
   if (bundles.length === 0) return null;
 
   return (
-    <section aria-labelledby="bundles-heading" className="py-10 xs:py-12 md:py-16">
+    <section aria-label="Bundle & save" className="py-10 xs:py-12 md:py-16">
       <div className="container-content">
-        <div className="mb-8 max-w-lg xs:mb-10">
+        {/* Mobile & tablet: single compact promo banner, matches app-style home design */}
+        <Link
+          href="/shop?bundle=all"
+          className="group relative flex items-center gap-3 overflow-hidden rounded-3xl bg-gradient-to-br from-ink-800 via-ink-700 to-ink-600 p-6 shadow-clay md:hidden"
+        >
+          <Sparkles className="absolute left-6 top-6 h-3.5 w-3.5 fill-cream-50/70 text-cream-50/70" aria-hidden="true" />
+
+          <div className="min-w-0 flex-1">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-sunny-400">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              Bundle &amp; Save
+            </span>
+            <h2 className="mt-2 font-display text-xl font-semibold leading-snug text-cream-50">
+              Curated Bundle Collections
+            </h2>
+            <p className="mt-2 text-xs leading-relaxed text-cream-100/80">
+              Curated bundles that make learning more meaningful and savings
+              even sweeter.
+            </p>
+            <span className="tap-target mt-4 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-blossom-500 px-4 py-2.5 text-sm font-semibold text-cream-50 shadow-soft transition-transform group-hover:translate-x-0.5">
+              Explore Bundles
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+          </div>
+
+          <div className="relative h-32 w-32 shrink-0">
+            <Star className="absolute -left-1 top-2 h-3.5 w-3.5 fill-sunny-400 text-sunny-400" aria-hidden="true" />
+            <Star className="absolute right-1 top-0 h-3 w-3 fill-cream-50/80 text-cream-50/80" aria-hidden="true" />
+            <span className="absolute right-3 top-9 h-3.5 w-6 rounded-full bg-cream-50/25" aria-hidden="true" />
+            <Image src="/images/explore-bundles.png" alt="" fill sizes="128px" className="object-contain" />
+          </div>
+        </Link>
+
+        {/* Desktop: full heading + per-bundle card grid, unchanged */}
+        <div className="mb-8 hidden max-w-lg md:block xs:mb-10">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-sage-700">
             <Gift className="h-3.5 w-3.5" aria-hidden="true" />
             Bundle &amp; Save
           </span>
-          <h2 id="bundles-heading" className="mt-3 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
+          <h2 className="mt-3 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
             Bundle Collections
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-400 xs:text-base">
@@ -116,7 +150,7 @@ export function BundleCollections({ bundles }: { bundles: BundleSummary[] }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-4">
+        <div className="hidden grid-cols-1 gap-4 xs:grid-cols-2 md:grid lg:grid-cols-4">
           {bundles.map((bundle, index) => (
             <BundleCard key={bundle.id} bundle={bundle} index={index} />
           ))}

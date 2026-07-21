@@ -1,11 +1,61 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Star } from "lucide-react";
+import { BookOpen, Star, Moon } from "lucide-react";
 import type { ProductSummary } from "@/types/catalog";
 
 export function HeroSection({}: { products: ProductSummary[] }) {
   return (
-    <section className="relative aspect-[3/2] max-h-[80vh] w-full overflow-hidden bg-cream-50 xs:aspect-[16/9] md:aspect-[1717/916] md:max-h-[calc(100vh-140px)]">
+    <>
+      <MobileHero />
+      <DesktopHero />
+    </>
+  );
+}
+
+/** Mobile & tablet: purple gradient card with a book/moon motif, matches
+ * app-style home design. Desktop keeps the wide illustration hero below. */
+function MobileHero() {
+  return (
+    <section className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-b from-ink-600 via-ink-500 to-ink-600 px-6 pb-9 pt-8 text-center md:hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <Star className="absolute left-[10%] top-[10%] h-3 w-3 fill-cream-50/60 text-cream-50/60" />
+        <Star className="absolute right-[14%] top-[30%] h-2.5 w-2.5 fill-cream-50/40 text-cream-50/40" />
+        <Moon className="absolute right-[8%] top-[6%] h-9 w-9 fill-ink-200/30 text-ink-200/50" />
+      </div>
+
+      <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cream-50/15">
+        <BookOpen className="h-6 w-6 text-cream-50" aria-hidden="true" />
+      </span>
+
+      <h1 className="relative mx-auto mt-5 max-w-xs font-display text-[1.7rem] font-semibold leading-[1.15] text-cream-50">
+        Start building your child&apos;s Islamic learning library today.
+      </h1>
+
+      <p className="relative mx-auto mt-4 max-w-[19rem] text-sm leading-relaxed text-cream-100/85">
+        Instant downloads, printable at home, and loved by thousands of Muslim
+        families.
+      </p>
+
+      <Link
+        href="/shop"
+        className="tap-target relative mt-6 inline-flex items-center gap-2 rounded-full bg-blossom-400 px-6 py-3 text-sm font-semibold text-cream-50 shadow-clay-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-blossom-500 active:translate-y-0 active:scale-95"
+      >
+        <BookOpen className="h-4 w-4" aria-hidden="true" />
+        Explore All Books
+      </Link>
+
+      <div className="relative mt-6 flex items-center justify-center gap-1.5" aria-hidden="true">
+        <span className="h-1.5 w-4 rounded-full bg-cream-50" />
+        <span className="h-1.5 w-1.5 rounded-full bg-cream-50/40" />
+        <span className="h-1.5 w-1.5 rounded-full bg-cream-50/40" />
+      </div>
+    </section>
+  );
+}
+
+function DesktopHero() {
+  return (
+    <section className="relative hidden aspect-[1717/916] max-h-[calc(100vh-140px)] w-full overflow-hidden bg-cream-50 md:block">
       <Image
         src="/images/hero-background.png"
         alt=""

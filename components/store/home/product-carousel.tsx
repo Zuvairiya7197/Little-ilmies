@@ -6,17 +6,34 @@ import { ProductCard } from "@/components/store/product-card";
 import type { ProductSummary } from "@/types/catalog";
 
 /** Shared horizontal product carousel — desktop shows scroll arrows once
- * content overflows, mobile relies on native swipe with scroll-snap. */
-export function ProductCarousel({ products }: { products: ProductSummary[] }) {
+ * content overflows, mobile relies on native swipe with scroll-snap.
+ * `showDots` adds a mobile-only pagination dot row below the carousel,
+ * tracking which card is currently in view. */
+export function ProductCarousel({ products, showDots }: { products: ProductSummary[]; showDots?: boolean }) {
   const scrollerRef = useRef<HTMLUListElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   function updateScrollState() {
     const el = scrollerRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 4);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    if (showDots) {
+      const children = Array.from(el.children) as HTMLElement[];
+      const centerLine = el.scrollLeft + el.clientWidth / 2;
+      let closest = 0;
+      let closestDist = Infinity;
+      children.forEach((child, i) => {
+        const dist = Math.abs(child.offsetLeft + child.clientWidth / 2 - centerLine);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = i;
+        }
+      });
+      setActiveIndex(closest);
+    }
   }
 
   useEffect(() => {
@@ -72,6 +89,17 @@ export function ProductCarousel({ products }: { products: ProductSummary[] }) {
           </li>
         ))}
       </ul>
+
+      {showDots && (
+        <div className="mt-3 flex items-center justify-center gap-1.5 md:hidden" aria-hidden="true">
+          {products.map((product, i) => (
+            <span
+              key={product.id}
+              className={`h-1.5 rounded-full transition-all ${i === activeIndex ? "w-4 bg-ink-600" : "w-1.5 bg-ink-100"}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

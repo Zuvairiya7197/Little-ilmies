@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, ShoppingBag, Moon, Languages, GraduationCap, PenTool, HandHeart, Star } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { Menu, ArrowLeft, Heart, ShoppingBag, Moon, Languages, GraduationCap, PenTool, HandHeart, Star } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
 import { SearchOverlay } from "@/components/store/search-overlay";
@@ -10,6 +11,7 @@ import { HeaderGooeySearch } from "@/components/store/header-gooey-search";
 import { CartDrawer } from "@/components/store/cart-drawer";
 import { IconBadge } from "@/components/store/icon-badge";
 import { AccountMenu } from "@/components/store/account-menu";
+import { MobileMenu } from "@/components/store/mobile-menu";
 import { useCartStore, selectCartCount } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
@@ -26,8 +28,12 @@ const chipNav = [
 ] as const;
 
 export function SiteHeader() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const isProductPage = pathname.startsWith("/product/");
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const cartCount = useCartStore(selectCartCount);
   const openCart = useCartStore((s) => s.openCart);
@@ -59,6 +65,26 @@ export function SiteHeader() {
         )}
       >
         <div className="container-content flex h-16 items-center justify-between gap-3 xs:h-18">
+          {isProductPage ? (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Go back"
+              className="tap-target flex items-center justify-center rounded-full text-ink-600 md:hidden"
+            >
+              <ArrowLeft className="h-6 w-6" aria-hidden="true" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              className="tap-target flex items-center justify-center rounded-full text-ink-600 md:hidden"
+            >
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            </button>
+          )}
+
           <Logo />
 
           <nav aria-label="Primary" className="hidden lg:block">
@@ -83,7 +109,7 @@ export function SiteHeader() {
             <Link
               href="/wishlist"
               aria-label={`Wishlist${mounted && wishlistCount > 0 ? `, ${wishlistCount} items` : ""}`}
-              className="tap-target relative hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:flex"
+              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
             >
               <Heart className="h-5 w-5" aria-hidden="true" />
               {mounted && <IconBadge count={wishlistCount} />}
@@ -93,7 +119,7 @@ export function SiteHeader() {
               type="button"
               onClick={openCart}
               aria-label={`Cart${mounted && cartCount > 0 ? `, ${cartCount} items` : ""}`}
-              className="tap-target relative hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:flex"
+              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
             >
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               {mounted && <IconBadge count={cartCount} />}
@@ -108,6 +134,7 @@ export function SiteHeader() {
 
       <SearchOverlay open={searchOpen} onClose={closeSearch} />
       <CartDrawer />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </header>
   );
 }

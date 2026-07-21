@@ -19,6 +19,11 @@
     --color-text-primary: #17142B;
     --color-text-secondary: #636363;
     --color-border: #E4ECF5;
+
+    /* Height of the persistent mobile bottom tab bar (MobileBottomNav) —
+       page-level sticky action bars (checkout pay bar) sit just above it
+       instead of overlapping, since the tab bar never hides on mobile. */
+    --mobile-nav-height: 52px;
   }
 
   * {

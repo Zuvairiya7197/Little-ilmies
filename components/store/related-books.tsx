@@ -10,13 +10,13 @@ export function RelatedBooks({ products }: { products: ProductSummary[] }) {
     <section aria-labelledby="related-heading" className="scroll-mt-24">
       <div className="flex items-center justify-between">
         <h2 id="related-heading" className="font-display text-xl font-bold text-ink-700">
-          Related Books
+          You may also like
         </h2>
         <Link
           href="/shop"
-          className="hidden shrink-0 items-center gap-1 text-sm font-semibold text-sage-700 underline-offset-4 hover:underline md:flex"
+          className="flex shrink-0 items-center gap-1 text-sm font-semibold text-sage-700 underline-offset-4 hover:underline"
         >
-          View All
+          View all
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>

@@ -6,9 +6,9 @@ import {
   getRelatedProductsBySlug,
 } from "@/lib/db/catalog";
 import { BookPreviewCard } from "@/components/book-preview/book-preview-card";
+import { ProductMobileHero } from "@/components/store/product-mobile-hero";
 import { ProductHeader } from "@/components/store/product-header";
 import { ProductBuyBox } from "@/components/store/product-buy-box";
-import { StickyBuyBar } from "@/components/store/sticky-buy-bar";
 import {
   ProductOverview,
   WhatsInside,
@@ -16,6 +16,7 @@ import {
   FileDetails,
   ProductReviews,
 } from "@/components/store/product-info-sections";
+import { ProductMobileAbout } from "@/components/store/product-mobile-about";
 import { RelatedBooks } from "@/components/store/related-books";
 import { ProductMobilePrice } from "@/components/store/product-mobile-price";
 import { findPrice } from "@/lib/pricing/resolve-price";
@@ -115,6 +116,7 @@ export default async function ProductPage({ params }: PageProps) {
 
       <div className="container-content py-6 xs:py-8 md:py-10">
         <div className="md:grid md:grid-cols-2 md:gap-12">
+          <ProductMobileHero product={product} />
           <BookPreviewCard
             title={product.title}
             coverImage={product.coverImage}
@@ -124,7 +126,7 @@ export default async function ProductPage({ params }: PageProps) {
             hasFreePreview={product.hasFreePreview}
           />
 
-          <div className="mt-8 md:mt-0">
+          <div className="mt-6 md:mt-0">
             <ProductHeader product={product} />
 
             <ProductMobilePrice product={product} />
@@ -135,7 +137,12 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-6 md:mt-16">
+        {/* Mobile & tablet: compact format row + About this book, matches app-style PDP design */}
+        <div className="mt-8 md:hidden">
+          <ProductMobileAbout product={product} />
+        </div>
+
+        <div className="mt-12 hidden flex-col gap-6 md:mt-16 md:flex">
           <Reveal>
             <ProductOverview product={product} />
           </Reveal>
@@ -159,8 +166,6 @@ export default async function ProductPage({ params }: PageProps) {
           </Reveal>
         </div>
       </div>
-
-      <StickyBuyBar product={product} />
     </div>
   );
 }
