@@ -119,13 +119,10 @@ export function ShopByLearningGoal() {
 
           <div aria-hidden="true" className="relative hidden h-28 w-24 shrink-0 xs:block">
             <Star className="absolute -top-1 right-2 h-4 w-4 fill-blossom-400 text-blossom-400" />
-            <Star className="absolute right-8 top-6 h-3 w-3 fill-sunny-400 text-sunny-400" />
             <span className="absolute bottom-0 left-0 flex h-9 w-9 items-center justify-center rounded-full bg-sage-100">
               <Sprout className="h-4 w-4 text-sage-600" aria-hidden="true" />
             </span>
-            <div className="absolute bottom-2 left-8 h-9 w-16 -rotate-3 rounded-lg bg-blossom-400 shadow-clay-sm" />
-            <div className="absolute bottom-9 left-9 h-9 w-16 rotate-2 rounded-lg bg-sunny-400 shadow-clay-sm" />
-            <div className="absolute bottom-16 left-8 h-9 w-16 -rotate-1 rounded-lg bg-teal-400 shadow-clay-sm" />
+            <Image src="/images/age-6-9.png" alt="" fill sizes="96px" className="object-contain object-right" />
           </div>
         </div>
 

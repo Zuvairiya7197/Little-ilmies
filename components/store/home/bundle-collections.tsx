@@ -127,10 +127,9 @@ export function BundleCollections({ bundles }: { bundles: BundleSummary[] }) {
             </span>
           </div>
 
-          <div className="relative h-32 w-32 shrink-0">
-            <Star className="absolute -left-1 top-2 h-3.5 w-3.5 fill-sunny-400 text-sunny-400" aria-hidden="true" />
-            <Star className="absolute right-1 top-0 h-3 w-3 fill-cream-50/80 text-cream-50/80" aria-hidden="true" />
-            <span className="absolute right-3 top-9 h-3.5 w-6 rounded-full bg-cream-50/25" aria-hidden="true" />
+          <div className="relative aspect-[707/819] h-28 shrink-0 xs:h-32">
+            <Star className="absolute -left-2 top-1 h-3.5 w-3.5 fill-sunny-400 text-sunny-400" aria-hidden="true" />
+            <Star className="absolute -right-1 top-0 h-3 w-3 fill-cream-50/80 text-cream-50/80" aria-hidden="true" />
             <Image src="/images/explore-bundles.png" alt="" fill sizes="128px" className="object-contain" />
           </div>
         </Link>

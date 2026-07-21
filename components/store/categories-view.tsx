@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Sparkles,
   Moon,
@@ -215,12 +216,7 @@ export function CategoriesView({ categories }: { categories: Category[] }) {
         <Star className="absolute right-4 top-4 h-3.5 w-3.5 fill-sunny-400/80 text-sunny-400/80" aria-hidden="true" />
 
         <div aria-hidden="true" className="relative h-16 w-20 shrink-0 xs:h-20 xs:w-24">
-          <div className="absolute bottom-1 left-0 h-12 w-[4.5rem] rounded-b-lg rounded-t-sm bg-cream-100 shadow-clay-sm xs:h-14 xs:w-20" />
-          <div className="absolute bottom-1 left-0 h-12 w-9 rounded-l-sm border-r border-ink-200/50 bg-cream-50 xs:h-14 xs:w-10" />
-          <Star className="absolute bottom-9 left-4 h-3 w-3 fill-blossom-400 text-blossom-400 xs:bottom-11 xs:left-5" aria-hidden="true" />
-          <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-sage-100 xs:h-9 xs:w-9">
-            <span className="h-3 w-2.5 rounded-t-full bg-sage-500 xs:h-4 xs:w-3" />
-          </span>
+          <Image src="/images/age-6-9.png" alt="" fill sizes="96px" className="object-contain object-center" />
         </div>
 
         <div className="min-w-0 flex-1">

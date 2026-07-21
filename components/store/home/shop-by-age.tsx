@@ -3,9 +3,12 @@ import Link from "next/link";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import type { AgeRange } from "@/types/catalog";
 
-const ageBands: { range: AgeRange; label: string; tint: string; image?: string }[] = [
-  { range: "0-3", label: "0–3 Years", tint: "bg-ink-600", image: "/images/age-0-3.png" },
-  { range: "3-6", label: "3–6 Years", tint: "bg-sunny-500", image: "/images/age-3-6.png" },
+const ageBands: { range: AgeRange; label: string; tint: string; image?: string; imageScale?: string; imageWrapperClass?: string }[] = [
+  // age-0-3.png has a wider aspect ratio than the other age illustrations, so
+  // it renders visibly smaller under object-contain in the same box — scaled
+  // up here to match the others' apparent size.
+  { range: "0-3", label: "0–3 Years", tint: "bg-ink-600", image: "/images/age-0-3.png", imageScale: "scale-125" },
+  { range: "3-6", label: "3–6 Years", tint: "bg-sunny-500", image: "/images/age-3-6.png", imageWrapperClass: "-translate-y-2" },
   { range: "6-9", label: "6–9 Years", tint: "bg-lemon-600", image: "/images/age-6-9.png" },
   { range: "9-12", label: "9–12 Years", tint: "bg-teal-500", image: "/images/age-9-12.png" },
   { range: "12+", label: "12+ Years", tint: "bg-blossom-500", image: "/images/age-12-plus.png" },
@@ -42,7 +45,7 @@ export function ShopByAge() {
 
         {/* Mobile & tablet: same saturated colors as desktop, compact size */}
         <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:hidden">
-          {ageBands.map(({ range, label, tint, image }) => (
+          {ageBands.map(({ range, label, tint, image, imageScale, imageWrapperClass }) => (
             <li key={range} className="w-28 shrink-0 snap-start xs:w-32">
               <Link
                 href={`/shop?age=${encodeURIComponent(range)}`}
@@ -53,13 +56,13 @@ export function ShopByAge() {
                 </span>
 
                 {image ? (
-                  <div className="relative mt-1 w-full flex-1">
+                  <div className={`relative mt-1 w-full flex-1 ${imageWrapperClass ?? ""}`}>
                     <Image
                       src={image}
                       alt=""
                       fill
                       sizes="128px"
-                      className="object-contain object-bottom transition-transform duration-300 group-hover:scale-105"
+                      className={`object-contain object-bottom transition-transform duration-300 ${imageScale ? `${imageScale} group-hover:scale-[1.35]` : "group-hover:scale-105"}`}
                     />
                   </div>
                 ) : (
@@ -76,7 +79,7 @@ export function ShopByAge() {
 
         {/* Desktop: saturated cards with big number + label, unchanged */}
         <ul className="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-5">
-          {ageBands.map(({ range, label, tint, image }) => (
+          {ageBands.map(({ range, label, tint, image, imageScale, imageWrapperClass }) => (
             <li key={range}>
               <Link
                 href={`/shop?age=${encodeURIComponent(range)}`}
@@ -90,13 +93,13 @@ export function ShopByAge() {
                 </span>
 
                 {image ? (
-                  <div className="relative mt-2 w-full flex-1">
+                  <div className={`relative mt-2 w-full flex-1 ${imageWrapperClass ?? ""}`}>
                     <Image
                       src={image}
                       alt=""
                       fill
                       sizes="220px"
-                      className="object-contain object-bottom transition-transform duration-300 group-hover:scale-105"
+                      className={`object-contain object-bottom transition-transform duration-300 ${imageScale ? `${imageScale} group-hover:scale-[1.35]` : "group-hover:scale-105"}`}
                     />
                   </div>
                 ) : (

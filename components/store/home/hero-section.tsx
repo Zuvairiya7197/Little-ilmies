@@ -55,7 +55,7 @@ function MobileHero() {
 
 function DesktopHero() {
   return (
-    <section className="relative hidden aspect-[1717/916] max-h-[calc(100vh-140px)] w-full overflow-hidden bg-cream-50 md:block">
+    <section className="relative z-0 mb-0 hidden aspect-[1717/916] max-h-[calc(100vh-140px)] w-full overflow-hidden bg-cream-50 md:block">
       <Image
         src="/images/hero-background.png"
         alt=""

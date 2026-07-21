@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BookHeart, Sparkles, Moon, Languages, PenTool } from "lucide-react";
 
-const collections = [
+export const collections = [
   {
     title: "Stories of the Prophets",
     description: "Authentic tales retold for young hearts.",
@@ -60,7 +60,7 @@ const collections = [
   },
 ] as const;
 
-function CollectionCard({
+export function CollectionCard({
   title,
   description,
   href,
@@ -74,9 +74,9 @@ function CollectionCard({
   return (
     <Link
       href={href}
-      className={`group relative flex min-h-[190px] items-center gap-3 overflow-hidden rounded-3xl p-5 shadow-clay transition-transform duration-300 hover:-translate-y-1 xs:min-h-[200px] ${cardBg}`}
+      className={`group relative flex min-h-[190px] gap-3 overflow-hidden rounded-3xl p-5 shadow-clay transition-transform duration-300 hover:-translate-y-1 xs:min-h-[200px] ${cardBg}`}
     >
-      <div className="relative z-10 flex w-1/2 shrink-0 flex-col items-start">
+      <div className="relative z-10 flex w-1/2 shrink-0 flex-col items-start justify-center md:w-[45%]">
         <span className={`flex h-10 w-10 items-center justify-center rounded-2xl text-cream-50 shadow-soft ${badgeBg}`}>
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
@@ -94,13 +94,13 @@ function CollectionCard({
         </span>
       </div>
 
-      <div className="relative -my-3 h-[calc(100%+1.5rem)] w-1/2 shrink-0">
+      <div className="relative -my-5 w-1/2 shrink-0 self-stretch md:w-[55%]">
         <Image
           src={image}
           alt=""
           fill
           sizes="(max-width: 480px) 50vw, 300px"
-          className="object-contain object-right scale-125 transition-transform duration-300 group-hover:scale-[1.35]"
+          className="scale-125 object-contain object-right transition-transform duration-300 group-hover:scale-[1.35] md:scale-150 md:group-hover:scale-[1.6]"
         />
       </div>
     </Link>
@@ -144,7 +144,7 @@ export function FeaturedCollections() {
             </h2>
           </div>
           <Link
-            href="/shop"
+            href="/collections"
             className="shrink-0 text-sm font-semibold text-sage-700 underline-offset-4 hover:underline"
           >
             View all
@@ -175,12 +175,12 @@ export function FeaturedCollections() {
           </p>
         </div>
 
-        <div className="hidden grid-cols-1 gap-4 xs:grid-cols-2 md:grid lg:grid-cols-3">
+        <div className="hidden gap-4 md:grid md:grid-cols-3">
           {collections.slice(0, 3).map((collection) => (
             <CollectionCard key={collection.title} {...collection} />
           ))}
         </div>
-        <div className="mx-auto mt-4 hidden grid-cols-1 gap-4 xs:grid-cols-2 md:grid lg:w-2/3">
+        <div className="mx-auto mt-4 hidden gap-4 md:grid md:w-2/3 md:grid-cols-2">
           {collections.slice(3).map((collection) => (
             <CollectionCard key={collection.title} {...collection} />
           ))}
