@@ -10,7 +10,7 @@ import type { AgeRange, Category, Language, ProductFormat } from "@/types/catalo
 import { cn } from "@/lib/utils/cn";
 
 const ageRanges: AgeRange[] = ["0-3", "3-6", "6-9", "9-12", "12+"];
-const languages: Language[] = ["English", "Arabic", "Urdu", "Hindi", "Marathi"];
+const languages: Language[] = ["English", "Arabic", "Hindi", "Marathi"];
 const formats: ProductFormat[] = ["PDF", "Printable PDF", "Interactive PDF"];
 
 // Manually tuned bucket boundaries per currency — these mirror the actual

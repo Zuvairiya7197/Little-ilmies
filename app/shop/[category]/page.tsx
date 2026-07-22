@@ -24,7 +24,7 @@ const resolveCategory = cache(async (slug: string) => {
       title: group.name,
       description: group.description,
       matchedProducts: products.filter((p) => group.categorySlugs.includes(p.category.slug)),
-      categories,
+      categories: categories.filter((c) => group.categorySlugs.includes(c.slug)),
     };
   }
 

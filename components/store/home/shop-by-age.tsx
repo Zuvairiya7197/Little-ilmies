@@ -7,7 +7,7 @@ const ageBands: { range: AgeRange; label: string; tint: string; image?: string; 
   // age-0-3.png has a wider aspect ratio than the other age illustrations, so
   // it renders visibly smaller under object-contain in the same box — scaled
   // up here to match the others' apparent size.
-  { range: "0-3", label: "0–3 Years", tint: "bg-ink-600", image: "/images/age-0-3.png", imageScale: "scale-125" },
+  { range: "0-3", label: "0–3 Years", tint: "bg-ink-600", image: "/images/age-0-3.png", imageScale: "scale-125", imageWrapperClass: "-translate-y-10" },
   { range: "3-6", label: "3–6 Years", tint: "bg-sunny-500", image: "/images/age-3-6.png", imageWrapperClass: "-translate-y-2" },
   { range: "6-9", label: "6–9 Years", tint: "bg-lemon-600", image: "/images/age-6-9.png" },
   { range: "9-12", label: "9–12 Years", tint: "bg-teal-500", image: "/images/age-9-12.png" },

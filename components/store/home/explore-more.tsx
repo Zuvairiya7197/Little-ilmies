@@ -11,8 +11,8 @@ const explore = [
     image: "/images/explore-islamic-books.png",
     cardBg: "bg-ink-50",
     badgeBg: "bg-cream-50",
-    iconColor: "text-ink-600",
-    linkColor: "text-ink-600",
+    iconColor: "text-ink-400",
+    linkColor: "text-ink-400",
   },
   {
     title: "Browse Educational Books",
@@ -22,8 +22,8 @@ const explore = [
     image: "/images/explore-educational-books.png",
     cardBg: "bg-teal-50",
     badgeBg: "bg-cream-50",
-    iconColor: "text-teal-600",
-    linkColor: "text-teal-700",
+    iconColor: "text-teal-500",
+    linkColor: "text-teal-600",
   },
   {
     title: "Browse Printable Activities",
@@ -33,8 +33,8 @@ const explore = [
     image: "/images/explore-printable-activities.png",
     cardBg: "bg-sunny-50",
     badgeBg: "bg-cream-50",
-    iconColor: "text-sunny-600",
-    linkColor: "text-sunny-700",
+    iconColor: "text-sunny-500",
+    linkColor: "text-sunny-600",
   },
   {
     title: "Browse Bundles",
@@ -44,8 +44,8 @@ const explore = [
     image: "/images/explore-bundles.png",
     cardBg: "bg-blossom-50",
     badgeBg: "bg-cream-50",
-    iconColor: "text-blossom-600",
-    linkColor: "text-blossom-600",
+    iconColor: "text-blossom-400",
+    linkColor: "text-blossom-500",
   },
 ] as const;
 

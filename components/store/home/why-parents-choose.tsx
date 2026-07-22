@@ -51,10 +51,10 @@ export function WhyParentsChoose() {
           {reasons.map(({ title, description, image, cardBg }) => (
             <div
               key={title}
-              className={`flex flex-col items-center gap-2 rounded-3xl p-4 text-center shadow-clay-sm md:p-6 ${cardBg}`}
+              className={`flex h-full flex-col items-center justify-center rounded-3xl p-4 text-center shadow-clay-sm md:p-6 ${cardBg}`}
             >
-              <div className="relative h-20 w-20 shrink-0 md:h-28 md:w-28">
-                <Image src={image} alt="" fill sizes="112px" className="object-contain" />
+              <div className="relative -mb-3 h-24 w-24 shrink-0 md:-mb-5 md:h-36 md:w-36">
+                <Image src={image} alt="" fill sizes="144px" className="object-contain" />
               </div>
               <p className="font-display text-sm font-semibold leading-snug text-ink-700 md:text-base">
                 {title}

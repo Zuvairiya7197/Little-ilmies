@@ -18,7 +18,7 @@ export const productFormSchema = z.object({
   shortDescription: z.string().trim().min(5, "Short description is required"),
   categoryIds: z.array(z.string()).min(1, "Select at least one category"),
   ageRange: z.enum(["0-3", "3-6", "6-9", "9-12", "12+"]),
-  language: z.enum(["English", "Arabic", "Urdu", "Hindi", "Marathi"]),
+  language: z.enum(["English", "Arabic", "Hindi", "Marathi"]),
   format: z.enum(["PDF", "Printable PDF", "Interactive PDF"]),
   pageCount: z.coerce.number().int().min(1, "Must be at least 1 page"),
   isBestseller: z.boolean().default(false),

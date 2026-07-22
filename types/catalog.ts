@@ -2,7 +2,7 @@ import type { RegionalPrice } from "@/types/pricing";
 
 export type AgeRange = "0-3" | "3-6" | "6-9" | "9-12" | "12+";
 
-export type Language = "English" | "Arabic" | "Urdu" | "Hindi" | "Marathi";
+export type Language = "English" | "Arabic" | "Hindi" | "Marathi";
 
 export type ProductFormat = "PDF" | "Printable PDF" | "Interactive PDF";
 

@@ -165,7 +165,7 @@ export function ProductForm({
           </Field>
           <Field label="Language" error={errors.language?.message}>
             <select {...register("language")} className="admin-input">
-              {["English", "Arabic", "Urdu", "Hindi", "Marathi"].map((l) => (
+              {["English", "Arabic", "Hindi", "Marathi"].map((l) => (
                 <option key={l} value={l}>
                   {l}
                 </option>
