@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cn } from "@/lib/utils/cn";
 
-export function Logo() {
+export function Logo({ className }: { className?: string }) {
   return (
     <Link
       href="/"
@@ -14,7 +15,7 @@ export function Logo() {
         width={988}
         height={574}
         priority
-        className="h-12 w-auto xs:h-14"
+        className={cn("h-12 w-auto xs:h-14", className)}
       />
     </Link>
   );
