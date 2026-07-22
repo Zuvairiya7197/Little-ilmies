@@ -4,6 +4,7 @@ import {
   Instagram,
   Facebook,
   Youtube,
+  MessageCircle,
   Moon,
   Landmark,
   Languages,
@@ -68,10 +69,9 @@ const trustBadges = [
 ];
 
 const socialLinks = [
-  { label: "Instagram", href: "#", icon: Instagram },
-  { label: "Facebook", href: "#", icon: Facebook },
-  { label: "Pinterest", href: "#", icon: BookOpen },
-  { label: "YouTube", href: "#", icon: Youtube },
+  { label: "Instagram", href: "https://instagram.com/littleilmies", icon: Instagram },
+  { label: "WhatsApp", href: "https://wa.me/919876543210", icon: MessageCircle },
+  { label: "Facebook", href: "https://facebook.com/littleilmies", icon: Facebook },
 ];
 
 const paymentMethods = ["UPI", "VISA", "Mastercard", "RuPay", "Net Banking", "Paytm"];
@@ -101,8 +101,8 @@ export function SiteFooter() {
       {/* Mobile & tablet: illustration header + accordion sections + trust grid, distinct layout from desktop */}
       <div className="md:hidden">
         <div className="container-content pt-10 xs:pt-12">
-          <div className="flex items-center gap-3">
-            <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
               <Logo className="h-20 xs:h-24" />
               <p className="text-sm leading-relaxed text-ink-400">
                 Islamic ebooks and activities for little hearts and curious minds. Read. Learn. Grow in Deen.
@@ -121,7 +121,7 @@ export function SiteFooter() {
               </div>
             </div>
 
-            <div className="relative -mr-4 h-56 w-40 shrink-0 xs:-mr-6 xs:h-64 xs:w-48">
+            <div className="relative -mr-2 h-56 w-40 shrink-0 xs:-mr-4 xs:h-64 xs:w-48">
               <Image src="/images/contact us.png" alt="" fill sizes="240px" className="scale-150 object-contain" />
             </div>
           </div>
@@ -197,8 +197,8 @@ export function SiteFooter() {
       <div className="hidden md:block">
         <div className="container-content pb-0 pt-16">
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-5">
-            <div className="col-span-2 flex flex-col gap-4 md:col-span-1">
-              <Logo className="h-20 xs:h-20" />
+            <div className="col-span-2 flex flex-col gap-2 md:col-span-1">
+              <Logo className="h-20 xs:h-20 md:h-28 lg:h-32" />
               <p className="max-w-[220px] text-sm leading-relaxed text-ink-400">
                 Islamic ebooks and activities for little hearts and curious minds. Read. Learn. Grow in Deen.
               </p>

@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Send, Headset, Mail, MessageCircle, Clock, MapPin, HelpCircle, BookOpen, Sparkle } from "lucide-react";
+import {
+  Send,
+  Headset,
+  Mail,
+  MessageCircle,
+  Clock,
+  MapPin,
+  HelpCircle,
+  BookOpen,
+  Sparkle,
+} from "lucide-react";
 import { ContactForm } from "@/components/store/contact-form";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "Get in touch with Little Ilmies — we're happy to help with orders, downloads, or general questions.",
+  description:
+    "Get in touch with Little Ilmies — we're happy to help with orders, downloads, or general questions.",
   alternates: { canonical: "/contact" },
 };
 
@@ -62,18 +73,37 @@ export default function ContactPage() {
               <h1 className="mt-3 font-display text-2xl font-bold leading-tight text-ink-700 xs:text-4xl">
                 We&apos;re Here <br />
                 To Help You
-                <span className="relative inline-block h-6 w-6 shrink-0 overflow-hidden align-middle xs:h-9 xs:w-9" aria-hidden="true">
-                  <Image src="/images/heart.png" alt="" fill sizes="36px" className="scale-[3.2] object-contain" />
+                <span
+                  className="relative inline-block h-6 w-6 shrink-0 overflow-hidden align-middle xs:h-9 xs:w-9"
+                  aria-hidden="true"
+                >
+                  <Image
+                    src="/images/heart.png"
+                    alt=""
+                    fill
+                    sizes="36px"
+                    className="scale-[3.2] object-contain"
+                  />
                 </span>
               </h1>
-              <span className="mt-4 block h-1 w-16 rounded-full bg-ink-300" aria-hidden="true" />
+              <span
+                className="mt-4 block h-1 w-16 rounded-full bg-ink-300"
+                aria-hidden="true"
+              />
               <p className="mt-5 text-base leading-relaxed text-ink-400">
-                Have a question, suggestion, or need help? We&apos;d love to hear from you!
+                Have a question, suggestion, or need help? We&apos;d love to
+                hear from you!
               </p>
             </div>
 
             <div className="relative -mr-6 h-40 w-24 shrink-0 xs:h-48 xs:w-40">
-              <Image src="/images/contact us.png" alt="" fill sizes="200px" className="scale-[1.6] object-contain" />
+              <Image
+                src="/images/contact us.png"
+                alt=""
+                fill
+                sizes="200px"
+                className="scale-[1.6] object-contain"
+              />
             </div>
           </div>
 
@@ -83,10 +113,21 @@ export default function ContactPage() {
             </span>
             <div>
               <p className="text-sm text-ink-400">We usually reply within</p>
-              <p className="font-display text-base font-bold text-ink-700">24 hours</p>
+              <p className="font-display text-base font-bold text-ink-700">
+                24 hours
+              </p>
             </div>
-            <span className="absolute -right-3 bottom-2 h-5 w-5 overflow-hidden" aria-hidden="true">
-              <Image src="/images/star.png" alt="" fill sizes="20px" className="scale-150 object-contain" />
+            <span
+              className="absolute -right-3 bottom-2 h-5 w-5 overflow-hidden"
+              aria-hidden="true"
+            >
+              <Image
+                src="/images/star.png"
+                alt=""
+                fill
+                sizes="20px"
+                className="scale-150 object-contain"
+              />
             </span>
           </div>
 
@@ -98,35 +139,43 @@ export default function ContactPage() {
         <div className="container-content pb-10 xs:pb-12">
           <div className="flex items-center justify-center gap-2">
             <Sparkle className="h-3.5 w-3.5 text-ink-300" aria-hidden="true" />
-            <h2 className="font-display text-xl font-semibold text-ink-700 xs:text-2xl">Other Ways To Reach Us</h2>
+            <h2 className="font-display text-xl font-semibold text-ink-700 xs:text-2xl">
+              Other Ways To Reach Us
+            </h2>
             <Sparkle className="h-3.5 w-3.5 text-ink-300" aria-hidden="true" />
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-4 xs:grid-cols-2">
-            {otherWays.map(({ label, icon: Icon, bg, color, labelColor, lines, href }) => {
-              const content = (
-                <div className="flex h-full items-start gap-3 rounded-2xl bg-ink-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-clay-sm">
-                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${bg} ${color}`}>
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <p className={`text-sm font-bold ${labelColor}`}>{label}</p>
-                    {lines.map((line) => (
-                      <p key={line} className="mt-0.5 text-sm text-ink-400">
-                        {line}
+            {otherWays.map(
+              ({ label, icon: Icon, bg, color, labelColor, lines, href }) => {
+                const content = (
+                  <div className="flex h-full items-start gap-3 rounded-2xl bg-ink-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-clay-sm">
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${bg} ${color}`}
+                    >
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className={`text-sm font-bold ${labelColor}`}>
+                        {label}
                       </p>
-                    ))}
+                      {lines.map((line) => (
+                        <p key={line} className="mt-0.5 text-sm text-ink-400">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-              return href ? (
-                <a key={label} href={href} className="block">
-                  {content}
-                </a>
-              ) : (
-                <div key={label}>{content}</div>
-              );
-            })}
+                );
+                return href ? (
+                  <a key={label} href={href} className="block">
+                    {content}
+                  </a>
+                ) : (
+                  <div key={label}>{content}</div>
+                );
+              },
+            )}
           </div>
 
           <div className="mt-6 flex flex-col gap-4 rounded-3xl bg-ink-100 p-4 text-left">
@@ -145,7 +194,8 @@ export default function ContactPage() {
                   Can&apos;t find what you&apos;re looking for?
                 </p>
                 <p className="mt-1 text-sm text-ink-400">
-                  Check out our FAQs or browse our Help Center for quick answers.
+                  Check out our FAQs or browse our Help Center for quick
+                  answers.
                 </p>
               </div>
             </div>
@@ -182,14 +232,27 @@ export default function ContactPage() {
                 We&apos;re Here <br />
                 <span className="inline-flex items-center gap-2">
                   To Help You
-                  <span className="relative inline-block h-11 w-11 shrink-0 overflow-hidden" aria-hidden="true">
-                    <Image src="/images/heart.png" alt="" fill sizes="44px" className="scale-[3.2] object-contain" />
+                  <span
+                    className="relative inline-block h-11 w-11 shrink-0 overflow-hidden"
+                    aria-hidden="true"
+                  >
+                    <Image
+                      src="/images/heart.png"
+                      alt=""
+                      fill
+                      sizes="44px"
+                      className="scale-[3.2] object-contain"
+                    />
                   </span>
                 </span>
               </h1>
-              <span className="mt-4 block h-1 w-16 rounded-full bg-ink-300" aria-hidden="true" />
+              <span
+                className="mt-4 block h-1 w-16 rounded-full bg-ink-300"
+                aria-hidden="true"
+              />
               <p className="mt-5 max-w-md text-base leading-relaxed text-ink-400">
-                Have a question, suggestion, or need help? We&apos;d love to hear from you!
+                Have a question, suggestion, or need help? We&apos;d love to
+                hear from you!
               </p>
 
               <div className="relative mt-6 inline-flex items-center gap-3 rounded-2xl bg-cream-50 py-3 pl-3 pr-5 shadow-clay-sm">
@@ -197,17 +260,36 @@ export default function ContactPage() {
                   <Headset className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="text-sm text-ink-400">We usually reply within</p>
-                  <p className="font-display text-base font-bold text-ink-700">24 hours</p>
+                  <p className="text-sm text-ink-400">
+                    We usually reply within
+                  </p>
+                  <p className="font-display text-base font-bold text-ink-700">
+                    24 hours
+                  </p>
                 </div>
-                <span className="absolute -right-3 bottom-2 h-5 w-5 overflow-hidden" aria-hidden="true">
-                  <Image src="/images/star.png" alt="" fill sizes="20px" className="scale-150 object-contain" />
+                <span
+                  className="absolute -right-3 bottom-2 h-5 w-5 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <Image
+                    src="/images/star.png"
+                    alt=""
+                    fill
+                    sizes="20px"
+                    className="scale-150 object-contain"
+                  />
                 </span>
               </div>
             </div>
 
             <div className="relative aspect-[3/2] w-full">
-              <Image src="/images/contact us.png" alt="" fill sizes="640px" className="object-contain scale-[1.8]" />
+              <Image
+                src="/images/contact us.png"
+                alt=""
+                fill
+                sizes="640px"
+                className="object-contain scale-[1.8]"
+              />
             </div>
 
             <div>
@@ -219,36 +301,50 @@ export default function ContactPage() {
         <div className="border-t border-ink-100 bg-cream-50 py-16">
           <div className="container-content">
             <div className="flex items-center justify-center gap-2">
-              <Sparkle className="h-3.5 w-3.5 text-ink-300" aria-hidden="true" />
-              <h2 className="font-display text-2xl font-semibold text-ink-700">Other Ways To Reach Us</h2>
-              <Sparkle className="h-3.5 w-3.5 text-ink-300" aria-hidden="true" />
+              <Sparkle
+                className="h-3.5 w-3.5 text-ink-300"
+                aria-hidden="true"
+              />
+              <h2 className="font-display text-2xl font-semibold text-ink-700">
+                Other Ways To Reach Us
+              </h2>
+              <Sparkle
+                className="h-3.5 w-3.5 text-ink-300"
+                aria-hidden="true"
+              />
             </div>
 
             <div className="mt-8 grid grid-cols-4 gap-4">
-              {otherWays.map(({ label, icon: Icon, bg, color, labelColor, lines, href }) => {
-                const content = (
-                  <div className="flex h-full items-start gap-3 rounded-2xl bg-ink-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-clay-sm">
-                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${bg} ${color}`}>
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <p className={`text-sm font-bold ${labelColor}`}>{label}</p>
-                      {lines.map((line) => (
-                        <p key={line} className="mt-0.5 text-sm text-ink-400">
-                          {line}
+              {otherWays.map(
+                ({ label, icon: Icon, bg, color, labelColor, lines, href }) => {
+                  const content = (
+                    <div className="flex h-full items-start gap-3 rounded-2xl bg-ink-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-clay-sm">
+                      <span
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${bg} ${color}`}
+                      >
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <div>
+                        <p className={`text-sm font-bold ${labelColor}`}>
+                          {label}
                         </p>
-                      ))}
+                        {lines.map((line) => (
+                          <p key={line} className="mt-0.5 text-sm text-ink-400">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-                return href ? (
-                  <a key={label} href={href} className="block">
-                    {content}
-                  </a>
-                ) : (
-                  <div key={label}>{content}</div>
-                );
-              })}
+                  );
+                  return href ? (
+                    <a key={label} href={href} className="block">
+                      {content}
+                    </a>
+                  ) : (
+                    <div key={label}>{content}</div>
+                  );
+                },
+              )}
             </div>
 
             <div className="mt-6 flex flex-row items-center gap-2 rounded-3xl bg-ink-100 p-2 py-0 pl-2 pr-3 text-left">
@@ -266,7 +362,8 @@ export default function ContactPage() {
                   Can&apos;t find what you&apos;re looking for?
                 </p>
                 <p className="mt-1 text-sm text-ink-400">
-                  Check out our FAQs or browse our Help Center for quick answers.
+                  Check out our FAQs or browse our Help Center for quick
+                  answers.
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
