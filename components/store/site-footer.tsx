@@ -93,6 +93,7 @@ const helpLinks = [
 const whyParents = [
   {
     label: "Instant Download",
+    href: "/digital-delivery-policy",
     description: "Get your files right away",
     icon: Download,
     bg: "bg-ink-50",
@@ -100,6 +101,7 @@ const whyParents = [
   },
   {
     label: "Print at Home",
+    href: "/digital-delivery-policy",
     description: "Easy to print and use",
     icon: Printer,
     bg: "bg-sage-50",
@@ -107,6 +109,7 @@ const whyParents = [
   },
   {
     label: "Trusted Content",
+    href: "/about",
     description: "Authentic & beneficial",
     icon: ShieldCheck,
     bg: "bg-blossom-50",
@@ -114,6 +117,7 @@ const whyParents = [
   },
   {
     label: "Made with Love",
+    href: "/about",
     description: "For little Muslims",
     icon: Heart,
     bg: "bg-sunny-50",
