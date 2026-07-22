@@ -49,7 +49,7 @@ const otherWays = [
 
 export default function ContactPage() {
   return (
-    <div className="bg-[#FBF3EC]">
+    <div className="bg-cream">
       {/* Mobile & tablet: stacked single-column layout, distinct from desktop's 3-col grid */}
       <div className="lg:hidden">
         <div className="container-content py-10 xs:py-12">
@@ -73,7 +73,7 @@ export default function ContactPage() {
             </div>
 
             <div className="relative -mr-6 h-40 w-24 shrink-0 xs:h-48 xs:w-40">
-              <Image src="/images/contact us.png" alt="" fill sizes="200px" className="scale-[2.2] object-contain" />
+              <Image src="/images/contact us.png" alt="" fill sizes="200px" className="scale-[1.6] object-contain" />
             </div>
           </div>
 
@@ -206,8 +206,8 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="relative aspect-[3/2] w-full scale-125">
-              <Image src="/images/contact us.png" alt="" fill sizes="640px" className="object-contain" />
+            <div className="relative aspect-[3/2] w-full">
+              <Image src="/images/contact us.png" alt="" fill sizes="640px" className="object-contain scale-[1.8]" />
             </div>
 
             <div>
@@ -216,7 +216,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="border-t border-ink-100 bg-white py-16">
+        <div className="border-t border-ink-100 bg-cream-50 py-16">
           <div className="container-content">
             <div className="flex items-center justify-center gap-2">
               <Sparkle className="h-3.5 w-3.5 text-ink-300" aria-hidden="true" />
