@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Mail, Loader2, BookOpen, AlertTriangle } from "lucide-react";
+import { Mail, Loader2, BookOpen, AlertTriangle, Send, ShieldCheck, Heart } from "lucide-react";
 import { buyerLoginSchema, type BuyerLoginFormValues } from "@/lib/validation/login";
 
 export function BuyerLoginForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -33,7 +34,7 @@ export function BuyerLoginForm() {
         return;
       }
 
-      setSubmittedEmail(values.email);
+      router.push(`/login/check-email?email=${encodeURIComponent(values.email)}`);
     } catch {
       setSubmitError("Something went wrong. Please check your connection and try again.");
     } finally {
@@ -41,57 +42,41 @@ export function BuyerLoginForm() {
     }
   }
 
-  if (submittedEmail) {
-    return (
-      <div className="flex flex-col items-center gap-4 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-sage-50 text-sage-600">
-          <Mail className="h-6 w-6" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="font-display text-lg font-semibold text-ink-700">Check your email</p>
-          <p className="mt-1 max-w-xs text-sm text-ink-400">
-            We&apos;ve sent a secure sign-in link to <strong>{submittedEmail}</strong>. It expires
-            in 15 minutes.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setSubmittedEmail(null)}
-          className="text-sm font-semibold text-sage-700 underline-offset-2 hover:underline"
-        >
-          Use a different email
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
-      <div className="flex flex-col items-center gap-2 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sage-50 text-sage-600">
-          <BookOpen className="h-5 w-5" aria-hidden="true" />
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-xs" noValidate>
+      <div className="flex flex-col items-center text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-ink-50 text-ink-500 shadow-soft">
+          <BookOpen className="h-7 w-7" aria-hidden="true" />
         </span>
-        <h1 className="font-display text-2xl font-semibold text-ink-700">Login to Little Ilmies</h1>
-        <p className="max-w-xs text-sm text-ink-400">
+        <h1 className="mt-4 font-display text-2xl font-bold text-ink-700 sm:text-3xl">Login to Little Ilmies</h1>
+        <p className="mt-2 max-w-xs text-sm font-medium leading-relaxed text-ink-400">
           No password needed. We&apos;ll email you a secure link to sign in.
         </p>
+        <div className="mt-4 flex w-24 items-center justify-center gap-3 text-blossom-400" aria-hidden="true">
+          <span className="h-px flex-1 bg-blossom-300" />
+          <Heart className="h-4 w-4 fill-blossom-400" />
+          <span className="h-px flex-1 bg-blossom-300" />
+        </div>
       </div>
 
-      <div>
+      <div className="mt-4">
         <label htmlFor="login-email" className="mb-1.5 block text-sm font-semibold text-ink-600">
           Email address
         </label>
-        <input
-          id="login-email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? "login-email-error" : undefined}
-          {...register("email")}
-          placeholder="you@example.com"
-          className="store-input rounded-xl"
-        />
+        <div className="relative">
+          <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gold-400" aria-hidden="true" />
+          <input
+            id="login-email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? "login-email-error" : undefined}
+            {...register("email")}
+            placeholder="you@example.com"
+            className="store-input rounded-2xl pl-12"
+          />
+        </div>
         {errors.email && (
           <p id="login-email-error" role="alert" className="mt-1.5 text-xs text-gold-700">
             {errors.email.message}
@@ -106,16 +91,24 @@ export function BuyerLoginForm() {
         </p>
       )}
 
-      <button type="submit" disabled={isSubmitting} className="btn-primary w-full disabled:opacity-60">
+      <button type="submit" disabled={isSubmitting} className="btn-primary mt-4 w-full bg-ink-600 py-3.5 text-base shadow-clay-primary hover:bg-ink-700 disabled:opacity-60">
         {isSubmitting ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         ) : (
-          "Send Sign-In Link"
+          <>
+            <Send className="h-5 w-5" aria-hidden="true" />
+            Send Sign-in Link
+          </>
         )}
       </button>
 
-      <p className="text-center text-xs text-ink-300">
-        Purchased before? Use the same email you checked out with to see your downloads.
+      <p className="mx-auto mt-3 flex max-w-xs items-start justify-center gap-2 text-center text-sm leading-relaxed text-ink-400">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 fill-sage-500 text-sage-500" aria-hidden="true" />
+        <span>
+          We&apos;ll never share your email.
+          <br />
+          Your account is secure with us.
+        </span>
       </p>
     </form>
   );

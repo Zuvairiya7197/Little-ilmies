@@ -11,6 +11,7 @@ export interface WishlistItem {
 interface WishlistState {
   items: WishlistItem[];
   toggleItem: (item: WishlistItem) => void;
+  clear: () => void;
   isWishlisted: (productId: string) => boolean;
 }
 
@@ -28,6 +29,7 @@ export const useWishlistStore = create<WishlistState>()(
       },
       isWishlisted: (productId) =>
         get().items.some((i) => i.productId === productId),
+      clear: () => set({ items: [] }),
     }),
     { name: "little-ilmies-wishlist" }
   )

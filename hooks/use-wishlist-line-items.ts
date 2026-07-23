@@ -11,9 +11,13 @@ export interface WishlistLineItem {
   productId: string;
   slug: string;
   title: string;
+  shortDescription: string;
   coverImage: string;
   price: number;
   currencyCode: CurrencyCode;
+  categoryName: string;
+  ageRange: string;
+  pageCount: number;
 }
 
 export function useWishlistLineItems() {
@@ -31,9 +35,13 @@ export function useWishlistLineItems() {
           productId: item.productId,
           slug: item.slug,
           title: item.title,
+          shortDescription: product.shortDescription,
           coverImage: item.coverImage,
           price: resolved.salePrice ?? resolved.regularPrice,
           currencyCode: resolved.currencyCode,
+          categoryName: product.category.name,
+          ageRange: product.ageRange,
+          pageCount: product.pageCount,
         },
       ];
     });

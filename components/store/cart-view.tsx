@@ -4,70 +4,74 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ShoppingBag,
-  ShoppingCart,
-  Tag,
+  ArrowLeft,
+  Award,
+  Download,
+  Infinity,
+  Lock,
   Minus,
   Plus,
-  Trash2,
-  Heart,
   ShieldCheck,
-  Download,
-  Lock,
+  ShoppingCart,
+  Tag,
+  Trash2,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
 import { useCartStore } from "@/lib/store/use-cart-store";
-import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { formatPrice } from "@/lib/utils/format";
-import { cn } from "@/lib/utils/cn";
 
-const trustBadges = [
-  { label: "Secure Checkout", icon: ShieldCheck, iconColor: "text-sunny-600" },
-  { label: "Instant Download", icon: Download, iconColor: "text-ink-500" },
-  { label: "100% Safe & Trusted", icon: Lock, iconColor: "text-sage-600" },
-  { label: "Loved by Families", icon: Heart, iconColor: "text-blossom-500" },
+const benefitItems = [
+  {
+    label: "Continue Shopping",
+    description: "Browse more books and resources",
+    icon: ArrowLeft,
+    href: "/shop",
+  },
+  {
+    label: "Instant Download",
+    description: "Access right after purchase",
+    icon: Download,
+    href: undefined,
+  },
+  {
+    label: "Lifetime Access",
+    description: "Download anytime, anywhere",
+    icon: Infinity,
+    href: undefined,
+  },
+  {
+    label: "High Quality",
+    description: "Well designed & print friendly",
+    icon: Award,
+    href: undefined,
+  },
 ] as const;
 
 export function CartView() {
   const lineItems = useCartLineItems();
   const removeItem = useCartStore((s) => s.removeItem);
   const setQuantity = useCartStore((s) => s.setQuantity);
-  const toggleWishlist = useWishlistStore((s) => s.toggleItem);
   const [couponCode, setCouponCode] = useState("");
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
 
-  const subtotal = lineItems.reduce((sum, i) => sum + i.lineTotal, 0);
-  const regularSubtotal = lineItems.reduce((sum, i) => sum + i.regularUnitPrice * i.quantity, 0);
+  const subtotal = lineItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  const regularSubtotal = lineItems.reduce((sum, item) => sum + item.regularUnitPrice * item.quantity, 0);
   const savings = Math.max(0, regularSubtotal - subtotal);
   const currencyCode = lineItems[0]?.currencyCode;
 
   function applyCoupon(e: React.FormEvent) {
     e.preventDefault();
     if (!couponCode.trim()) return;
-    // Coupon validation is a backend concern (Phase 5/6 admin coupons) —
-    // this UI only wires up the interaction for now.
     setCouponMessage("Coupon codes will be validated at checkout.");
-  }
-
-  function moveAllToWishlist() {
-    for (const item of lineItems) {
-      toggleWishlist({
-        productId: item.productId,
-        slug: item.slug,
-        title: item.title,
-        coverImage: item.coverImage,
-      });
-      removeItem(item.productId);
-    }
   }
 
   if (lineItems.length === 0) {
     return (
-      <div className="container-content py-6 xs:py-8 md:py-10">
-        <h1 className="font-display text-2xl font-semibold text-ink-700 xs:text-3xl">Cart</h1>
+      <div className="container-content py-8 md:py-12">
+        <h1 className="font-display text-3xl font-semibold text-ink-700">My Cart</h1>
         <EmptyState
-          icon={ShoppingBag}
+          icon={ShoppingCart}
           title="Your cart is empty"
           description="Browse our collection and find your child's next favourite book."
           action={
@@ -81,216 +85,218 @@ export function CartView() {
   }
 
   return (
-    <div className="container-content py-6 xs:py-8 md:py-10">
-      {/* Mobile & tablet: cart icon + subtitle, matches app-style cart design */}
-      <div className="mb-6 md:hidden">
-        <h1 className="flex items-center gap-2.5 font-display text-2xl font-semibold text-ink-700">
-          <ShoppingCart className="h-6 w-6 text-ink-600" aria-hidden="true" />
-          Your Cart ({lineItems.length})
-        </h1>
-        <p className="mt-1.5 text-sm text-ink-400">Review your items and proceed to checkout.</p>
-      </div>
+    <main className="min-h-[calc(100vh-8rem)] bg-gradient-to-br from-white via-cream-50 to-lilac-50/70">
+      <div className="mx-auto w-full max-w-[1600px] px-5 py-4 sm:px-8 md:py-5 xl:px-10">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-7">
+          <section className="min-w-0">
+            <div>
+              <div className="flex items-center gap-4">
+                <h1 className="font-display text-2xl font-bold leading-none text-ink-900 sm:text-3xl">
+                  My Cart
+                </h1>
+                <span className="grid h-8 min-w-8 place-items-center rounded-full bg-lilac-100 px-2.5 font-display text-base font-bold text-ink-800">
+                  {lineItems.length}
+                </span>
+              </div>
+              <p className="mt-2 flex items-center gap-2 text-sm font-medium text-ink-400 sm:text-base">
+                <ShoppingCart className="h-5 w-5 text-violet-700" aria-hidden="true" />
+                Review your items before checkout.
+              </p>
+            </div>
 
-      <h1 className="mb-6 hidden font-display text-2xl font-semibold text-ink-700 md:block xs:mb-8 xs:text-3xl">
-        Cart ({lineItems.length})
-      </h1>
-
-      <div className="md:flex md:items-start md:gap-10">
-        <div className="min-w-0 flex-1">
-          {/* Mobile & tablet: individual cards with quantity stepper, matches app-style cart design */}
-          <ul className="flex flex-col gap-4 md:hidden">
-            {lineItems.map((item) => (
-              <li key={item.productId} className="rounded-3xl bg-cream-50 p-4 shadow-clay-sm">
-                <div className="flex gap-4">
-                  <Link
-                    href={`/product/${item.slug}`}
-                    className="relative h-24 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-b from-ink-100 to-blossom-100"
-                  >
-                    <Image src={item.coverImage} alt="" fill sizes="80px" className="object-contain p-2" />
-                  </Link>
-
-                  <div className="min-w-0 flex-1">
-                    {(item.isBestseller || item.isNewArrival || item.isOnSale) && (
-                      <span
-                        className={cn(
-                          "inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
-                          item.isOnSale
-                            ? "bg-blossom-500 text-cream-50"
-                            : item.isBestseller
-                              ? "bg-ink-600 text-cream-50"
-                              : "bg-teal-500 text-cream-50"
-                        )}
-                      >
-                        {item.isOnSale ? "Sale" : item.isBestseller ? "Bestseller" : "New"}
-                      </span>
-                    )}
-                    <Link href={`/product/${item.slug}`}>
-                      <h3 className="mt-1.5 line-clamp-2 font-display text-base font-semibold leading-snug text-ink-700">
-                        {item.title}
-                      </h3>
-                    </Link>
-                    <p className="mt-1 text-xs text-ink-400">
-                      Ages {item.ageRange} · {item.pageCount}pg
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(item.productId, item.quantity - 1)}
-                      aria-label="Decrease quantity"
-                      className="tap-target flex h-9 w-9 items-center justify-center rounded-full bg-cream-100 text-ink-600"
-                    >
-                      <Minus className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                    <span className="w-5 text-center text-sm font-semibold text-ink-700">{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(item.productId, item.quantity + 1)}
-                      aria-label="Increase quantity"
-                      className="tap-target flex h-9 w-9 items-center justify-center rounded-full bg-cream-100 text-ink-600"
-                    >
-                      <Plus className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.productId)}
-                    aria-label="Remove item"
-                    className="tap-target flex h-9 w-9 items-center justify-center rounded-full bg-blossom-50 text-blossom-500"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-
-                <div className="mt-3 flex items-baseline gap-2 border-t border-ink-100 pt-3">
-                  <span className="font-display text-lg font-semibold text-ink-700">
-                    {formatPrice(item.unitPrice, item.currencyCode)}
-                  </span>
-                  {item.isOnSale && (
-                    <span className="text-sm text-ink-300 line-through">
-                      {formatPrice(item.regularUnitPrice, item.currencyCode)}
-                    </span>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            type="button"
-            onClick={moveAllToWishlist}
-            className="tap-target mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-cream-100 py-3 text-sm font-semibold text-ink-600 md:hidden"
-          >
-            <Heart className="h-4 w-4" aria-hidden="true" />
-            Move all items to wishlist
-          </button>
-
-          {/* Desktop: compact divided rows, unchanged */}
-          <ul className="hidden divide-y divide-ink-100 border-y border-ink-100 md:block xs:border xs:rounded-3xl xs:px-5">
-            {lineItems.map((item) => (
-              <li key={item.productId} className="flex gap-4 py-4 xs:py-5">
-                <Link
-                  href={`/product/${item.slug}`}
-                  className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-cream-200 xs:h-28"
+            <ul className="mt-5 space-y-3">
+              {lineItems.map((item) => (
+                <li
+                  key={item.productId}
+                  className="rounded-3xl border border-lilac-100 bg-white/92 p-4 shadow-[0_18px_55px_rgba(75,31,124,0.08)] sm:p-5"
                 >
-                  <Image src={item.coverImage} alt="" fill sizes="80px" className="object-cover" />
-                </Link>
-
-                <div className="flex min-w-0 flex-1 flex-col justify-between">
-                  <div>
-                    <Link href={`/product/${item.slug}`}>
-                      <h3 className="line-clamp-2 font-display text-base font-semibold leading-snug text-ink-600 hover:text-sage-700">
-                        {item.title}
-                      </h3>
-                    </Link>
-                    <p className="mt-1 text-sm text-ink-400">
-                      {formatPrice(item.unitPrice, item.currencyCode)} each
-                    </p>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-end gap-4">
-                    <span className="font-display text-base font-semibold text-ink-600">
-                      {formatPrice(item.lineTotal, item.currencyCode)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.productId)}
-                      className="tap-target text-xs font-semibold text-ink-300 underline-offset-2 hover:text-ink-500 hover:underline"
+                  <div className="grid gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] lg:grid-cols-[142px_minmax(0,1fr)_138px_108px_64px] lg:items-center">
+                    <Link
+                      href={`/product/${item.slug}`}
+                      className="relative h-32 w-full max-w-36 overflow-hidden rounded-2xl bg-gradient-to-br from-lilac-50 via-white to-blossom-50 sm:w-36 lg:h-36"
                     >
-                      Remove
-                    </button>
+                      <Image src={item.coverImage} alt="" fill sizes="144px" className="object-contain p-2.5" />
+                    </Link>
+
+                    <div className="min-w-0">
+                      <Link href={`/product/${item.slug}`}>
+                        <h2 className="max-w-xl font-display text-lg font-bold leading-tight text-ink-900 sm:text-xl">
+                          {item.title}
+                        </h2>
+                      </Link>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="font-display text-xl font-bold text-violet-700">
+                          {formatPrice(item.unitPrice, item.currencyCode)}
+                        </span>
+                        <span className="text-sm font-medium text-ink-300">each</span>
+                      </div>
+                      <span className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-lilac-100 px-3 py-1.5 text-xs font-semibold text-violet-800">
+                        <Tag className="h-4 w-4" aria-hidden="true" />
+                        Digital Download
+                      </span>
+                    </div>
+
+                    <div className="flex h-10 w-full max-w-34 items-center justify-between rounded-2xl border border-lilac-200 bg-white px-3 text-base font-semibold text-ink-500 shadow-sm sm:col-start-2 lg:col-start-auto">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                        aria-label="Decrease quantity"
+                        className="grid h-8 w-8 place-items-center rounded-full text-violet-800 transition hover:bg-lilac-50"
+                      >
+                        <Minus className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                        aria-label="Increase quantity"
+                        className="grid h-8 w-8 place-items-center rounded-full text-violet-800 transition hover:bg-lilac-50"
+                      >
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+
+                    <div className="font-display text-xl font-bold text-ink-900 sm:col-start-2 lg:col-start-auto">
+                      {formatPrice(item.lineTotal, item.currencyCode)}
+                    </div>
+
+                    <div className="flex items-center gap-3 sm:col-start-2 lg:col-start-auto lg:flex-col">
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.productId)}
+                        aria-label="Remove item"
+                        className="grid h-10 w-10 place-items-center rounded-full bg-lilac-50 text-violet-800 transition hover:bg-blossom-50 hover:text-blossom-600"
+                      >
+                        <Trash2 className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.productId)}
+                        className="text-sm font-semibold text-violet-800 hover:text-blossom-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-4 hidden rounded-3xl border border-lilac-200 bg-white/75 px-6 py-4 shadow-[0_16px_45px_rgba(75,31,124,0.06)] md:flex md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-lilac-100 text-violet-800">
+                  <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="font-display text-lg font-bold text-ink-900">Safe & Secure</h2>
+                  <p className="mt-1 text-sm font-medium text-ink-400">
+                    Your data and payments are always protected.
+                  </p>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+              </div>
+              <div className="relative h-20 w-72">
+                <Image src="/images/safe & secure.png" alt="" fill sizes="288px" className="object-contain" />
+              </div>
+            </div>
+          </section>
 
-        <div className="mt-6 shrink-0 md:mt-0 md:w-80">
-          <div className="card-surface p-5">
-            <h2 className="mb-5 font-display text-lg font-semibold text-ink-700">Order Summary</h2>
+          <aside className="xl:pt-3">
+            <div className="sticky top-5 rounded-3xl border border-lilac-200 bg-white/92 p-5 shadow-[0_20px_65px_rgba(75,31,124,0.09)]">
+              <h2 className="font-display text-xl font-bold text-ink-900">Order Summary</h2>
 
-            <form onSubmit={applyCoupon} className="mb-5">
-              <label htmlFor="coupon" className="section-eyebrow mb-2 block">
-                Coupon code
-              </label>
-              <div className="flex gap-2">
-                <div className="relative min-w-0 flex-1">
-                  <Tag
-                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300"
-                    aria-hidden="true"
-                  />
+              <form onSubmit={applyCoupon} className="mt-5">
+                <label className="mb-2 flex items-center gap-3 text-base font-semibold text-green-700" htmlFor="coupon">
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-green-50">
+                    <Tag className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  Have a coupon code?
+                </label>
+                <div className="grid gap-3 sm:grid-cols-[1fr_116px]">
                   <input
                     id="coupon"
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="Enter code"
-                    className="store-input rounded-full py-2 pl-9 pr-3 text-sm"
+                    className="h-11 rounded-2xl border border-lilac-200 bg-white px-4 text-base font-medium text-ink-700 outline-none transition placeholder:text-ink-200 focus:border-violet-400 focus:ring-4 focus:ring-lilac-100"
                   />
+                  <button
+                    type="submit"
+                    className="h-11 rounded-2xl bg-green-100 px-5 text-base font-bold text-green-700 transition hover:bg-green-200"
+                  >
+                    Apply
+                  </button>
                 </div>
-                <button type="submit" className="btn-secondary px-4 text-sm">
-                  Apply
-                </button>
-              </div>
-              {couponMessage && <p className="mt-2 text-xs text-ink-400">{couponMessage}</p>}
-            </form>
+                {couponMessage && <p className="mt-3 text-sm font-medium text-ink-400">{couponMessage}</p>}
+              </form>
 
-            <div className="flex flex-col gap-2 border-t border-ink-100 pt-4 text-sm">
-              <div className="flex items-center justify-between text-ink-400">
-                <span>Subtotal ({lineItems.length} {lineItems.length === 1 ? "item" : "items"})</span>
-                <span>{currencyCode ? formatPrice(regularSubtotal, currencyCode) : null}</span>
-              </div>
-              {savings > 0 && (
-                <div className="flex items-center justify-between text-blossom-600">
+              <div className="mt-4 space-y-3 border-y border-dashed border-lilac-200 py-4 text-base">
+                <div className="flex items-center justify-between text-ink-700">
+                  <span>Subtotal ({lineItems.length} {lineItems.length === 1 ? "item" : "items"})</span>
+                  <span className="font-semibold">{currencyCode ? formatPrice(regularSubtotal, currencyCode) : null}</span>
+                </div>
+                <div className="flex items-center justify-between text-ink-700">
                   <span>Discount</span>
-                  <span>- {currencyCode ? formatPrice(savings, currencyCode) : null}</span>
+                  <span className="font-semibold text-green-700">
+                    - {currencyCode ? formatPrice(savings, currencyCode) : null}
+                  </span>
                 </div>
-              )}
-              <div className="mt-2 flex items-center justify-between border-t border-ink-100 pt-3 font-display text-lg font-semibold text-ink-700">
-                <span>Total</span>
-                <span>{currencyCode ? formatPrice(subtotal, currencyCode) : null}</span>
               </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <span className="font-display text-xl font-bold text-ink-900">Total</span>
+                <span className="font-display text-2xl font-bold text-violet-800">
+                  {currencyCode ? formatPrice(subtotal, currencyCode) : null}
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-lilac-100/75 px-4 py-2.5 text-xs font-semibold text-ink-500">
+                <ShieldCheck className="h-5 w-5 text-violet-700" aria-hidden="true" />
+                <span>You&apos;ll earn 2 points with this order!</span>
+              </div>
+
+              <Link
+                href="/checkout"
+                className="mt-4 flex min-h-12 items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-700 to-purple-700 px-5 py-2.5 text-center text-lg font-bold text-white shadow-[0_16px_30px_rgba(105,22,176,0.26)] transition hover:scale-[1.01]"
+              >
+                <Lock className="h-5 w-5" aria-hidden="true" />
+                Proceed to Checkout
+              </Link>
+
+              <p className="mt-4 flex items-center justify-center gap-2 text-xs font-medium text-ink-400">
+                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                Secure checkout • 100% safe payment
+              </p>
             </div>
+          </aside>
+        </div>
 
-            <Link href="/checkout" className="btn-primary mt-5 w-full">
-              Proceed to Checkout
-            </Link>
-          </div>
+        <div className="mt-5 grid gap-3 rounded-3xl border border-lilac-100 bg-white/70 p-3 shadow-[0_12px_40px_rgba(75,31,124,0.05)] md:grid-cols-4">
+          {benefitItems.map(({ label, description, icon: Icon, href }) => {
+            const content = (
+              <>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-lilac-200 bg-lilac-50 text-violet-800">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block font-display text-sm font-bold text-ink-900">{label}</span>
+                  <span className="mt-0.5 block text-xs font-medium text-ink-400">{description}</span>
+                </span>
+              </>
+            );
 
-          <div className="mt-4 grid grid-cols-2 gap-3 rounded-3xl bg-cream-50 p-4 shadow-clay-sm md:hidden">
-            {trustBadges.map(({ label, icon: Icon, iconColor }) => (
-              <div key={label} className="flex items-center gap-2">
-                <Icon className={`h-4 w-4 shrink-0 ${iconColor}`} aria-hidden="true" />
-                <span className="text-xs font-semibold leading-tight text-ink-600">{label}</span>
+            return href ? (
+              <Link key={label} href={href} className="flex items-center gap-4 rounded-2xl p-2 transition hover:bg-white">
+                {content}
+              </Link>
+            ) : (
+              <div key={label} className="flex items-center gap-4 rounded-2xl p-2 md:border-l md:border-lilac-100 md:pl-6">
+                {content}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
