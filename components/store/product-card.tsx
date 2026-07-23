@@ -90,7 +90,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           />
         </button>
 
-        <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between gap-1.5">
+        <div className="absolute inset-x-2.5 bottom-2.5 hidden items-center justify-between gap-1.5 lg:flex">
           <Link
             href={`/product/${product.slug}#preview`}
             className="tap-target flex items-center gap-1.5 rounded-full bg-cream-50 px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft"
@@ -155,7 +155,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
                 coverImage: product.coverImage,
               })
             }
-            className="tap-target flex items-center gap-1.5 rounded-full bg-ink-600 px-4 py-2 text-xs font-semibold text-cream-50 transition-all hover:bg-ink-700 active:scale-95"
+            className="tap-target hidden items-center gap-1.5 rounded-full bg-ink-600 px-4 py-2 text-xs font-semibold text-cream-50 transition-all hover:bg-ink-700 active:scale-95 lg:flex"
           >
             <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
             Add

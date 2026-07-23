@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ShoppingBag, Lock } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CheckoutForm } from "@/components/store/checkout-form";
-import { CheckoutOrderSummary } from "@/components/store/checkout-order-summary";
 import { CheckoutStepProgress } from "@/components/store/checkout-step-progress";
 import { RegionMismatchNotice } from "@/components/store/region-mismatch-notice";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
@@ -35,9 +34,9 @@ export function CheckoutView() {
   }
 
   return (
-    <div className="container-content pb-32 pt-6 xs:pt-8 md:pb-16 md:pt-10">
+    <div className="container-content pb-32 pt-6 xs:pt-8 md:pt-10">
       {/* Mobile & tablet: lock icon + subtitle + step tracker, matches app-style checkout design */}
-      <div className="mb-6 md:hidden">
+      <div className="mx-auto mb-6 max-w-2xl">
         <h1 className="flex items-center gap-2.5 font-display text-2xl font-semibold text-ink-700">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-50 text-ink-600">
             <Lock className="h-4 w-4" aria-hidden="true" />
@@ -51,21 +50,12 @@ export function CheckoutView() {
         </div>
       </div>
 
-      <h1 className="mb-4 hidden font-display text-2xl font-semibold text-ink-700 md:block xs:text-3xl">
-        Checkout
-      </h1>
-
-      <div className="mb-6">
+      <div className="mx-auto mb-6 max-w-2xl">
         <RegionMismatchNotice />
       </div>
 
-      <div className="md:flex md:flex-row-reverse md:items-start md:gap-10">
-        <div className="order-2 mt-6 hidden md:order-none md:mt-0 md:block md:w-96 md:shrink-0">
-          <CheckoutOrderSummary />
-        </div>
-        <div className="order-1 min-w-0 flex-1">
-          <CheckoutForm mobilePhase={mobilePhase} onMobilePhaseChange={setMobilePhase} />
-        </div>
+      <div className="mx-auto max-w-2xl">
+        <CheckoutForm mobilePhase={mobilePhase} onMobilePhaseChange={setMobilePhase} />
       </div>
     </div>
   );

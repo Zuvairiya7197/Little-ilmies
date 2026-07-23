@@ -9,7 +9,7 @@ const steps = ["Cart", "Details", "Payment", "Review"] as const;
  * there's no separate step-by-step wizard behind these markers. */
 export function CheckoutStepProgress({ activeStep = 1 }: { activeStep?: number }) {
   return (
-    <div className="flex items-center justify-between md:hidden" aria-hidden="true">
+    <div className="flex items-center justify-between" aria-hidden="true">
       {steps.map((label, i) => (
         <div key={label} className="flex flex-1 items-center last:flex-none">
           <div className="flex flex-col items-center gap-1.5">

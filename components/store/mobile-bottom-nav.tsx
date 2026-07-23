@@ -33,7 +33,7 @@ export function MobileBottomNav() {
 
   const tabClass = (active: boolean) =>
     cn(
-      "tap-target flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium transition-colors",
+      "tap-target flex flex-1 flex-col items-center justify-center gap-1 py-2 text-sm font-semibold transition-colors",
       active ? "text-ink-700" : "text-ink-400"
     );
 
@@ -41,7 +41,7 @@ export function MobileBottomNav() {
     <nav
       aria-label="Primary mobile"
       style={{ minHeight: "var(--mobile-nav-height)" }}
-      className="safe-bottom fixed inset-x-0 bottom-0 z-50 flex border-t border-ink-100 bg-cream-50/95 shadow-clay-sm backdrop-blur md:hidden"
+      className="safe-bottom fixed inset-x-7 bottom-6 z-50 flex rounded-3xl border border-ink-100 bg-cream-50/95 shadow-clay-sm backdrop-blur lg:hidden"
     >
       <Link href="/" className={tabClass(isActive("/") && pathname === "/")}>
         <Home className="h-5 w-5" aria-hidden={true} />

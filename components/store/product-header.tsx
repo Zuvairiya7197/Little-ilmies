@@ -6,7 +6,7 @@ import type { ProductDetail } from "@/types/catalog";
 export function ProductHeader({ product }: { product: ProductDetail }) {
   return (
     <div>
-      <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-xs text-ink-300 md:flex">
+      <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-xs text-ink-300 lg:flex">
         <Link href="/shop" className="hover:text-ink-500">
           Shop
         </Link>
@@ -19,28 +19,28 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
       </nav>
 
       {/* Mobile & tablet: plain category label + ages/pages line, matches app-style PDP design */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <Link
           href={`/shop/${product.category.slug}`}
-          className="text-xs font-bold uppercase tracking-wide text-sage-600"
+          className="text-sm font-bold uppercase tracking-wide text-sage-600"
         >
           {product.category.name}
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-bold leading-tight text-ink-700">
+        <h1 className="mt-4 font-display text-3xl font-bold leading-tight text-ink-700 sm:text-4xl">
           {product.title}
         </h1>
-        <p className="mt-2 text-sm text-ink-500">
+        <p className="mt-5 text-xl text-ink-400">
           Ages {product.ageRange} · {product.pageCount}pg
         </p>
         {product.reviewCount > 0 && (
-          <div className="mt-1.5 flex items-center gap-2">
-            <StarRating rating={product.rating} />
-            <span className="text-sm text-ink-400">({product.reviewCount})</span>
+          <div className="mt-5 flex items-center gap-3">
+            <StarRating rating={product.rating} size="md" />
+            <span className="text-base text-ink-400">({product.reviewCount})</span>
           </div>
         )}
       </div>
 
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <span className="inline-flex items-center rounded-full bg-sage-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-sage-700">
           {product.category.name}
         </span>

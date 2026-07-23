@@ -37,13 +37,13 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
   return (
     <>
       {/* Mobile & tablet: just Add to Cart + Add to Wishlist, matches app-style PDP design */}
-      <div className="flex gap-3 md:hidden">
+      <div className="grid grid-cols-2 gap-5 lg:hidden">
         <button
           type="button"
           onClick={addToCart}
-          className="tap-target flex flex-1 items-center justify-center gap-2 rounded-full bg-ink-600 py-3.5 text-sm font-semibold text-cream-50 transition-all active:scale-95"
+          className="tap-target flex items-center justify-center gap-2 rounded-2xl bg-ink-600 px-2 py-4 text-base font-semibold text-cream-50 shadow-clay-primary transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
         >
-          <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+          <ShoppingCart className="h-6 w-6" aria-hidden="true" />
           Add to Cart
         </button>
         <button
@@ -57,17 +57,17 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
             })
           }
           aria-pressed={isWishlisted}
-          className="tap-target flex flex-1 items-center justify-center gap-2 rounded-full bg-cream-100 py-3.5 text-sm font-semibold text-ink-600 transition-all active:scale-95"
+          className="tap-target flex items-center justify-center gap-2 rounded-2xl bg-cream-50 px-2 py-4 text-base font-semibold text-ink-600 shadow-soft transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
         >
           <Heart
-            className={cn("h-4 w-4", isWishlisted ? "fill-blossom-500 text-blossom-500" : "text-ink-500")}
+            className={cn("h-6 w-6", isWishlisted ? "fill-blossom-500 text-blossom-500" : "text-ink-500")}
             aria-hidden="true"
           />
           {isWishlisted ? "Saved" : "Add to Wishlist"}
         </button>
       </div>
 
-      <div className="hidden rounded-3xl bg-cream-50 p-6 shadow-clay md:block">
+      <div className="hidden rounded-3xl bg-cream-50 p-6 shadow-clay lg:block">
       <div className="flex items-baseline gap-3">
         <span className="font-display text-3xl font-semibold text-ink-700">
           {formatPrice(displayPrice, resolvedPrice.currencyCode)}

@@ -16,21 +16,21 @@ export function ProductMobileHero({ product }: { product: ProductDetail }) {
   const dotCount = Math.max(1, Math.min(5, product.previewImages.length || 1));
 
   return (
-    <div className="md:hidden">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-b from-ink-100 to-blossom-100 shadow-clay">
+    <div className="lg:hidden">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] bg-gradient-to-b from-ink-100 via-blossom-100 to-cream-100 shadow-card sm:rounded-[1.45rem]">
         <Image
           src={product.coverImage}
           alt={`${product.title} book cover`}
           fill
           sizes="(max-width: 480px) 90vw, 420px"
-          className="object-contain p-6"
+          className="object-contain p-2 xs:p-3 sm:p-4"
           priority
         />
 
         {(product.isBestseller || product.isNewArrival) && (
           <span
             className={cn(
-              "absolute left-3 top-3 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide",
+              "absolute left-3 top-3 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wide",
               product.isBestseller ? "bg-ink-600 text-cream-50" : "bg-teal-500 text-cream-50"
             )}
           >
@@ -53,16 +53,16 @@ export function ProductMobileHero({ product }: { product: ProductDetail }) {
           className="tap-target absolute right-3 top-3 flex items-center justify-center rounded-full bg-cream-50 text-ink-500 shadow-soft"
         >
           <Heart
-            className={cn("h-4 w-4", isWishlisted ? "fill-blossom-500 text-blossom-500" : "text-ink-400")}
+            className={cn("h-5 w-5", isWishlisted ? "fill-blossom-500 text-blossom-500" : "text-ink-400")}
             aria-hidden="true"
           />
         </button>
       </div>
 
       {dotCount > 1 && (
-        <div className="mt-3 flex items-center justify-center gap-1.5" aria-hidden="true">
+        <div className="-mt-7 flex items-center justify-center gap-2" aria-hidden="true">
           {Array.from({ length: dotCount }).map((_, i) => (
-            <span key={i} className={cn("h-1.5 rounded-full", i === 0 ? "w-4 bg-ink-600" : "w-1.5 bg-ink-100")} />
+            <span key={i} className={cn("h-2 rounded-full shadow-soft", i === 0 ? "w-2 bg-ink-600" : "w-2 bg-cream-50/80")} />
           ))}
         </div>
       )}

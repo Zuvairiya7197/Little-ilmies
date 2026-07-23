@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -64,6 +64,10 @@ export function CheckoutForm({
   const regularSubtotal = lineItems.reduce((sum, i) => sum + i.regularUnitPrice * i.quantity, 0);
   const savings = Math.max(0, regularSubtotal - subtotal);
   const currencyCode = lineItems[0]?.currencyCode;
+  const isInrCheckout = currencyCode === "INR";
+  const availablePaymentMethods = isInrCheckout
+    ? paymentMethods
+    : paymentMethods.filter((method) => method.id === "card");
 
   const {
     register,
@@ -72,6 +76,12 @@ export function CheckoutForm({
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
   });
+
+  useEffect(() => {
+    if (!availablePaymentMethods.some((method) => method.id === paymentMethod)) {
+      setPaymentMethod(availablePaymentMethods[0]?.id ?? "card");
+    }
+  }, [availablePaymentMethods, paymentMethod]);
 
   function goToPayment() {
     onMobilePhaseChange("payment");
@@ -105,6 +115,8 @@ export function CheckoutForm({
         return;
       }
 
+      const selectedPaymentMethod = createData.currencyCode === "INR" ? paymentMethod : "card";
+
       const razorpay = new window.Razorpay({
         key: createData.razorpayKeyId,
         amount: createData.amount,
@@ -117,10 +129,10 @@ export function CheckoutForm({
         // Narrows Razorpay's own checkout modal to the method the shopper
         // picked on our Payment step, rather than showing every tab.
         method: {
-          netbanking: paymentMethod === "netbanking",
-          card: paymentMethod === "card",
-          upi: paymentMethod === "upi",
-          wallet: paymentMethod === "wallet",
+          netbanking: selectedPaymentMethod === "netbanking",
+          card: selectedPaymentMethod === "card",
+          upi: selectedPaymentMethod === "upi",
+          wallet: selectedPaymentMethod === "wallet",
         },
         handler: async (response: {
           razorpay_order_id: string;
@@ -163,25 +175,18 @@ export function CheckoutForm({
       {/* Contact Information — single registered instance shared by both breakpoints
           (two DOM inputs bound to the same react-hook-form field name would fight
           over which one's value wins at validation time), just restyled per size. */}
-      <div className={cn("rounded-3xl bg-cream-50 p-5 shadow-clay-sm md:card-surface md:rounded-none md:bg-transparent md:p-5 md:shadow-none", mobilePhase === "payment" && "hidden md:block")}>
+      <div className={cn("rounded-3xl bg-cream-50 p-5 shadow-clay-sm", mobilePhase === "payment" && "hidden")}>
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-bold text-ink-700 md:text-lg md:font-semibold">
-            <span className="md:hidden">Contact Information</span>
-            <span className="hidden md:inline">Your Details</span>
+          <h2 className="font-display text-lg font-bold text-ink-700">
+            <span>Contact Information</span>
           </h2>
-          <Link href="/login" className="shrink-0 text-sm text-ink-400 md:hidden">
+          <Link href="/login" className="shrink-0 text-sm text-ink-400">
             Already have an account? <span className="font-semibold text-blossom-600">Login</span>
           </Link>
         </div>
-        <p className="mt-1 hidden text-sm text-ink-400 md:block">
-          No account needed — we&apos;ll email your download links here.
-        </p>
 
         <div className="relative mt-4">
-          <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300 md:hidden" aria-hidden="true" />
-          <label htmlFor="email" className="mb-1.5 hidden text-sm font-semibold text-ink-600 md:block">
-            Email address
-          </label>
+          <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300" aria-hidden="true" />
           <input
             id="email"
             type="email"
@@ -190,7 +195,7 @@ export function CheckoutForm({
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? "email-error" : undefined}
             {...register("email")}
-            className="store-input rounded-2xl pl-11 md:rounded-xl md:pl-4"
+            className="store-input rounded-2xl pl-11"
             placeholder="Email address"
           />
         </div>
@@ -200,10 +205,7 @@ export function CheckoutForm({
           </p>
         )}
 
-        <div className="mt-3 md:mt-4">
-          <label htmlFor="fullName" className="mb-1.5 hidden text-sm font-semibold text-ink-600 md:block">
-            Full name
-          </label>
+        <div className="mt-3">
           <input
             id="fullName"
             type="text"
@@ -211,7 +213,7 @@ export function CheckoutForm({
             aria-invalid={Boolean(errors.fullName)}
             aria-describedby={errors.fullName ? "fullName-error" : undefined}
             {...register("fullName")}
-            className="store-input rounded-2xl md:rounded-xl"
+            className="store-input rounded-2xl"
             placeholder="Full name"
           />
         </div>
@@ -221,7 +223,7 @@ export function CheckoutForm({
           </p>
         )}
 
-        <label className="mt-3 flex items-center gap-2.5 text-sm text-ink-500 md:hidden">
+        <label className="mt-3 flex items-center gap-2.5 text-sm text-ink-500">
           <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-ink-200 text-ink-600" />
           Email me order updates and offers
         </label>
@@ -229,7 +231,7 @@ export function CheckoutForm({
 
       {/* Mobile & tablet: Order Items, matches app-style checkout design */}
       {mobilePhase === "details" && (
-        <div className="flex flex-col gap-6 md:hidden">
+        <div className="flex flex-col gap-6">
           <div className="rounded-3xl bg-cream-50 p-5 shadow-clay-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-display text-lg font-bold text-ink-700">Order Items ({lineItems.length})</h2>
@@ -271,7 +273,7 @@ export function CheckoutForm({
 
       {/* Mobile & tablet: Payment phase — method picker + order summary + trust points, matches app-style checkout design */}
       {mobilePhase === "payment" && (
-        <div className="flex flex-col gap-6 md:hidden">
+        <div className="flex flex-col gap-6">
           {savings > 0 && (
             <div className="flex items-center gap-4 rounded-3xl bg-sage-50 p-4">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream-50 text-sage-700 shadow-soft">
@@ -286,7 +288,7 @@ export function CheckoutForm({
           <div className="rounded-3xl bg-cream-50 p-5 shadow-clay-sm">
             <h2 className="font-display text-lg font-bold text-ink-700">Payment Methods</h2>
             <div className="mt-3 flex flex-col gap-3">
-              {paymentMethods.map(({ id, label, description, icon: Icon, badge }) => (
+              {availablePaymentMethods.map(({ id, label, description, icon: Icon, badge }) => (
                 <label
                   key={id}
                   className={cn(
@@ -318,6 +320,12 @@ export function CheckoutForm({
                 </label>
               ))}
             </div>
+
+            {!isInrCheckout && (
+              <p className="mt-3 rounded-2xl bg-ink-50 px-3.5 py-3 text-xs font-semibold text-ink-500">
+                International orders are processed by card for {currencyCode ?? "your selected currency"} checkout.
+              </p>
+            )}
 
             <div className="mt-4 flex items-center gap-2.5 rounded-2xl bg-sage-50 p-3.5 text-xs font-semibold text-sage-800">
               <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -362,23 +370,6 @@ export function CheckoutForm({
         </div>
       )}
 
-      <div className="card-surface hidden p-5 md:block">
-        <p className="section-eyebrow mb-3">Payment method</p>
-        <div className="rounded-xl border border-sage-200 bg-sage-50 px-4 py-3 text-sm font-semibold text-sage-800">
-          Razorpay — Cards, UPI, Netbanking &amp; Wallets
-        </div>
-        <ul className="mt-4 flex flex-col gap-2 text-sm text-ink-400">
-          <li className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-sage-600" aria-hidden="true" />
-            256-bit encrypted, PCI-DSS compliant checkout
-          </li>
-          <li className="flex items-center gap-2">
-            <Lock className="h-4 w-4 text-sage-600" aria-hidden="true" />
-            We never store your card details
-          </li>
-        </ul>
-      </div>
-
       {submitError && (
         <p role="alert" className="flex items-start gap-2 rounded-xl bg-gold-50 px-3.5 py-2.5 text-sm text-gold-700">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -386,24 +377,11 @@ export function CheckoutForm({
         </p>
       )}
 
-      {/* Desktop submit; mobile uses the sticky bottom bar instead */}
-      <button
-        type="submit"
-        disabled={isSubmitting || lineItems.length === 0}
-        className="btn-primary hidden w-full disabled:opacity-60 md:flex"
-      >
-        {isSubmitting ? (
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        ) : (
-          `Pay ${currencyCode ? formatPrice(subtotal, currencyCode) : ""}`
-        )}
-      </button>
-
       <div
         style={{ bottom: "var(--mobile-nav-height)" }}
-        className="fixed inset-x-0 z-40 flex items-center gap-3 border-t border-ink-100 bg-cream-50/95 px-4 py-3 shadow-lifted backdrop-blur md:hidden"
+        className="fixed inset-x-0 z-40 flex items-center gap-3 border-t border-ink-100 bg-cream-50/95 px-4 py-3 shadow-lifted backdrop-blur lg:inset-x-auto lg:left-1/2 lg:bottom-6 lg:w-[min(42rem,calc(100%-3rem))] lg:-translate-x-1/2 lg:justify-center lg:rounded-3xl lg:border lg:px-5"
       >
-        <div className="min-w-0 shrink-0">
+        <div className="min-w-0 shrink-0 lg:w-40">
           <p className="text-xs text-ink-300">Total Amount</p>
           <p className="font-display text-lg font-bold text-ink-700">
             {currencyCode ? formatPrice(subtotal, currencyCode) : ""}
@@ -419,7 +397,7 @@ export function CheckoutForm({
             type="button"
             onClick={handleSubmit(goToPayment)}
             disabled={lineItems.length === 0}
-            className="btn-primary min-w-0 flex-1 disabled:opacity-60"
+            className="btn-primary min-w-0 flex-1 disabled:opacity-60 lg:max-w-md"
           >
             Continue to Payment
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -428,7 +406,7 @@ export function CheckoutForm({
           <button
             type="submit"
             disabled={isSubmitting || lineItems.length === 0}
-            className="btn-primary min-w-0 flex-1 disabled:opacity-60"
+            className="btn-primary min-w-0 flex-1 disabled:opacity-60 lg:max-w-md"
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

@@ -63,7 +63,7 @@ export function SiteHeader() {
               type="button"
               onClick={() => router.back()}
               aria-label="Go back"
-              className="tap-target flex items-center justify-center rounded-full text-ink-600 md:hidden"
+              className="tap-target flex items-center justify-center rounded-full text-ink-600 lg:hidden"
             >
               <ArrowLeft className="h-6 w-6" aria-hidden="true" />
             </button>
@@ -72,7 +72,7 @@ export function SiteHeader() {
               type="button"
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              className="tap-target flex items-center justify-center rounded-full text-ink-600 md:hidden"
+              className="tap-target flex items-center justify-center rounded-full text-ink-600 lg:hidden"
             >
               <Menu className="h-6 w-6" aria-hidden="true" />
             </button>
@@ -120,7 +120,7 @@ export function SiteHeader() {
               {mounted && <IconBadge count={cartCount} />}
             </button>
 
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <AccountMenu />
             </div>
           </div>
