@@ -36,7 +36,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
   const isOnSale = Boolean(resolvedPrice.salePrice);
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
+    <div className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
       <div className={cn("relative overflow-hidden", COVER_TINTS[tintIndex % COVER_TINTS.length])}>
         <Link
           href={`/product/${product.slug}`}
@@ -114,12 +114,12 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           {product.category.name}
         </p>
         <Link href={`/product/${product.slug}`} className="mt-1">
-          <h3 className="line-clamp-2 font-display text-base font-semibold leading-snug text-ink-700 transition-colors hover:text-sage-700">
+          <h3 className="line-clamp-2 min-h-[2.75rem] font-display text-base font-semibold leading-snug text-ink-700 transition-colors hover:text-sage-700">
             {product.title}
           </h3>
         </Link>
 
-        <div className="mt-1.5 flex items-center gap-2 text-xs text-ink-300">
+        <div className="mt-1.5 flex min-h-4 items-center gap-2 text-xs text-ink-300">
           {product.reviewCount > 0 && (
             <>
               <span className="flex items-center gap-1">
@@ -134,8 +134,8 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           <span>{product.pageCount}pg</span>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="flex items-baseline gap-2">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="font-display text-lg font-semibold text-ink-700">
               {formatPrice(displayPrice, resolvedPrice.currencyCode)}
             </span>

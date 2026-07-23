@@ -1,4 +1,4 @@
-import { Check, FileText, Globe, BookOpen, Printer, Gift, Star, Heart, Download } from "lucide-react";
+import { Check, FileText, Globe, BookOpen, Gift, Star, Heart, Download } from "lucide-react";
 import { StarRating } from "@/components/store/star-rating";
 import type { ProductDetail } from "@/types/catalog";
 

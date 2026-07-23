@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   Instagram,
   Facebook,
-  Youtube,
   MessageCircle,
   Moon,
   Landmark,
@@ -18,7 +17,6 @@ import {
   Lock,
   CreditCard,
   CheckCircle2,
-  BookOpen,
   ShoppingBag,
   HelpCircle,
   ChevronDown,
@@ -221,8 +219,8 @@ export function SiteFooter() {
       <div className="md:hidden">
         <div className="container-content pt-10 xs:pt-12">
           <div className="flex items-center gap-2">
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <Logo className="h-20 xs:h-24" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <Logo className="h-24 xs:h-28" />
               <p className="text-sm leading-relaxed text-ink-400">
                 Islamic ebooks and activities for little hearts and curious
                 minds. Read. Learn. Grow in Deen.
@@ -370,8 +368,8 @@ export function SiteFooter() {
       <div className="hidden md:block">
         <div className="container-content pb-0 pt-16">
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-5">
-            <div className="col-span-2 flex flex-col gap-2 md:col-span-1">
-              <Logo className="h-20 xs:h-20 md:h-28 lg:h-32" />
+            <div className="col-span-2 flex flex-col gap-1 md:col-span-1">
+              <Logo className="h-24 xs:h-24 md:h-32 lg:h-36" />
               <p className="max-w-[220px] text-sm leading-relaxed text-ink-400">
                 Islamic ebooks and activities for little hearts and curious
                 minds. Read. Learn. Grow in Deen.

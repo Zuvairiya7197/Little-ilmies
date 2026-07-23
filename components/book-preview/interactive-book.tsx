@@ -41,11 +41,6 @@ export function InteractiveBook({
 
   const handleOpenBook = () => setIsOpen(true);
 
-  const handleCloseBook = () => {
-    setIsOpen(false);
-    setCurrentPageIndex(-1);
-  };
-
   const nextPage = () => {
     if (currentPageIndex < totalLeaves - 1) setCurrentPageIndex((prev) => prev + 1);
   };

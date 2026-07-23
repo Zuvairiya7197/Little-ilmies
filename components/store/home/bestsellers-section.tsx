@@ -17,9 +17,9 @@ export function BestsellersSection({ products }: { products: ProductSummary[] })
           </h2>
         </div>
 
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 lg:grid-cols-6">
+        <div className="-mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:grid md:auto-rows-fr md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 lg:grid-cols-6">
           {bestsellers.map((product) => (
-            <div key={product.id} className="w-[45vw] shrink-0 snap-start xs:w-[38vw] sm:w-[30vw] md:w-auto">
+            <div key={product.id} className="flex w-[45vw] shrink-0 snap-start xs:w-[38vw] sm:w-[30vw] md:w-auto">
               <ProductCard product={product} />
             </div>
           ))}
@@ -32,9 +32,9 @@ export function BestsellersSection({ products }: { products: ProductSummary[] })
           </h2>
         </div>
 
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 lg:grid-cols-6">
+        <div className="-mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:grid md:auto-rows-fr md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 lg:grid-cols-6">
           {newArrivals.map((product) => (
-            <div key={product.id} className="w-[45vw] shrink-0 snap-start xs:w-[38vw] sm:w-[30vw] md:w-auto">
+            <div key={product.id} className="flex w-[45vw] shrink-0 snap-start xs:w-[38vw] sm:w-[30vw] md:w-auto">
               <ProductCard product={product} />
             </div>
           ))}

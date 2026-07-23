@@ -85,7 +85,7 @@ export function SiteHeader() {
             </button>
           )}
 
-          <Logo />
+          <Logo className="h-16 xs:h-20" />
 
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-2">

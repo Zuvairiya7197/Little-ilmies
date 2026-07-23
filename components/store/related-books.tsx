@@ -20,7 +20,7 @@ export function RelatedBooks({ products }: { products: ProductSummary[] }) {
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4">
+      <div className="mt-5 grid auto-rows-fr grid-cols-2 items-stretch gap-x-4 gap-y-8 sm:grid-cols-4">
         {products.map((product, i) => (
           <ProductCard key={product.id} product={product} tintIndex={i} />
         ))}

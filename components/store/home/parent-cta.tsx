@@ -57,7 +57,7 @@ export function ParentCta() {
             {trustPoints.map(({ label, icon: Icon }, i) => (
               <div key={label} className="flex items-center gap-4">
                 {i > 0 && <span className="hidden h-8 w-px bg-cream-50/20 xs:block" aria-hidden="true" />}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 rounded-full bg-ink-700/35 px-3 py-2 backdrop-blur-sm">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-50/15">
                     <Icon className="h-4 w-4 text-cream-50" aria-hidden="true" />
                   </span>

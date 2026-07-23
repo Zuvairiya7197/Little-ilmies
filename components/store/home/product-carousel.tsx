@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "@/components/store/product-card";
 import type { ProductSummary } from "@/types/catalog";
@@ -15,7 +15,7 @@ export function ProductCarousel({ products, showDots }: { products: ProductSumma
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  function updateScrollState() {
+  const updateScrollState = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 4);
@@ -34,7 +34,7 @@ export function ProductCarousel({ products, showDots }: { products: ProductSumma
       });
       setActiveIndex(closest);
     }
-  }
+  }, [showDots]);
 
   useEffect(() => {
     updateScrollState();
@@ -46,7 +46,7 @@ export function ProductCarousel({ products, showDots }: { products: ProductSumma
       el.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
     };
-  }, [products]);
+  }, [products, updateScrollState]);
 
   function scrollByAmount(direction: 1 | -1) {
     const el = scrollerRef.current;
@@ -81,10 +81,10 @@ export function ProductCarousel({ products, showDots }: { products: ProductSumma
 
       <ul
         ref={scrollerRef}
-        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:px-0"
+        className="-mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:px-0"
       >
         {products.map((product, i) => (
-          <li key={product.id} className="w-[45vw] shrink-0 snap-start xs:w-[38vw] sm:w-[30vw] md:w-[240px]">
+          <li key={product.id} className="flex w-[45vw] shrink-0 snap-start xs:w-[38vw] sm:w-[30vw] md:w-[240px]">
             <ProductCard product={product} tintIndex={i} />
           </li>
         ))}

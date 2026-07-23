@@ -51,7 +51,7 @@ export function WhyParentsChoose() {
           {reasons.map(({ title, description, image, cardBg }) => (
             <div
               key={title}
-              className={`flex h-full flex-col items-center justify-center rounded-3xl p-4 text-center shadow-clay-sm md:p-6 ${cardBg}`}
+              className={`flex h-full flex-col items-center justify-start rounded-3xl px-4 pb-4 pt-2 text-center shadow-clay-sm md:px-6 md:pb-6 md:pt-2 ${cardBg}`}
             >
               <div className="relative -mb-3 h-24 w-24 shrink-0 md:-mb-5 md:h-36 md:w-36">
                 <Image src={image} alt="" fill sizes="144px" className="object-contain" />

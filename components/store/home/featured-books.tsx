@@ -24,7 +24,7 @@ export function FeaturedBooks({ products }: { products: ProductSummary[] }) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid auto-rows-fr grid-cols-2 items-stretch gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
           {books.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
