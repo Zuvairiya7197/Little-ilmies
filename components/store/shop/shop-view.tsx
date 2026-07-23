@@ -15,7 +15,7 @@ import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { cn } from "@/lib/utils/cn";
 import type { Category, ProductSummary } from "@/types/catalog";
 
-const ACTIVITY_CATEGORY_SLUGS = ["coloring-books", "kids-islamic-activity-books", "games-and-gifts"];
+const ACTIVITY_CATEGORY_SLUGS = ["creative-learning", "printables", "games-and-activities"];
 
 const typeFilters = ["All", "Books", "Activities", "Bundles"] as const;
 type TypeFilter = (typeof typeFilters)[number];

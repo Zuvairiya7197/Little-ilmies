@@ -18,7 +18,7 @@ const goals = [
   {
     title: "Early Learning",
     description: "Fun activities and books to build skills for a bright start.",
-    href: "/shop/preschool-learning",
+    href: "/shop/early-learning",
     icon: GraduationCap,
     image: "/images/goal-early-learning.png",
     cardBg: "bg-sage-50",
@@ -38,7 +38,7 @@ const goals = [
   {
     title: "STEM Learning",
     description: "Explore science, technology, engineering and math in a fun way.",
-    href: "/shop/math-for-kids",
+    href: "/shop/science-and-stem",
     icon: FlaskConical,
     image: "/images/goal-stem-learning.png",
     cardBg: "bg-ink-50",
@@ -48,7 +48,7 @@ const goals = [
   {
     title: "Quran & Arabic",
     description: "Help your child love the Quran and the beauty of Arabic.",
-    href: "/shop/arabic-for-kids",
+    href: "/shop/quran-and-arabic",
     icon: BookOpen,
     image: "/images/goal-quran-arabic.png",
     cardBg: "bg-teal-50",
@@ -58,7 +58,7 @@ const goals = [
   {
     title: "Character Building",
     description: "Stories and activities that build good values and habits.",
-    href: "/shop/islamic-manners-and-character",
+    href: "/shop/character-building",
     icon: Heart,
     image: "/images/goal-character-building.png",
     cardBg: "bg-blossom-50",
@@ -68,7 +68,7 @@ const goals = [
   {
     title: "Islamic Stories",
     description: "Inspiring stories of the Prophets and great muslim role models.",
-    href: "/shop/stories-of-the-prophets",
+    href: "/shop/islamic-studies",
     icon: Feather,
     image: "/images/goal-islamic-stories.png",
     cardBg: "bg-sunny-50",
@@ -78,7 +78,7 @@ const goals = [
   {
     title: "Creative Arts",
     description: "Encourage creativity with art, crafts and imaginative activities.",
-    href: "/shop/coloring-books",
+    href: "/shop/creative-learning",
     icon: Palette,
     image: "/images/goal-creative-arts.png",
     cardBg: "bg-sage-50",
@@ -88,7 +88,7 @@ const goals = [
   {
     title: "Life Skills",
     description: "Practical books and activities for everyday life and confidence.",
-    href: "/shop/kids-islamic-activity-books",
+    href: "/shop/life-skills",
     icon: Lightbulb,
     image: "/images/goal-life-skills.png",
     cardBg: "bg-lemon-50",

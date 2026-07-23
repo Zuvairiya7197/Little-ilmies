@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Landmark, HandHeart, Heart, GraduationCap, PenTool, Lightbulb, LayoutGrid } from "lucide-react";
+import { BookOpen, Landmark, HandHeart, Heart, GraduationCap, PenTool, Palette, LayoutGrid } from "lucide-react";
 import type { Category } from "@/types/catalog";
 
 /** Curated icon + label per real category slug, echoing the reference
  * store's circular category row. Falls back to a generic icon/label for
  * any category slug not explicitly mapped, so new categories never vanish. */
 const CATEGORY_DISPLAY: Record<string, { label: string; icon: typeof BookOpen; tint: string }> = {
-  "stories-from-the-quran": { label: "Quran Stories", icon: BookOpen, tint: "bg-sage-50 text-sage-600" },
-  "stories-of-the-prophets": { label: "Prophets Stories", icon: Landmark, tint: "bg-sunny-50 text-sunny-600" },
-  "dua-and-prayers-for-kids": { label: "Duas & Supplications", icon: HandHeart, tint: "bg-teal-50 text-teal-600" },
-  "islamic-manners-and-character": { label: "Aqeedah & Values", icon: Heart, tint: "bg-blossom-50 text-blossom-600" },
-  "preschool-learning": { label: "Islamic Learning", icon: GraduationCap, tint: "bg-ink-50 text-ink-600" },
-  "kids-islamic-activity-books": { label: "Kids Activities", icon: PenTool, tint: "bg-lemon-50 text-lemon-600" },
-  "mothers-of-the-ummah": { label: "General Knowledge", icon: Lightbulb, tint: "bg-sage-50 text-sage-600" },
+  "islamic-studies": { label: "Islamic Studies", icon: Landmark, tint: "bg-sunny-50 text-sunny-600" },
+  "quran-and-arabic": { label: "Qur'an & Arabic", icon: BookOpen, tint: "bg-sage-50 text-sage-600" },
+  "early-learning": { label: "Early Learning", icon: GraduationCap, tint: "bg-ink-50 text-ink-600" },
+  "languages": { label: "Languages", icon: BookOpen, tint: "bg-teal-50 text-teal-600" },
+  "character-building": { label: "Character", icon: Heart, tint: "bg-blossom-50 text-blossom-600" },
+  "creative-learning": { label: "Creative", icon: Palette, tint: "bg-sage-50 text-sage-600" },
+  "games-and-activities": { label: "Activities", icon: PenTool, tint: "bg-lemon-50 text-lemon-600" },
+  "life-skills": { label: "Life Skills", icon: HandHeart, tint: "bg-teal-50 text-teal-600" },
 };
 
 const FALLBACK_TINTS = ["bg-ink-50 text-ink-600", "bg-sunny-50 text-sunny-600", "bg-lemon-50 text-lemon-600", "bg-teal-50 text-teal-600", "bg-blossom-50 text-blossom-600", "bg-sage-50 text-sage-600"];

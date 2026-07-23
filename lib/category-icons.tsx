@@ -17,21 +17,22 @@ import {
  * category needs a compact visual identity (filter checkboxes, chips) but a
  * full cover-image thumbnail would be too heavy. Falls back to BookOpen. */
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  "arabic-for-kids": Languages,
-  "ashrah-al-mubashsharah": Star,
-  "coloring-books": Palette,
-  "dua-and-prayers-for-kids": HandHeart,
-  "english-for-kids": BookOpen,
-  "games-and-gifts": Gamepad2,
-  "hindi-for-kids": BookOpen,
-  "islamic-manners-and-character": Heart,
-  "kids-islamic-activity-books": PenTool,
-  "marathi-for-kids": BookOpen,
-  "math-for-kids": Calculator,
-  "mothers-of-the-ummah": Star,
-  "preschool-learning": Baby,
-  "stories-from-the-quran": BookOpen,
-  "stories-of-the-prophets": Landmark,
+  "best-sellers": Star,
+  "bundles": BookOpen,
+  "character-building": Heart,
+  "creative-learning": Palette,
+  "early-learning": Baby,
+  "free-downloads": BookOpen,
+  "games-and-activities": Gamepad2,
+  "islamic-studies": Landmark,
+  "languages": Languages,
+  "life-skills": HandHeart,
+  "mathematics": Calculator,
+  "new-arrivals": Star,
+  "printables": PenTool,
+  "quran-and-arabic": BookOpen,
+  "science-and-stem": BookOpen,
+  "seasonal-collections": Star,
 };
 
 export function getCategoryIcon(slug: string): LucideIcon {

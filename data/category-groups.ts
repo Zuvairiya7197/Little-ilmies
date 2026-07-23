@@ -11,36 +11,20 @@ export const categoryGroups: CategoryGroup[] = [
     name: "Islamic E-Books",
     description:
       "Authentic stories of the Prophets, the Ummah's great women, du'as, and Islamic manners — retold for young hearts.",
-    categorySlugs: [
-      "stories-of-the-prophets",
-      "mothers-of-the-ummah",
-      "ashrah-al-mubashsharah",
-      "stories-from-the-quran",
-      "dua-and-prayers-for-kids",
-      "islamic-manners-and-character",
-      "kids-islamic-activity-books",
-    ],
+    categorySlugs: ["islamic-studies", "quran-and-arabic", "character-building"],
   },
   {
     slug: "educational-books",
     name: "Educational E-Books",
     description:
       "Preschool foundations, language learning, and early literacy — designed for home, madrasa, or homeschooling.",
-    categorySlugs: [
-      "preschool-learning",
-      "coloring-books",
-      "math-for-kids",
-      "english-for-kids",
-      "arabic-for-kids",
-      "marathi-for-kids",
-      "hindi-for-kids",
-    ],
+    categorySlugs: ["early-learning", "languages", "mathematics", "science-and-stem"],
   },
   {
     slug: "gifts-games",
     name: "Gifts & Games",
     description: "Printable planners, calendars, and gifting favourites the whole family will love.",
-    categorySlugs: ["games-and-gifts"],
+    categorySlugs: ["creative-learning", "printables", "games-and-activities", "seasonal-collections"],
   },
 ];
 

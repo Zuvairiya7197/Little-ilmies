@@ -7,6 +7,7 @@ import { bundles } from "../data/bundles";
 const prisma = new PrismaClient();
 
 async function main() {
+  const allowedCategorySlugs = categories.map((category) => category.slug);
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@littleilmies.com";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "changeme123";
 
@@ -41,6 +42,13 @@ async function main() {
     const dbCategory = await prisma.category.findUnique({
       where: { slug: product.category.slug },
     });
+    const extraCategorySlugs = [
+      ...(product.isBestseller ? ["best-sellers"] : []),
+      ...(product.isNewArrival ? ["new-arrivals"] : []),
+    ];
+    const extraCategories = extraCategorySlugs.length
+      ? await prisma.category.findMany({ where: { slug: { in: extraCategorySlugs } }, select: { id: true } })
+      : [];
 
     const created = await prisma.product.upsert({
       where: { slug: product.slug },
@@ -64,11 +72,20 @@ async function main() {
         hasFreePreview: product.hasFreePreview,
         status: "PUBLISHED",
         publishedAt: new Date(product.publishedAt),
-        ...(dbCategory
-          ? { categories: { create: [{ categoryId: dbCategory.id }] } }
-          : {}),
       },
     });
+
+    const categoryIds = [
+      ...(dbCategory ? [dbCategory.id] : []),
+      ...extraCategories.map((category) => category.id),
+    ];
+    await prisma.productCategory.deleteMany({ where: { productId: created.id } });
+    if (categoryIds.length > 0) {
+      await prisma.productCategory.createMany({
+        data: categoryIds.map((categoryId) => ({ productId: created.id, categoryId })),
+        skipDuplicates: true,
+      });
+    }
 
     for (const price of product.prices) {
       await prisma.productPrice.upsert({
@@ -92,6 +109,11 @@ async function main() {
     }
   }
   console.log(`Seeded ${products.length} products with regional prices.`);
+
+  await prisma.category.deleteMany({
+    where: { slug: { notIn: allowedCategorySlugs } },
+  });
+  console.log("Removed categories outside the primary shop category list.");
 
   for (const bundle of bundles) {
     const bundleProducts = await prisma.product.findMany({
