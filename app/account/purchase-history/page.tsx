@@ -179,16 +179,16 @@ export default async function PurchaseHistoryPage() {
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 font-bold text-ink-500">2</button>
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 text-ink-500">›</button>
                 </div>
-                <p className="text-lg text-ink-400">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
+                <p className="text-center text-sm text-ink-400 sm:text-base xl:text-lg">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
               </div>
             </section>
 
             <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-cream-50 p-5 shadow-clay-sm xl:flex-row xl:items-center xl:justify-between xl:px-10">
-              <div className="flex items-center gap-8">
+              <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left xl:gap-8">
                 <div className="relative h-20 w-28 shrink-0">
                   <Image src="/images/check your email.png" alt="" fill sizes="128px" className="object-contain" aria-hidden="true" />
                 </div>
-                <div className="h-16 w-px bg-ink-100" aria-hidden="true" />
+                <div className="hidden h-16 w-px bg-ink-100 sm:block" aria-hidden="true" />
                 <div>
                   <h2 className="font-display text-lg font-bold text-ink-600">Need help with your order?</h2>
                   <p className="mt-1 max-w-md text-base leading-relaxed text-ink-400">
@@ -196,7 +196,7 @@ export default async function PurchaseHistoryPage() {
                   </p>
                 </div>
               </div>
-              <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 px-7 py-3 font-bold text-ink-600 hover:bg-gold-50">
+              <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 px-5 py-3 text-sm font-bold text-ink-600 hover:bg-gold-50 sm:px-7 sm:text-base">
                 <Mail className="h-5 w-5" aria-hidden="true" />
                 Contact Support
               </Link>

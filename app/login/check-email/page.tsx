@@ -65,16 +65,16 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
           />
         </div>
 
-        <h1 className="-mt-4 font-display text-3xl font-bold text-ink-700">
+        <h1 className="-mt-4 font-display text-2xl font-bold text-ink-700 xs:text-3xl">
           Check your email
         </h1>
-        <p className="mx-auto mt-2.5 max-w-md text-base leading-relaxed text-ink-500">
+        <p className="mx-auto mt-2.5 max-w-md break-words text-sm leading-relaxed text-ink-500 xs:text-base">
           We&apos;ve sent a secure sign-in link to{" "}
           {email ? <strong className="text-ink-600">{email}</strong> : "your email"}. It expires in 15
           minutes.
         </p>
 
-        <div className="mt-3.5 flex items-center gap-3 rounded-2xl bg-ink-50/70 p-3.5 text-left shadow-soft">
+        <div className="mt-3.5 flex flex-col items-start gap-3 rounded-2xl bg-ink-50/70 p-3.5 text-left shadow-soft xs:flex-row xs:items-center">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ink-100 text-ink-500">
             <Lock className="h-5 w-5" aria-hidden="true" />
           </span>

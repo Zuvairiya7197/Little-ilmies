@@ -146,7 +146,7 @@ export default async function AccountDetailsPage() {
 
         <section className="mt-3 grid gap-3 xl:grid-cols-2">
           <div className="rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:p-5">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div className="flex min-w-0 items-center gap-4">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blossom-50 text-blossom-500 shadow-soft">
                   <Bell className="h-7 w-7" aria-hidden="true" />
@@ -170,7 +170,7 @@ export default async function AccountDetailsPage() {
           </div>
 
           <div className="rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:p-5">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div className="flex min-w-0 items-center gap-4">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sage-50 text-sage-600 shadow-soft">
                   <ShieldCheck className="h-7 w-7" aria-hidden="true" />

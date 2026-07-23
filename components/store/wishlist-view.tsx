@@ -147,7 +147,7 @@ export function WishlistView() {
             <Heart className="h-4 w-4 fill-blossom-500" aria-hidden="true" />
             My Wishlist
           </p>
-          <h1 className="mt-2 max-w-md font-display text-3xl font-bold leading-tight text-ink-700 xs:text-4xl">
+          <h1 className="mt-2 max-w-md font-display text-2xl font-bold leading-tight text-ink-700 xs:text-3xl xl:text-4xl">
             Books you love, all in one place
           </h1>
           <p className="mt-2 max-w-sm text-sm font-medium leading-relaxed text-ink-400">
@@ -186,7 +186,7 @@ export function WishlistView() {
 
         <ul className="flex flex-col gap-2">
           {items.map((item) => (
-            <li key={item.productId} className="flex items-center gap-3 rounded-2xl border border-ink-100 bg-white/80 p-2.5 shadow-soft">
+            <li key={item.productId} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-3 rounded-2xl border border-ink-100 bg-white/80 p-2.5 shadow-soft sm:flex sm:items-center">
               <Link
                 href={`/product/${item.slug}`}
                 className="relative h-18 w-14 shrink-0 overflow-hidden rounded-xl bg-blossom-50"
@@ -214,7 +214,7 @@ export function WishlistView() {
                 {formatPrice(item.price, item.currencyCode)}
               </p>
 
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="col-span-2 flex shrink-0 items-center justify-end gap-2 sm:col-span-1">
                 <button
                   type="button"
                   onClick={() =>

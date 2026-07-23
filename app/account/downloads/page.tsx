@@ -86,7 +86,7 @@ export default async function DownloadsPage() {
           </div>
         </section>
 
-        <section className="mt-3 grid rounded-2xl bg-cream-50 p-3 shadow-clay-sm xl:grid-cols-4 xl:divide-x xl:divide-ink-100">
+        <section className="mt-3 grid gap-2 rounded-2xl bg-cream-50 p-3 shadow-clay-sm sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-ink-100">
           {[
             { label: "Total Downloads", value: downloads.reduce((sum, item) => sum + item.downloadCount, 0) || downloads.length, helper: "All time", icon: Clipboard, tint: "bg-lilac-100 text-violet-700" },
             { label: "Books", value: downloads.length, helper: "Purchased", icon: Check, tint: "bg-sage-50 text-sage-600" },
@@ -106,7 +106,7 @@ export default async function DownloadsPage() {
           ))}
         </section>
 
-        <section className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <section className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-2">
             {filterTabs.map((tab, index) => (
               <button
@@ -122,8 +122,8 @@ export default async function DownloadsPage() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3">
-            <button type="button" className="tap-target rounded-full bg-cream-50 px-5 text-xs font-bold text-ink-500 shadow-soft">
+          <div className="flex items-center gap-3 sm:justify-end">
+            <button type="button" className="tap-target flex-1 rounded-full bg-cream-50 px-5 text-xs font-bold text-ink-500 shadow-soft sm:flex-none">
               Latest First
             </button>
             <button type="button" aria-label="Filter downloads" className="tap-target flex items-center justify-center rounded-full bg-cream-50 text-ink-500 shadow-soft">
@@ -236,7 +236,7 @@ export default async function DownloadsPage() {
 
         {downloads.length > 0 && (
           <section className="mt-3 flex flex-col gap-4 rounded-3xl bg-lilac-50/55 p-4 shadow-clay-sm xl:flex-row xl:items-center xl:justify-between xl:px-6">
-            <div className="flex items-center gap-5">
+            <div className="flex min-w-0 items-center gap-4 sm:gap-5">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-lilac-100 text-violet-700">
                 <Shield className="h-6 w-6" aria-hidden="true" />
               </span>
@@ -247,7 +247,7 @@ export default async function DownloadsPage() {
                 </p>
               </div>
             </div>
-            <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-violet-500 bg-cream-50 px-7 py-3 font-bold text-violet-700 hover:bg-lilac-50">
+            <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-violet-500 bg-cream-50 px-5 py-3 text-sm font-bold text-violet-700 hover:bg-lilac-50 sm:px-7 sm:text-base">
               <FileText className="h-5 w-5" aria-hidden="true" />
               How Downloads Work
             </Link>
@@ -255,7 +255,7 @@ export default async function DownloadsPage() {
         )}
 
         <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-green-50/50 p-4 shadow-clay-sm xl:flex-row xl:items-center xl:justify-between xl:px-7">
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:gap-5 sm:text-left">
             <div className="relative h-24 w-40 shrink-0">
               <Image
                 src="/images/contact support.png"
@@ -266,7 +266,7 @@ export default async function DownloadsPage() {
                 aria-hidden="true"
               />
             </div>
-            <div className="h-12 w-px bg-ink-100" aria-hidden="true" />
+            <div className="hidden h-12 w-px bg-ink-100 sm:block" aria-hidden="true" />
             <div>
               <h2 className="font-display text-lg font-bold text-ink-700">Need help?</h2>
               <p className="mt-1 max-w-md text-sm leading-relaxed text-ink-400">
@@ -274,7 +274,7 @@ export default async function DownloadsPage() {
               </p>
             </div>
           </div>
-          <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 bg-cream-50 px-7 py-3 font-bold text-ink-600 hover:bg-gold-50">
+          <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 bg-cream-50 px-5 py-3 text-sm font-bold text-ink-600 hover:bg-gold-50 sm:px-7 sm:text-base">
             <Mail className="h-5 w-5" aria-hidden="true" />
             Contact Support
           </Link>
