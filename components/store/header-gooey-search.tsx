@@ -52,10 +52,14 @@ export function HeaderGooeySearch() {
     }
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
-      if (!res.ok || cancelled) return;
-      const data = await res.json();
-      if (!cancelled) setResults(data.results as SearchResult[]);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (!cancelled) setResults(data.results as SearchResult[]);
+      } catch {
+        if (!cancelled) setResults([]);
+      }
     }, 300);
     return () => {
       cancelled = true;

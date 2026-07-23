@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
       OR: [
         { title: { contains: query, mode: "insensitive" } },
         { shortDescription: { contains: query, mode: "insensitive" } },
+        { description: { contains: query, mode: "insensitive" } },
+        { categories: { some: { category: { name: { contains: query, mode: "insensitive" } } } } },
       ],
     },
     select: { slug: true, title: true },
