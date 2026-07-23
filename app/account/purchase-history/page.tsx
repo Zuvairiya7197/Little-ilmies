@@ -35,24 +35,24 @@ export default async function PurchaseHistoryPage() {
     : null;
 
   return (
-    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-6 pt-3 md:pb-6 md:pt-4">
+    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-6 pt-3 xl:pb-6 xl:pt-4">
       <div className="container-content relative">
         <div className="relative min-h-0">
-          <h1 className="font-display text-2xl font-bold leading-tight text-ink-700 xs:text-3xl md:text-4xl">
+          <h1 className="font-display text-2xl font-bold leading-tight text-ink-700 xs:text-3xl xl:text-4xl">
             Purchase History <span className="text-blossom-400">♥</span>
           </h1>
-          <p className="mt-2 flex flex-wrap items-center gap-2 break-words text-sm font-medium text-ink-400 md:text-base">
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-sm font-medium text-ink-400 xl:text-base">
             {orders.length === 0 ? "Signed in as" : "Orders linked to"}{" "}
             <span className="font-bold text-ink-600">{session.user.email}</span>
             {orders.length === 0 && (
-              <span className="relative ml-2 hidden w-24 md:inline-block" aria-hidden="true">
+              <span className="relative ml-2 hidden w-24 xl:inline-block" aria-hidden="true">
               <span className="absolute left-0 top-1 h-px w-20 border-t border-dashed border-ink-200" />
               <Image src="/images/star.png" alt="" width={26} height={26} className="absolute right-0 -top-3 h-6 w-6 object-contain" />
             </span>
             )}
           </p>
           {orders.length > 0 && (
-            <div className="pointer-events-none absolute right-0 top-0 hidden h-56 w-[30rem] md:block">
+            <div className="pointer-events-none absolute right-0 top-0 hidden h-56 w-[30rem] xl:block">
               <Image
                 src="/images/purchase history.png"
                 alt=""
@@ -68,7 +68,7 @@ export default async function PurchaseHistoryPage() {
 
         {orders.length === 0 ? (
           <div className="mx-auto mt-0 flex max-w-md flex-col items-center text-center">
-            <div className="relative aspect-[4/3] w-full max-w-[17rem] md:max-w-xs">
+            <div className="relative aspect-[4/3] w-full max-w-[17rem] xl:max-w-xs">
               <Image
                 src="/images/no purchase yet.png"
                 alt="Clipboard illustration for no purchases yet"
@@ -78,22 +78,22 @@ export default async function PurchaseHistoryPage() {
                 priority
               />
             </div>
-            <h2 className="-mt-5 font-display text-2xl font-bold text-ink-700 md:text-3xl">
+            <h2 className="-mt-5 font-display text-2xl font-bold text-ink-700 xl:text-3xl">
               No purchases yet
             </h2>
-            <p className="mt-1.5 max-w-sm text-sm font-medium leading-relaxed text-ink-400 md:text-base">
+            <p className="mt-1.5 max-w-sm text-sm font-medium leading-relaxed text-ink-400 xl:text-base">
               Once you buy a book, your orders and receipts
               <br className="hidden sm:block" />
               will show up here.
             </p>
-            <Link href="/shop" className="btn-primary mt-3 rounded-3xl px-7 py-2.5 text-sm md:text-base">
+            <Link href="/shop" className="btn-primary mt-3 rounded-3xl px-7 py-2.5 text-sm xl:text-base">
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               Browse Books
             </Link>
           </div>
         ) : (
           <div className="mt-5">
-            <section className="grid gap-2 rounded-3xl bg-cream-50 p-4 shadow-clay-sm sm:grid-cols-2 md:grid-cols-4 md:divide-x md:divide-ink-100">
+            <section className="grid rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:grid-cols-4 xl:divide-x xl:divide-ink-100">
               {[
                 { label: "Total Orders", value: orders.length, icon: ShoppingBag, tint: "bg-gold-50 text-gold-500" },
                 { label: "Completed", value: orders.filter((order) => order.status === "PAID").length, icon: Check, tint: "bg-sage-50 text-sage-600" },
@@ -113,7 +113,7 @@ export default async function PurchaseHistoryPage() {
             </section>
 
             <section className="mt-5 rounded-3xl bg-cream-50 p-4 shadow-clay-sm">
-              <div className="hidden grid-cols-[1fr_1.4fr_2.2fr_1.1fr_1.4fr_1.7fr] px-5 py-3 text-sm font-bold uppercase text-ink-600 md:grid">
+              <div className="hidden grid-cols-[1fr_1.4fr_2.2fr_1.1fr_1.4fr_1.7fr] px-5 py-3 text-sm font-bold uppercase text-ink-600 xl:grid">
                 <span>Order ID</span>
                 <span>Date</span>
                 <span>Items</span>
@@ -133,7 +133,7 @@ export default async function PurchaseHistoryPage() {
                   return (
                     <div
                       key={order.id}
-                      className="grid gap-4 rounded-2xl border border-ink-100 bg-cream-50 p-3 shadow-soft md:grid-cols-[1fr_1.4fr_2.2fr_1.1fr_1.4fr_1.7fr] md:items-center md:px-5"
+                      className="grid gap-4 rounded-2xl border border-ink-100 bg-cream-50 p-3 shadow-soft xl:grid-cols-[1fr_1.4fr_2.2fr_1.1fr_1.4fr_1.7fr] xl:items-center xl:px-5"
                     >
                       <p className="font-semibold text-ink-500">#ILM-{String(index + 1).padStart(4, "0")}</p>
                       <p className="font-medium text-ink-500">{date}</p>
@@ -179,16 +179,16 @@ export default async function PurchaseHistoryPage() {
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 font-bold text-ink-500">2</button>
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 text-ink-500">›</button>
                 </div>
-                <p className="text-center text-sm text-ink-400 sm:text-base md:text-lg">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
+                <p className="text-lg text-ink-400">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
               </div>
             </section>
 
-            <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-cream-50 p-5 shadow-clay-sm md:flex-row md:items-center md:justify-between md:px-10">
-              <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left md:gap-8">
+            <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-cream-50 p-5 shadow-clay-sm xl:flex-row xl:items-center xl:justify-between xl:px-10">
+              <div className="flex items-center gap-8">
                 <div className="relative h-20 w-28 shrink-0">
                   <Image src="/images/check your email.png" alt="" fill sizes="128px" className="object-contain" aria-hidden="true" />
                 </div>
-                <div className="hidden h-16 w-px bg-ink-100 sm:block" aria-hidden="true" />
+                <div className="h-16 w-px bg-ink-100" aria-hidden="true" />
                 <div>
                   <h2 className="font-display text-lg font-bold text-ink-600">Need help with your order?</h2>
                   <p className="mt-1 max-w-md text-base leading-relaxed text-ink-400">
@@ -196,7 +196,7 @@ export default async function PurchaseHistoryPage() {
                   </p>
                 </div>
               </div>
-              <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 px-5 py-3 text-sm font-bold text-ink-600 hover:bg-gold-50 sm:px-7 sm:text-base">
+              <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 px-7 py-3 font-bold text-ink-600 hover:bg-gold-50">
                 <Mail className="h-5 w-5" aria-hidden="true" />
                 Contact Support
               </Link>

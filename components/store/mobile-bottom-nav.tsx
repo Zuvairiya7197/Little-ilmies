@@ -41,7 +41,7 @@ export function MobileBottomNav() {
     <nav
       aria-label="Primary mobile"
       style={{ minHeight: "var(--mobile-nav-height)" }}
-      className="safe-bottom fixed inset-x-7 bottom-6 z-50 flex rounded-3xl border border-ink-100 bg-cream-50/95 shadow-clay-sm backdrop-blur lg:hidden"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-50 flex border-t border-ink-100 bg-cream-50/95 shadow-lifted backdrop-blur xl:hidden"
     >
       <Link href="/" className={tabClass(isActive("/") && pathname === "/")}>
         <Home className="h-5 w-5" aria-hidden={true} />

@@ -87,7 +87,7 @@ export default function RootLayout({
           <main id="main-content" className="flex-1">
             {children}
           </main>
-          <div className="pb-20 md:pb-0">
+          <div className="pb-20 xl:pb-0">
             <SiteFooter />
           </div>
           <MobileBottomNav />

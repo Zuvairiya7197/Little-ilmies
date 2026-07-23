@@ -16,7 +16,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
   const { email } = await searchParams;
 
   return (
-    <div className="relative isolate flex min-h-[calc(100vh-9rem)] items-start justify-center overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 px-4 py-3 md:py-4">
+    <div className="relative isolate flex min-h-[calc(100vh-9rem)] items-start justify-center overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 px-4 py-3 xl:py-4">
       <Image
         src="/images/star.png"
         alt=""
@@ -53,8 +53,8 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
       <span className="pointer-events-none absolute right-[18%] top-[56%] h-4 w-4 rounded-full bg-blossom-400/70" aria-hidden="true" />
       <span className="pointer-events-none absolute left-[12%] top-[55%] h-4 w-4 rounded-full bg-ink-200" aria-hidden="true" />
 
-      <main className="w-full max-w-md rounded-[1.75rem] bg-cream-50/95 px-6 py-4 text-center shadow-lifted sm:px-8 md:px-10 md:py-5">
-        <div className="relative mx-auto aspect-[4/3] max-w-[13.5rem] md:max-w-[15rem]">
+      <main className="w-full max-w-md rounded-[1.75rem] bg-cream-50/95 px-6 py-4 text-center shadow-lifted sm:px-8 xl:px-10 xl:py-5">
+        <div className="relative mx-auto aspect-[4/3] max-w-[13.5rem] xl:max-w-[15rem]">
           <Image
             src="/images/check your email.png"
             alt="Envelope with a verified email"
@@ -65,16 +65,16 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
           />
         </div>
 
-        <h1 className="-mt-4 font-display text-2xl font-bold text-ink-700 xs:text-3xl">
+        <h1 className="-mt-4 font-display text-3xl font-bold text-ink-700">
           Check your email
         </h1>
-        <p className="mx-auto mt-2.5 max-w-md break-words text-sm leading-relaxed text-ink-500 xs:text-base">
+        <p className="mx-auto mt-2.5 max-w-md text-base leading-relaxed text-ink-500">
           We&apos;ve sent a secure sign-in link to{" "}
           {email ? <strong className="text-ink-600">{email}</strong> : "your email"}. It expires in 15
           minutes.
         </p>
 
-        <div className="mt-3.5 flex flex-col items-start gap-3 rounded-2xl bg-ink-50/70 p-3.5 text-left shadow-soft xs:flex-row xs:items-center">
+        <div className="mt-3.5 flex items-center gap-3 rounded-2xl bg-ink-50/70 p-3.5 text-left shadow-soft">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ink-100 text-ink-500">
             <Lock className="h-5 w-5" aria-hidden="true" />
           </span>

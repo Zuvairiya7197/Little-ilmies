@@ -50,7 +50,7 @@ export default async function AccountDetailsPage() {
   const email = session.user.email ?? "";
 
   return (
-    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 pb-6 pt-3 md:pb-5 md:pt-4">
+    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 pb-6 pt-3 xl:pb-5 xl:pt-4">
       <div className="container-content relative">
         <Link
           href="/account"
@@ -60,16 +60,16 @@ export default async function AccountDetailsPage() {
           Back to My Account
         </Link>
 
-        <div className="mt-3 grid min-h-0 items-center gap-3 md:min-h-28 md:grid-cols-[1fr_22rem] md:gap-4">
+        <div className="mt-3 grid min-h-28 items-center gap-4 xl:grid-cols-[1fr_22rem]">
           <div>
             <h1 className="font-display text-3xl font-bold leading-tight text-ink-700 xs:text-4xl">
               Account Details <span className="text-blossom-400">♥</span>
             </h1>
-            <p className="mt-2 text-base font-medium text-ink-400 md:text-lg">
+            <p className="mt-2 text-base font-medium text-ink-400 xl:text-lg">
               Manage your profile and email preferences.
             </p>
           </div>
-          <div className="relative hidden h-28 md:block">
+          <div className="relative hidden h-28 xl:block">
             <Image
               src="/images/account details.png"
               alt=""
@@ -82,8 +82,8 @@ export default async function AccountDetailsPage() {
           </div>
         </div>
 
-        <section className="mt-3 rounded-3xl bg-cream-50 p-4 shadow-clay-sm md:p-5">
-          <div className="grid gap-4 md:grid-cols-[minmax(15rem,0.85fr)_minmax(0,1.7fr)_auto] md:items-center">
+        <section className="mt-3 rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:p-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(15rem,0.85fr)_minmax(0,1.7fr)_auto] xl:items-center">
             <div className="flex min-w-0 items-center gap-4">
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gold-50 text-gold-500 shadow-soft">
                 <User className="h-7 w-7" aria-hidden="true" />
@@ -96,7 +96,7 @@ export default async function AccountDetailsPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 xl:grid-cols-2">
               <div>
                 <p className="mb-1.5 text-sm font-bold text-ink-700">Name</p>
                 <div className="flex min-h-11 items-center gap-3 rounded-2xl border border-ink-100 bg-cream-50 px-3.5 shadow-clay-pressed">
@@ -113,14 +113,14 @@ export default async function AccountDetailsPage() {
               </div>
             </div>
 
-            <div className="justify-self-end md:justify-self-auto">
+            <div className="justify-self-end xl:justify-self-auto">
               <EditButton label="Edit profile details" />
             </div>
           </div>
         </section>
 
-        <section className="mt-3 rounded-3xl bg-cream-50 p-4 shadow-clay-sm md:p-5">
-          <div className="grid gap-4 md:grid-cols-[minmax(15rem,0.85fr)_minmax(0,1.7fr)_auto] md:items-center">
+        <section className="mt-3 rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:p-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(15rem,0.85fr)_minmax(0,1.7fr)_auto] xl:items-center">
             <div className="flex min-w-0 items-center gap-4">
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gold-50 text-gold-500 shadow-soft">
                 <Mail className="h-7 w-7" aria-hidden="true" />
@@ -138,15 +138,15 @@ export default async function AccountDetailsPage() {
               <span className="truncate text-sm font-medium text-ink-600">{email}</span>
             </div>
 
-            <div className="justify-self-end md:justify-self-auto">
+            <div className="justify-self-end xl:justify-self-auto">
               <EditButton label="Edit sign-in email" />
             </div>
           </div>
         </section>
 
-        <section className="mt-3 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-3xl bg-cream-50 p-4 shadow-clay-sm md:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <section className="mt-3 grid gap-3 xl:grid-cols-2">
+          <div className="rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:p-5">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-4">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blossom-50 text-blossom-500 shadow-soft">
                   <Bell className="h-7 w-7" aria-hidden="true" />
@@ -169,8 +169,8 @@ export default async function AccountDetailsPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl bg-cream-50 p-4 shadow-clay-sm md:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:p-5">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-4">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sage-50 text-sage-600 shadow-soft">
                   <ShieldCheck className="h-7 w-7" aria-hidden="true" />
@@ -193,7 +193,7 @@ export default async function AccountDetailsPage() {
           </div>
         </section>
 
-        <section className="mx-auto mt-3 max-w-6xl overflow-hidden rounded-3xl border border-ink-100 bg-gold-50/30 px-4 py-3 shadow-soft md:px-6">
+        <section className="mx-auto mt-3 max-w-6xl overflow-hidden rounded-3xl border border-ink-100 bg-gold-50/30 px-4 py-3 shadow-soft xl:px-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold-50 text-gold-500 shadow-soft">
@@ -206,7 +206,7 @@ export default async function AccountDetailsPage() {
                 </p>
               </div>
             </div>
-            <div className="relative hidden h-24 w-60 shrink-0 md:block">
+            <div className="relative hidden h-24 w-60 shrink-0 xl:block">
               <Image
                 src="/images/your data is safe with us.png"
                 alt=""

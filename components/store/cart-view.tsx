@@ -68,7 +68,7 @@ export function CartView() {
 
   if (lineItems.length === 0) {
     return (
-      <div className="container-content py-8 md:py-12">
+      <div className="container-content py-8 xl:py-12">
         <h1 className="font-display text-3xl font-semibold text-ink-700">My Cart</h1>
         <EmptyState
           icon={ShoppingCart}
@@ -86,7 +86,7 @@ export function CartView() {
 
   return (
     <main className="min-h-[calc(100vh-8rem)] bg-gradient-to-br from-white via-cream-50 to-lilac-50/70">
-      <div className="mx-auto w-full max-w-[1600px] px-5 py-4 sm:px-8 md:py-5 xl:px-10">
+      <div className="mx-auto w-full max-w-[1600px] px-5 py-4 sm:px-8 xl:py-5 xl:px-10">
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-7">
           <section className="min-w-0">
             <div>
@@ -110,10 +110,10 @@ export function CartView() {
                   key={item.productId}
                   className="rounded-3xl border border-lilac-100 bg-white/92 p-4 shadow-[0_18px_55px_rgba(75,31,124,0.08)] sm:p-5"
                 >
-                  <div className="grid gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] lg:grid-cols-[142px_minmax(0,1fr)_138px_108px_64px] lg:items-center">
+                  <div className="grid gap-4 xl:grid-cols-[142px_minmax(0,1fr)_138px_108px_64px] xl:items-center">
                     <Link
                       href={`/product/${item.slug}`}
-                      className="relative h-32 w-full max-w-36 overflow-hidden rounded-2xl bg-gradient-to-br from-lilac-50 via-white to-blossom-50 sm:w-36 lg:h-36"
+                      className="relative h-32 w-full overflow-hidden rounded-2xl bg-gradient-to-br from-lilac-50 via-white to-blossom-50 sm:w-36 xl:h-36"
                     >
                       <Image src={item.coverImage} alt="" fill sizes="144px" className="object-contain p-2.5" />
                     </Link>
@@ -136,7 +136,7 @@ export function CartView() {
                       </span>
                     </div>
 
-                    <div className="flex h-10 w-full max-w-34 items-center justify-between rounded-2xl border border-lilac-200 bg-white px-3 text-base font-semibold text-ink-500 shadow-sm sm:col-start-2 lg:col-start-auto">
+                    <div className="flex h-10 w-full max-w-34 items-center justify-between rounded-2xl border border-lilac-200 bg-white px-3 text-base font-semibold text-ink-500 shadow-sm">
                       <button
                         type="button"
                         onClick={() => setQuantity(item.productId, item.quantity - 1)}
@@ -156,11 +156,11 @@ export function CartView() {
                       </button>
                     </div>
 
-                    <div className="font-display text-xl font-bold text-ink-900 sm:col-start-2 lg:col-start-auto">
+                    <div className="font-display text-xl font-bold text-ink-900">
                       {formatPrice(item.lineTotal, item.currencyCode)}
                     </div>
 
-                    <div className="flex items-center gap-3 sm:col-start-2 lg:col-start-auto lg:flex-col">
+                    <div className="flex items-center gap-3 xl:flex-col">
                       <button
                         type="button"
                         onClick={() => removeItem(item.productId)}
@@ -182,7 +182,7 @@ export function CartView() {
               ))}
             </ul>
 
-            <div className="mt-4 hidden rounded-3xl border border-lilac-200 bg-white/75 px-6 py-4 shadow-[0_16px_45px_rgba(75,31,124,0.06)] md:flex md:items-center md:justify-between">
+            <div className="mt-4 hidden rounded-3xl border border-lilac-200 bg-white/75 px-6 py-4 shadow-[0_16px_45px_rgba(75,31,124,0.06)] xl:flex xl:items-center xl:justify-between">
               <div className="flex items-center gap-4">
                 <span className="grid h-12 w-12 place-items-center rounded-full bg-lilac-100 text-violet-800">
                   <ShieldCheck className="h-6 w-6" aria-hidden="true" />
@@ -271,7 +271,7 @@ export function CartView() {
           </aside>
         </div>
 
-        <div className="mt-5 grid gap-3 rounded-3xl border border-lilac-100 bg-white/70 p-3 shadow-[0_12px_40px_rgba(75,31,124,0.05)] md:grid-cols-4">
+        <div className="mt-5 grid gap-3 rounded-3xl border border-lilac-100 bg-white/70 p-3 shadow-[0_12px_40px_rgba(75,31,124,0.05)] xl:grid-cols-4">
           {benefitItems.map(({ label, description, icon: Icon, href }) => {
             const content = (
               <>
@@ -290,7 +290,7 @@ export function CartView() {
                 {content}
               </Link>
             ) : (
-              <div key={label} className="flex items-center gap-4 rounded-2xl p-2 md:border-l md:border-lilac-100 md:pl-6">
+              <div key={label} className="flex items-center gap-4 rounded-2xl p-2 xl:border-l xl:border-lilac-100 xl:pl-6">
                 {content}
               </div>
             );

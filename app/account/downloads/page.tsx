@@ -50,7 +50,7 @@ export default async function DownloadsPage() {
     : null;
 
   return (
-    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 pb-8 pt-4 md:pb-6 md:pt-5">
+    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 pb-8 pt-4 xl:pb-6 xl:pt-5">
       <div className="container-content relative">
         <Link
           href="/account"
@@ -60,7 +60,7 @@ export default async function DownloadsPage() {
           Back to Account
         </Link>
 
-        <section className="relative mt-2 min-h-24 md:min-h-28">
+        <section className="relative mt-2 min-h-24 xl:min-h-28">
           <h1 className="flex items-center gap-3 font-display text-3xl font-bold text-ink-700 xs:text-4xl">
             Downloads
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-50 text-gold-500">
@@ -73,7 +73,7 @@ export default async function DownloadsPage() {
             Downloads are available anytime.
           </p>
 
-          <div className="pointer-events-none absolute right-0 top-[-2rem] hidden h-40 w-[24rem] md:block">
+          <div className="pointer-events-none absolute right-0 top-[-2rem] hidden h-40 w-[24rem] xl:block">
             <Image
               src="/images/downloads.png"
               alt=""
@@ -86,7 +86,7 @@ export default async function DownloadsPage() {
           </div>
         </section>
 
-        <section className="mt-3 grid gap-2 rounded-2xl bg-cream-50 p-3 shadow-clay-sm sm:grid-cols-2 md:grid-cols-4 md:divide-x md:divide-ink-100">
+        <section className="mt-3 grid rounded-2xl bg-cream-50 p-3 shadow-clay-sm xl:grid-cols-4 xl:divide-x xl:divide-ink-100">
           {[
             { label: "Total Downloads", value: downloads.reduce((sum, item) => sum + item.downloadCount, 0) || downloads.length, helper: "All time", icon: Clipboard, tint: "bg-lilac-100 text-violet-700" },
             { label: "Books", value: downloads.length, helper: "Purchased", icon: Check, tint: "bg-sage-50 text-sage-600" },
@@ -106,7 +106,7 @@ export default async function DownloadsPage() {
           ))}
         </section>
 
-        <section className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <section className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             {filterTabs.map((tab, index) => (
               <button
@@ -122,8 +122,8 @@ export default async function DownloadsPage() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3 sm:justify-end">
-            <button type="button" className="tap-target flex-1 rounded-full bg-cream-50 px-5 text-xs font-bold text-ink-500 shadow-soft sm:flex-none">
+          <div className="flex items-center gap-3">
+            <button type="button" className="tap-target rounded-full bg-cream-50 px-5 text-xs font-bold text-ink-500 shadow-soft">
               Latest First
             </button>
             <button type="button" aria-label="Filter downloads" className="tap-target flex items-center justify-center rounded-full bg-cream-50 text-ink-500 shadow-soft">
@@ -133,7 +133,7 @@ export default async function DownloadsPage() {
         </section>
 
         {downloads.length === 0 ? (
-          <section className="mt-3 rounded-3xl bg-cream-50 p-5 text-center shadow-clay-sm md:p-6">
+          <section className="mt-3 rounded-3xl bg-cream-50 p-5 text-center shadow-clay-sm xl:p-6">
             <div className="relative mx-auto aspect-[4/3] w-full max-w-[15rem]">
               <Image
                 src="/images/no download yet.png"
@@ -156,8 +156,8 @@ export default async function DownloadsPage() {
             </Link>
           </section>
         ) : (
-          <section className="mt-3 overflow-hidden rounded-3xl bg-cream-50 p-4 shadow-clay-sm md:p-5">
-            <div className="hidden grid-cols-[minmax(260px,1.5fr)_0.55fr_0.75fr_0.75fr] gap-5 border-b border-ink-100 pb-3 text-xs font-black uppercase tracking-wide text-ink-600 md:grid">
+          <section className="mt-3 overflow-hidden rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:p-5">
+            <div className="hidden grid-cols-[minmax(260px,1.5fr)_0.55fr_0.75fr_0.75fr] gap-5 border-b border-ink-100 pb-3 text-xs font-black uppercase tracking-wide text-ink-600 xl:grid">
               <span>Book</span>
               <span>Type</span>
               <span>Downloaded On</span>
@@ -180,7 +180,7 @@ export default async function DownloadsPage() {
                 return (
                   <div
                     key={`${download.orderId}-${download.productId}`}
-                    className="grid gap-3 py-3 md:grid-cols-[minmax(260px,1.5fr)_0.55fr_0.75fr_0.75fr] md:items-center md:gap-5"
+                    className="grid gap-3 py-3 xl:grid-cols-[minmax(260px,1.5fr)_0.55fr_0.75fr_0.75fr] xl:items-center xl:gap-5"
                   >
                     <Link href={`/product/${download.slug}`} className="flex min-w-0 items-center gap-4">
                       <span className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-lilac-50 shadow-sm">
@@ -235,8 +235,8 @@ export default async function DownloadsPage() {
         )}
 
         {downloads.length > 0 && (
-          <section className="mt-3 flex flex-col gap-4 rounded-3xl bg-lilac-50/55 p-4 shadow-clay-sm md:flex-row md:items-center md:justify-between md:px-6">
-            <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+          <section className="mt-3 flex flex-col gap-4 rounded-3xl bg-lilac-50/55 p-4 shadow-clay-sm xl:flex-row xl:items-center xl:justify-between xl:px-6">
+            <div className="flex items-center gap-5">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-lilac-100 text-violet-700">
                 <Shield className="h-6 w-6" aria-hidden="true" />
               </span>
@@ -247,15 +247,15 @@ export default async function DownloadsPage() {
                 </p>
               </div>
             </div>
-            <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-violet-500 bg-cream-50 px-5 py-3 text-sm font-bold text-violet-700 hover:bg-lilac-50 sm:px-7 sm:text-base">
+            <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-violet-500 bg-cream-50 px-7 py-3 font-bold text-violet-700 hover:bg-lilac-50">
               <FileText className="h-5 w-5" aria-hidden="true" />
               How Downloads Work
             </Link>
           </section>
         )}
 
-        <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-green-50/50 p-4 shadow-clay-sm md:flex-row md:items-center md:justify-between md:px-7">
-          <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:gap-5 sm:text-left">
+        <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-green-50/50 p-4 shadow-clay-sm xl:flex-row xl:items-center xl:justify-between xl:px-7">
+          <div className="flex items-center gap-5">
             <div className="relative h-24 w-40 shrink-0">
               <Image
                 src="/images/contact support.png"
@@ -266,7 +266,7 @@ export default async function DownloadsPage() {
                 aria-hidden="true"
               />
             </div>
-            <div className="hidden h-12 w-px bg-ink-100 sm:block" aria-hidden="true" />
+            <div className="h-12 w-px bg-ink-100" aria-hidden="true" />
             <div>
               <h2 className="font-display text-lg font-bold text-ink-700">Need help?</h2>
               <p className="mt-1 max-w-md text-sm leading-relaxed text-ink-400">
@@ -274,14 +274,14 @@ export default async function DownloadsPage() {
               </p>
             </div>
           </div>
-          <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 bg-cream-50 px-5 py-3 text-sm font-bold text-ink-600 hover:bg-gold-50 sm:px-7 sm:text-base">
+          <Link href="/contact" className="tap-target inline-flex items-center justify-center gap-2 rounded-xl border border-gold-300 bg-cream-50 px-7 py-3 font-bold text-ink-600 hover:bg-gold-50">
             <Mail className="h-5 w-5" aria-hidden="true" />
             Contact Support
           </Link>
         </section>
 
         {downloads.length > 0 && (
-          <section className="mt-5 grid gap-3 rounded-3xl bg-cream-50/75 p-3 shadow-soft sm:grid-cols-2 md:grid-cols-4 md:divide-x md:divide-ink-100">
+          <section className="mt-5 grid gap-3 rounded-3xl bg-cream-50/75 p-3 shadow-soft xl:grid-cols-4 xl:divide-x xl:divide-ink-100">
             {trustItems.map(({ label, copy, icon: Icon, tint }) => (
               <div key={label} className="flex items-center gap-3 px-3 py-1.5">
                 <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tint}`}>

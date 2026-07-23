@@ -96,7 +96,7 @@ export default async function AccountPage() {
   const orders = await getOrdersForUser(userId);
 
   return (
-    <div className="relative isolate overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 pb-24 pt-8 md:pb-16 md:pt-10">
+    <div className="relative isolate overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 pb-24 pt-8 xl:pb-16 xl:pt-10">
       <Image
         src="/images/rainbow.png"
         alt=""
@@ -186,9 +186,9 @@ export default async function AccountPage() {
           <LogoutButton className="tap-target flex w-full items-center justify-center gap-2 rounded-2xl bg-blossom-50/70 py-3 text-sm font-bold text-blossom-600 shadow-clay-sm transition-colors hover:bg-blossom-100" />
         </div>
 
-        <section className="mx-auto mt-5 grid max-w-5xl grid-cols-1 gap-3 rounded-3xl bg-cream-50/90 p-3 shadow-soft sm:grid-cols-2 lg:grid-cols-4">
+        <section className="mx-auto mt-5 grid max-w-5xl grid-cols-1 gap-3 rounded-3xl bg-cream-50/90 p-3 shadow-soft sm:grid-cols-2 xl:grid-cols-4">
           {trustItems.map(({ icon: Icon, title, body, tint }) => (
-            <div key={title} className="flex items-center gap-3 border-ink-100 lg:border-r lg:last:border-r-0 lg:pr-3">
+            <div key={title} className="flex items-center gap-3 border-ink-100 xl:border-r xl:last:border-r-0 xl:pr-3">
               <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-soft ${tint}`}>
                 <Icon className="h-6 w-6" aria-hidden="true" />
               </span>

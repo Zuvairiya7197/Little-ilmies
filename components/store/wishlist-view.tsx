@@ -44,7 +44,7 @@ export function WishlistView() {
   if (items.length === 0) {
     return (
       <div className="bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20">
-        <div className="container-content pb-8 pt-3 xs:pt-4 md:pb-6 md:pt-5">
+        <div className="container-content pb-8 pt-3 xs:pt-4 xl:pb-6 xl:pt-5">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold text-ink-400">
             <Link href="/" className="inline-flex items-center gap-1 hover:text-ink-600">
               <Home className="h-3.5 w-3.5" aria-hidden="true" />
@@ -84,7 +84,7 @@ export function WishlistView() {
           </div>
 
           <section className="mx-auto mt-5 max-w-4xl rounded-2xl border border-blossom-100 bg-cream-50/85 p-3 shadow-soft">
-            <div className="grid gap-3 md:grid-cols-[1fr_1.8fr] md:items-center">
+            <div className="grid gap-3 xl:grid-cols-[1fr_1.8fr] xl:items-center">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lemon-50 text-lemon-500 shadow-soft">
                   <Star className="h-5 w-5 fill-lemon-400" aria-hidden="true" />
@@ -123,13 +123,13 @@ export function WishlistView() {
 
   return (
     <div className="bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20">
-    <div className="container-content relative overflow-hidden pb-8 pt-3 xs:pt-4 md:pb-6 md:pt-5">
+    <div className="container-content relative overflow-hidden pb-8 pt-3 xs:pt-4 xl:pb-6 xl:pt-5">
       <Image
         src="/images/star.png"
         alt=""
         width={42}
         height={42}
-        className="pointer-events-none absolute bottom-24 left-2 h-8 w-8 rotate-12 object-contain opacity-80 md:h-10 md:w-10"
+        className="pointer-events-none absolute bottom-24 left-2 h-8 w-8 rotate-12 object-contain opacity-80 xl:h-10 xl:w-10"
         aria-hidden="true"
       />
       <Image
@@ -137,24 +137,24 @@ export function WishlistView() {
         alt=""
         width={42}
         height={42}
-        className="pointer-events-none absolute bottom-16 right-2 h-8 w-8 -rotate-12 object-contain opacity-80 md:h-10 md:w-10"
+        className="pointer-events-none absolute bottom-16 right-2 h-8 w-8 -rotate-12 object-contain opacity-80 xl:h-10 xl:w-10"
         aria-hidden="true"
       />
 
-      <section className="grid min-h-0 items-center gap-3 rounded-3xl md:min-h-32 md:grid-cols-[minmax(0,1fr)_22rem] md:gap-4">
+      <section className="grid min-h-32 items-center gap-4 rounded-3xl xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div>
           <p className="flex items-center gap-2 text-xs font-bold text-blossom-600">
             <Heart className="h-4 w-4 fill-blossom-500" aria-hidden="true" />
             My Wishlist
           </p>
-          <h1 className="mt-2 max-w-md font-display text-2xl font-bold leading-tight text-ink-700 xs:text-3xl md:text-4xl">
+          <h1 className="mt-2 max-w-md font-display text-3xl font-bold leading-tight text-ink-700 xs:text-4xl">
             Books you love, all in one place
           </h1>
           <p className="mt-2 max-w-sm text-sm font-medium leading-relaxed text-ink-400">
             Save your favorite ebooks and come back to them anytime.
           </p>
         </div>
-        <div className="relative hidden h-36 md:block">
+        <div className="relative hidden h-36 xl:block">
           <Image
             src="/images/my wishlist.png"
             alt="Books, lantern, plant, and hearts for wishlist"
@@ -166,7 +166,7 @@ export function WishlistView() {
         </div>
       </section>
 
-      <div className="mt-3 rounded-3xl bg-cream-50/95 p-3 shadow-clay-sm md:p-4">
+      <div className="mt-3 rounded-3xl bg-cream-50/95 p-3 shadow-clay-sm xl:p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs font-bold text-ink-600">
             {items.length} {items.length === 1 ? "item" : "items"}
@@ -186,7 +186,7 @@ export function WishlistView() {
 
         <ul className="flex flex-col gap-2">
           {items.map((item) => (
-            <li key={item.productId} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-3 rounded-2xl border border-ink-100 bg-white/80 p-2.5 shadow-soft sm:flex sm:items-center">
+            <li key={item.productId} className="flex items-center gap-3 rounded-2xl border border-ink-100 bg-white/80 p-2.5 shadow-soft">
               <Link
                 href={`/product/${item.slug}`}
                 className="relative h-18 w-14 shrink-0 overflow-hidden rounded-xl bg-blossom-50"
@@ -214,7 +214,7 @@ export function WishlistView() {
                 {formatPrice(item.price, item.currencyCode)}
               </p>
 
-              <div className="col-span-2 flex shrink-0 items-center justify-end gap-2 sm:col-span-1">
+              <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
                   onClick={() =>
@@ -258,7 +258,7 @@ export function WishlistView() {
       </div>
 
       {relatedProducts.length > 0 && (
-        <section className="mt-4 rounded-3xl bg-cream-50/95 p-3 shadow-clay-sm md:p-4">
+        <section className="mt-4 rounded-3xl bg-cream-50/95 p-3 shadow-clay-sm xl:p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink-700">
               <Star className="h-4 w-4 fill-lemon-400 text-lemon-400" aria-hidden="true" />
@@ -269,7 +269,7 @@ export function WishlistView() {
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
             {relatedProducts.map((product) => (
               <Link key={product.id} href={`/product/${product.slug}`} className="group min-w-0 rounded-2xl bg-cream-50 shadow-soft transition-transform hover:-translate-y-1">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-t-2xl bg-blossom-50">
@@ -295,7 +295,7 @@ export function WishlistView() {
 
 function TrustStrip() {
   return (
-    <section className="mx-auto mt-5 grid max-w-6xl grid-cols-1 gap-3 rounded-3xl bg-cream-50/90 p-3 shadow-soft xs:grid-cols-2 lg:grid-cols-4">
+    <section className="mx-auto mt-5 grid max-w-6xl grid-cols-1 gap-3 rounded-3xl bg-cream-50/90 p-3 shadow-soft sm:grid-cols-2 xl:grid-cols-4">
       {wishlistTrustPoints.map(({ label, description, icon: Icon, tint }) => (
         <div key={label} className="flex items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cream-100 shadow-clay-sm">

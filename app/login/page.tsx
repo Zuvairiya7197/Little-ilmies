@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="relative isolate overflow-hidden bg-gradient-to-br from-cream via-blossom-50/40 to-ink-50/30 py-5 md:min-h-[calc(100vh-9rem)] md:py-6">
+    <div className="relative isolate overflow-hidden bg-gradient-to-br from-cream via-blossom-50/40 to-ink-50/30 py-5 xl:min-h-[calc(100vh-9rem)] xl:py-6">
       <Image
         src="/images/star.png"
         alt=""
@@ -54,12 +54,12 @@ export default function LoginPage() {
       />
 
       <div className="container-content">
-        <div className="mx-auto grid max-w-4xl overflow-hidden rounded-[2rem] border border-cream-50 bg-cream-50/90 shadow-lifted md:grid-cols-2">
-          <div className="flex items-center justify-center px-6 py-7 sm:px-9 md:px-12 md:py-8">
+        <div className="mx-auto grid max-w-4xl overflow-hidden rounded-[2rem] border border-cream-50 bg-cream-50/90 shadow-lifted xl:grid-cols-2">
+          <div className="flex items-center justify-center px-6 py-7 sm:px-9 xl:px-12 xl:py-8">
             <BuyerLoginForm />
           </div>
 
-          <div className="relative hidden min-h-[28rem] overflow-hidden bg-gradient-to-br from-blossom-50 via-cream-50 to-ink-50 md:block lg:min-h-[30rem]">
+          <div className="relative hidden min-h-[28rem] overflow-hidden bg-gradient-to-br from-blossom-50 via-cream-50 to-ink-50 xl:block xl:min-h-[30rem]">
             <Image
               src="/images/login page.png"
               alt="Lantern, Islamic book, heart, and plant"
