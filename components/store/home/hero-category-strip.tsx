@@ -1,18 +1,4 @@
-import Link from "next/link";
 import Image from "next/image";
-import { Moon, Languages, GraduationCap, PenTool, HandHeart, Star } from "lucide-react";
-import { quickCategoryLinks } from "@/lib/store-navigation";
-
-const quickCategoryIcons = [
-  { icon: Moon, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-  { icon: GraduationCap, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-  { icon: HandHeart, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-  { icon: Languages, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-  { icon: PenTool, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-  { icon: Star, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-  { icon: Star, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-  { icon: Star, iconBg: "bg-cream-50", iconColor: "text-ink-400" },
-] as const;
 
 const trustBadges: { label: string; image: string; iconBg: string; imageScale?: string }[] = [
   { label: "Authentic Islamic Content", image: "/images/why-authentic-content.png", iconBg: "bg-ink-50" },
@@ -27,29 +13,9 @@ const trustBadges: { label: string; image: string; iconBg: string; imageScale?: 
 export function HeroCategoryStrip() {
   return (
     <>
-      {/* Mobile & tablet: quick category row + trust badges card, matches app-style home design */}
+      {/* Mobile & tablet: trust badges card, matches app-style home design */}
       <div className="relative z-10 -mt-6 md:hidden">
-        <div className="container-content flex flex-col gap-4">
-          <div className="grid grid-cols-4 gap-1.5 rounded-3xl bg-cream-50 p-3 shadow-lifted xs:gap-3 xs:p-4">
-            {quickCategoryLinks.map(({ label, href }, index) => {
-              const { icon: Icon, iconBg, iconColor } = quickCategoryIcons[index];
-              return (
-              <Link
-                key={label}
-                href={href}
-                className="tap-target flex flex-col items-center gap-1.5 xs:gap-2"
-              >
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink-100 xs:h-12 xs:w-12 ${iconBg} ${iconColor}`}>
-                  <Icon className="h-4 w-4 xs:h-5 xs:w-5" aria-hidden="true" />
-                </span>
-                <span className="text-center text-[9.5px] font-semibold leading-tight text-ink-600 xs:text-[11px]">
-                  {label}
-                </span>
-              </Link>
-              );
-            })}
-          </div>
-
+        <div className="container-content">
           <div className="grid grid-cols-3 gap-x-2 gap-y-5 rounded-3xl bg-cream-50 p-4 shadow-lifted xs:p-5">
             {trustBadges.map(({ label, image, iconBg, imageScale }) => (
               <div key={label} className="flex items-center gap-1.5 xs:gap-2">
@@ -63,20 +29,9 @@ export function HeroCategoryStrip() {
         </div>
       </div>
 
-      {/* Desktop: quick category shortcuts + compact image badge row, overlapping the hero above it */}
+      {/* Desktop: compact image badge row, overlapping the hero above it */}
       <div className="relative z-10 -mt-24 hidden md:block">
-        <div className="container-content flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl bg-cream-50 p-4 shadow-lifted">
-            {quickCategoryLinks.map(({ label, href }) => (
-              <Link
-                key={label}
-                href={href}
-                className="tap-target rounded-full border border-ink-100 px-4 py-2 text-sm font-semibold text-ink-600 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sage-50 hover:text-ink-700 hover:shadow-clay-sm"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
+        <div className="container-content">
           <div className="grid grid-cols-6 gap-4 rounded-3xl bg-cream-50 p-6 shadow-lifted">
             {trustBadges.map(({ label, image, iconBg, imageScale }) => (
               <div key={label} className="flex flex-col items-center gap-2 text-center">
