@@ -45,6 +45,24 @@ const mobileTrustPoints = [
   { label: "Loved by Families", description: "Thousands of happy parents", icon: Heart, iconColor: "text-blossom-500" },
 ] as const;
 
+function getRazorpayMethodConfig(method: PaymentMethod) {
+  return {
+    netbanking: method === "netbanking",
+    card: method === "card",
+    upi: method === "upi",
+    wallet: method === "wallet",
+  };
+}
+
+function getRazorpayDisplayConfig(method: PaymentMethod) {
+  return {
+    sequence: [method],
+    preferences: {
+      show_default_blocks: false,
+    },
+  };
+}
+
 export function CheckoutForm({
   mobilePhase,
   onMobilePhaseChange,
@@ -115,7 +133,7 @@ export function CheckoutForm({
         return;
       }
 
-      const selectedPaymentMethod = createData.currencyCode === "INR" ? paymentMethod : "card";
+      const selectedPaymentMethod: PaymentMethod = createData.currencyCode === "INR" ? paymentMethod : "card";
 
       const razorpay = new window.Razorpay({
         key: createData.razorpayKeyId,
@@ -126,14 +144,10 @@ export function CheckoutForm({
         description: "Digital e-book purchase",
         prefill: { name: values.fullName, email: values.email },
         theme: { color: "#4B449D" },
-        // Narrows Razorpay's own checkout modal to the method the shopper
-        // picked on our Payment step, rather than showing every tab.
-        method: {
-          netbanking: selectedPaymentMethod === "netbanking",
-          card: selectedPaymentMethod === "card",
-          upi: selectedPaymentMethod === "upi",
-          wallet: selectedPaymentMethod === "wallet",
-        },
+        // Keep Razorpay Checkout aligned with the payment method selected in
+        // our UI instead of showing its generic/default method list.
+        method: getRazorpayMethodConfig(selectedPaymentMethod),
+        display: getRazorpayDisplayConfig(selectedPaymentMethod),
         handler: async (response: {
           razorpay_order_id: string;
           razorpay_payment_id: string;
