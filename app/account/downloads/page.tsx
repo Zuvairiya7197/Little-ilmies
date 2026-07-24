@@ -61,13 +61,13 @@ export default async function DownloadsPage() {
         </Link>
 
         <section className="relative min-h-[10.5rem] xl:mt-2 xl:min-h-28">
-          <h1 className="flex items-center gap-4 font-display text-5xl font-bold text-ink-700 xl:text-4xl">
+          <h1 className="flex items-center gap-3 font-display text-[1.7rem] font-bold text-ink-700 xl:text-4xl">
             Downloads
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-lilac-50 text-violet-600 xl:h-8 xl:w-8 xl:rounded-full xl:bg-gold-50 xl:text-gold-500">
               <Download className="h-7 w-7 xl:h-4 xl:w-4" aria-hidden="true" />
             </span>
           </h1>
-          <p className="mt-6 max-w-[26rem] text-2xl font-medium leading-relaxed text-ink-600 xl:mt-2 xl:max-w-sm xl:text-sm xl:text-ink-400">
+          <p className="mt-4 max-w-[26rem] text-sm font-medium leading-relaxed text-ink-600 xl:mt-2 xl:max-w-sm xl:text-sm xl:text-ink-400">
             Access all your purchased e-books here.
             <br />
             Downloads are available anytime.
@@ -101,11 +101,11 @@ export default async function DownloadsPage() {
                 <Icon className="h-9 w-9 xl:h-6 xl:w-6" aria-hidden="true" />
               </span>
               <div>
-                <p className="text-xl font-bold text-ink-500 xl:text-xs">{label}</p>
-                <p className={`mt-1 font-display text-3xl font-bold xl:mt-0.5 xl:text-xl ${index === 1 ? "text-sage-600" : index === 2 ? "text-sunny-500" : index === 3 ? "text-blossom-500" : "text-ink-700"}`}>
+                <p className="text-sm font-bold text-ink-500 xl:text-xs">{label}</p>
+                <p className={`mt-1 font-display text-xl font-bold xl:mt-0.5 xl:text-xl ${index === 1 ? "text-sage-600" : index === 2 ? "text-sunny-500" : index === 3 ? "text-blossom-500" : "text-ink-700"}`}>
                   {value}
                 </p>
-                <p className="text-xl text-ink-400 xl:text-xs xl:text-ink-300">{helper}</p>
+                <p className="text-sm text-ink-400 xl:text-xs xl:text-ink-300">{helper}</p>
               </div>
             </div>
           ))}
@@ -119,8 +119,8 @@ export default async function DownloadsPage() {
                 type="button"
                 className={
                   index === 0
-                    ? "tap-target rounded-full bg-gradient-to-r from-violet-700 to-purple-700 px-6 text-2xl font-bold text-cream-50 shadow-clay-primary xl:px-4 xl:text-xs"
-                    : "tap-target rounded-full bg-cream-50 px-6 text-2xl font-bold text-ink-500 shadow-soft xl:px-4 xl:text-xs"
+                    ? "tap-target rounded-full bg-gradient-to-r from-violet-700 to-purple-700 px-6 text-sm font-bold text-cream-50 shadow-clay-primary xl:px-4 xl:text-xs"
+                    : "tap-target rounded-full bg-cream-50 px-6 text-sm font-bold text-ink-500 shadow-soft xl:px-4 xl:text-xs"
                 }
               >
                 {tab}
@@ -128,7 +128,7 @@ export default async function DownloadsPage() {
             ))}
           </div>
           <div className="flex items-center justify-between gap-3 xl:justify-end">
-            <button type="button" className="tap-target inline-flex min-w-56 items-center justify-between rounded-full bg-cream-50 px-7 text-xl font-bold text-ink-500 shadow-soft xl:min-w-0 xl:px-5 xl:text-xs">
+            <button type="button" className="tap-target inline-flex min-w-56 items-center justify-between rounded-full bg-cream-50 px-7 text-sm font-bold text-ink-500 shadow-soft xl:min-w-0 xl:px-5 xl:text-xs">
               Latest First
               <span className="text-violet-700" aria-hidden="true">⌄</span>
             </button>
@@ -150,13 +150,13 @@ export default async function DownloadsPage() {
                 priority
               />
             </div>
-            <h2 className="mt-5 font-display text-4xl font-bold text-ink-700 xl:mt-1 xl:text-xl">No downloads yet</h2>
-            <p className="mx-auto mt-5 max-w-[35rem] text-2xl font-medium leading-relaxed text-ink-500 xl:mt-2 xl:max-w-md xl:text-sm xl:text-ink-400">
+            <h2 className="mt-5 font-display text-[1.7rem] font-bold text-ink-700 xl:mt-1 xl:text-xl">No downloads yet</h2>
+            <p className="mx-auto mt-5 max-w-[35rem] text-sm font-medium leading-relaxed text-ink-500 xl:mt-2 xl:max-w-md xl:text-sm xl:text-ink-400">
               Once you purchase a book, you&apos;ll be able to
               <br />
               download it here anytime.
             </p>
-            <Link href="/shop" className="btn-primary mt-8 rounded-3xl px-10 py-5 text-2xl xl:mt-4 xl:px-6 xl:py-2.5 xl:text-sm">
+            <Link href="/shop" className="btn-primary mt-8 rounded-3xl px-10 py-5 text-sm xl:mt-4 xl:px-6 xl:py-2.5 xl:text-sm">
               <ShoppingBag className="h-7 w-7 xl:h-4 xl:w-4" aria-hidden="true" />
               Browse Books
             </Link>
@@ -194,10 +194,10 @@ export default async function DownloadsPage() {
                       </span>
                     </Link>
                       <span className="min-w-0">
-                        <Link href={`/product/${download.slug}`} className="block font-display text-2xl font-bold leading-snug text-ink-700 xl:text-sm">
+                        <Link href={`/product/${download.slug}`} className="block font-display text-base font-bold leading-snug text-ink-700 xl:text-sm">
                           {download.title}
                         </Link>
-                        <span className="mt-4 block text-lg font-black uppercase text-violet-700 xl:hidden">E-book</span>
+                        <span className="mt-4 block text-sm font-black uppercase text-violet-700 xl:hidden">E-book</span>
                         <span className="mt-4 flex flex-wrap items-center gap-3 text-base font-medium text-ink-400 xl:mt-1 xl:gap-2 xl:text-xs">
                           <span>1 e-book</span>
                           <span aria-hidden="true">•</span>
@@ -233,7 +233,7 @@ export default async function DownloadsPage() {
                       </button>
                       <a
                         href={`/api/download/${download.productId}`}
-                        className="tap-target inline-flex items-center justify-center gap-3 rounded-xl border border-violet-300 bg-white px-6 py-4 text-xl font-black text-violet-700 hover:bg-lilac-50 xl:gap-2 xl:border-lilac-200 xl:px-4 xl:py-2 xl:text-xs"
+                        className="tap-target inline-flex items-center justify-center gap-3 rounded-xl border border-violet-300 bg-white px-6 py-4 text-sm font-black text-violet-700 hover:bg-lilac-50 xl:gap-2 xl:border-lilac-200 xl:px-4 xl:py-2 xl:text-xs"
                       >
                         <Download className="h-7 w-7 xl:h-4 xl:w-4" aria-hidden="true" />
                         Download
@@ -260,13 +260,13 @@ export default async function DownloadsPage() {
                 <Shield className="h-10 w-10 xl:h-6 xl:w-6" aria-hidden="true" />
               </span>
               <div>
-                <h2 className="font-display text-2xl font-bold text-ink-700 xl:text-lg">Your downloads are safe</h2>
-                <p className="mt-2 max-w-md text-lg leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
+                <h2 className="font-display text-base font-bold text-ink-700 xl:text-lg">Your downloads are safe</h2>
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
                   All files are securely attached to your account and available for re-download anytime.
                 </p>
               </div>
             </div>
-            <Link href="/contact" className="tap-target inline-flex shrink-0 items-center justify-center gap-3 rounded-xl border border-violet-500 bg-cream-50 px-6 py-4 text-lg font-bold text-violet-700 hover:bg-lilac-50 xl:gap-2 xl:px-7 xl:py-3 xl:text-base">
+            <Link href="/contact" className="tap-target inline-flex shrink-0 items-center justify-center gap-3 rounded-xl border border-violet-500 bg-cream-50 px-6 py-4 text-sm font-bold text-violet-700 hover:bg-lilac-50 xl:gap-2 xl:px-7 xl:py-3 xl:text-base">
               <FileText className="h-6 w-6 xl:h-5 xl:w-5" aria-hidden="true" />
               How Downloads Work
             </Link>
@@ -287,13 +287,13 @@ export default async function DownloadsPage() {
             </div>
             <div className="h-16 w-px bg-ink-100 xl:h-12" aria-hidden="true" />
             <div>
-              <h2 className="font-display text-2xl font-bold text-ink-700 xl:text-lg">Need help?</h2>
+              <h2 className="font-display text-base font-bold text-ink-700 xl:text-lg">Need help?</h2>
               <p className="mt-2 max-w-[24rem] text-base leading-relaxed text-ink-400 xl:mt-1 xl:max-w-md xl:text-sm">
                 If you&apos;re having trouble downloading your books, our support team is here to help.
               </p>
             </div>
           </div>
-          <Link href="/contact" className="tap-target inline-flex shrink-0 items-center justify-center gap-3 rounded-xl border border-violet-500 bg-cream-50 px-6 py-4 text-lg font-bold text-violet-700 hover:bg-lilac-50 xl:gap-2 xl:border-gold-300 xl:px-7 xl:py-3 xl:text-base xl:text-ink-600 xl:hover:bg-gold-50">
+          <Link href="/contact" className="tap-target inline-flex shrink-0 items-center justify-center gap-3 rounded-xl border border-violet-500 bg-cream-50 px-6 py-4 text-sm font-bold text-violet-700 hover:bg-lilac-50 xl:gap-2 xl:border-gold-300 xl:px-7 xl:py-3 xl:text-base xl:text-ink-600 xl:hover:bg-gold-50">
             <Mail className="h-6 w-6 xl:h-5 xl:w-5" aria-hidden="true" />
             Contact Support
           </Link>

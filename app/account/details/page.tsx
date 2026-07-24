@@ -62,10 +62,10 @@ export default async function AccountDetailsPage() {
 
         <div className="grid min-h-40 grid-cols-[1fr_18rem] items-center gap-4 xl:mt-3 xl:min-h-28 xl:grid-cols-[1fr_22rem]">
           <div>
-            <h1 className="font-display text-5xl font-bold leading-tight text-ink-700 xl:text-4xl">
+            <h1 className="font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:text-4xl">
               Account Details <span className="text-blossom-400">♥</span>
             </h1>
-            <p className="mt-7 text-2xl font-medium text-ink-500 xl:mt-2 xl:text-lg xl:text-ink-400">
+            <p className="mt-4 text-sm font-medium text-ink-500 xl:mt-2 xl:text-lg xl:text-ink-400">
               Manage your profile and email preferences.
             </p>
           </div>
@@ -89,8 +89,8 @@ export default async function AccountDetailsPage() {
                 <User className="h-10 w-10 xl:h-7 xl:w-7" aria-hidden="true" />
               </span>
               <div>
-                <h2 className="font-display text-3xl font-bold text-ink-700 xl:text-lg">Profile</h2>
-                <p className="mt-3 max-w-xs text-2xl leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
+                <h2 className="font-display text-base font-bold text-ink-700 xl:text-lg">Profile</h2>
+                <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
                   Basic details linked to your orders and account.
                 </p>
               </div>
@@ -98,17 +98,17 @@ export default async function AccountDetailsPage() {
 
             <div className="grid gap-7 xl:grid-cols-2 xl:gap-4">
               <div>
-                <p className="mb-3 text-lg font-bold text-ink-700 xl:mb-1.5 xl:text-sm">Name</p>
+                <p className="mb-3 text-sm font-bold text-ink-700 xl:mb-1.5 xl:text-sm">Name</p>
                 <div className="flex min-h-16 items-center gap-5 rounded-2xl border border-blossom-100 bg-cream-50 px-5 shadow-clay-pressed xl:min-h-11 xl:gap-3 xl:border-ink-100 xl:px-3.5">
                   <User className="h-6 w-6 text-blossom-500 xl:h-4 xl:w-4 xl:text-gold-400" aria-hidden="true" />
-                  <span className="truncate text-xl font-medium text-ink-600 xl:text-sm">{name}</span>
+                  <span className="truncate text-sm font-medium text-ink-600 xl:text-sm">{name}</span>
                 </div>
               </div>
               <div>
-                <p className="mb-3 text-lg font-bold text-ink-700 xl:mb-1.5 xl:text-sm">Email</p>
+                <p className="mb-3 text-sm font-bold text-ink-700 xl:mb-1.5 xl:text-sm">Email</p>
                 <div className="flex min-h-16 items-center gap-5 rounded-2xl border border-blossom-100 bg-cream-50 px-5 shadow-clay-pressed xl:min-h-11 xl:gap-3 xl:border-ink-100 xl:px-3.5">
                   <Mail className="h-6 w-6 text-blossom-500 xl:h-4 xl:w-4 xl:text-gold-400" aria-hidden="true" />
-                  <span className="truncate text-xl font-medium text-ink-600 xl:text-sm">{email}</span>
+                  <span className="truncate text-sm font-medium text-ink-600 xl:text-sm">{email}</span>
                 </div>
               </div>
             </div>
@@ -126,18 +126,18 @@ export default async function AccountDetailsPage() {
                 <Mail className="h-10 w-10 xl:h-7 xl:w-7" aria-hidden="true" />
               </span>
               <div>
-                <h2 className="font-display text-3xl font-bold text-ink-700 xl:text-lg">Sign-in Email</h2>
-                <p className="mt-3 max-w-md text-2xl leading-relaxed text-ink-500 xl:mt-1 xl:max-w-xs xl:text-sm xl:text-ink-400">
+                <h2 className="font-display text-base font-bold text-ink-700 xl:text-lg">Sign-in Email</h2>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-500 xl:mt-1 xl:max-w-xs xl:text-sm xl:text-ink-400">
                   We use this email for magic-link login, receipts, and secure download access.
                 </p>
               </div>
             </div>
 
             <div>
-            <p className="mb-3 text-lg font-bold text-ink-700 xl:hidden">Email</p>
+            <p className="mb-3 text-sm font-bold text-ink-700 xl:hidden">Email</p>
             <div className="flex min-h-16 items-center gap-5 rounded-2xl border border-blossom-100 bg-cream-50 px-5 shadow-clay-pressed xl:min-h-11 xl:gap-3 xl:border-ink-100 xl:px-3.5">
               <Mail className="h-6 w-6 text-blossom-500 xl:h-4 xl:w-4 xl:text-gold-400" aria-hidden="true" />
-              <span className="truncate text-xl font-medium text-ink-600 xl:text-sm">{email}</span>
+              <span className="truncate text-sm font-medium text-ink-600 xl:text-sm">{email}</span>
             </div>
             </div>
 
@@ -155,8 +155,8 @@ export default async function AccountDetailsPage() {
                   <Bell className="h-9 w-9 xl:h-7 xl:w-7" aria-hidden="true" />
                 </span>
                 <div>
-                  <h2 className="font-display text-2xl font-bold text-ink-700 xl:text-lg">Order Updates</h2>
-                  <p className="mt-3 max-w-sm text-xl leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
+                  <h2 className="font-display text-base font-bold text-ink-700 xl:text-lg">Order Updates</h2>
+                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
                     Purchase confirmations and download links are sent automatically.
                   </p>
                 </div>
@@ -179,8 +179,8 @@ export default async function AccountDetailsPage() {
                   <ShieldCheck className="h-9 w-9 xl:h-7 xl:w-7" aria-hidden="true" />
                 </span>
                 <div>
-                  <h2 className="font-display text-2xl font-bold text-ink-700 xl:text-lg">Secure Access</h2>
-                  <p className="mt-3 max-w-sm text-xl leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
+                  <h2 className="font-display text-base font-bold text-ink-700 xl:text-lg">Secure Access</h2>
+                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-500 xl:mt-1 xl:text-sm xl:text-ink-400">
                     Downloads are safely attached to the email used at checkout.
                   </p>
                 </div>
@@ -203,8 +203,8 @@ export default async function AccountDetailsPage() {
                 <ShieldCheck className="h-8 w-8 xl:h-6 xl:w-6" aria-hidden="true" />
               </span>
               <div>
-                <h2 className="font-display text-xl font-bold text-ink-700 xl:text-base">Your data is safe with us</h2>
-                <p className="mt-2 max-w-md text-lg leading-relaxed text-ink-500 xl:mt-0.5 xl:text-sm">
+                <h2 className="font-display text-sm font-bold text-ink-700 xl:text-base">Your data is safe with us</h2>
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-500 xl:mt-0.5 xl:text-sm">
                   We never share your email. All your information is encrypted and secure.
                 </p>
               </div>

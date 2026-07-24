@@ -69,10 +69,10 @@ export default async function PurchaseHistoryPage() {
     <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-44 pt-14 xl:pb-6 xl:pt-4">
       <div className="container-content relative">
         <div className="relative min-h-0 text-center xl:text-left">
-          <h1 className="font-display text-6xl font-bold leading-tight text-ink-700 xl:text-4xl">
+          <h1 className="font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:text-4xl">
             Purchase History <span className="text-blossom-400">♥</span>
           </h1>
-          <p className="mt-7 flex flex-col items-center gap-1 text-2xl font-medium leading-snug text-ink-400 xl:mt-2 xl:flex-row xl:flex-wrap xl:items-center xl:gap-2 xl:text-base">
+          <p className="mt-4 flex flex-col items-center gap-1 text-sm font-medium leading-snug text-ink-400 xl:mt-2 xl:flex-row xl:flex-wrap xl:items-center xl:gap-2 xl:text-base">
             {orders.length === 0 ? "Signed in as" : "Orders linked to"}{" "}
             <span className="font-bold text-ink-600">{session.user.email}</span>
             {orders.length === 0 && (
@@ -110,17 +110,17 @@ export default async function PurchaseHistoryPage() {
                 priority
               />
             </div>
-            <h2 className="mt-5 font-display text-5xl font-bold leading-tight text-ink-700 xl:-mt-5 xl:text-3xl">
+            <h2 className="mt-5 font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:-mt-5 xl:text-3xl">
               No purchases yet
             </h2>
-            <p className="mt-6 max-w-[34rem] text-2xl font-medium leading-relaxed text-ink-500 xl:mt-1.5 xl:max-w-sm xl:text-base xl:text-ink-400">
+            <p className="mt-6 max-w-[34rem] text-sm font-medium leading-relaxed text-ink-500 xl:mt-1.5 xl:max-w-sm xl:text-base xl:text-ink-400">
               Once you buy a book,
               <br />
               your orders and receipts
               <br className="hidden xl:block" />
               will show up here.
             </p>
-            <Link href="/shop" className="btn-primary mt-9 rounded-3xl px-11 py-5 text-3xl xl:mt-3 xl:px-7 xl:py-2.5 xl:text-base">
+            <Link href="/shop" className="btn-primary mt-9 rounded-3xl px-11 py-5 text-sm xl:mt-3 xl:px-7 xl:py-2.5 xl:text-base">
               <ShoppingBag className="h-8 w-8 xl:h-5 xl:w-5" aria-hidden="true" />
               Browse Books
             </Link>
@@ -133,8 +133,8 @@ export default async function PurchaseHistoryPage() {
                   <Icon className="h-8 w-8" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="text-base font-bold leading-tight text-ink-700">{title}</h2>
-                  <p className="mt-2 text-base leading-snug text-ink-500">{body}</p>
+                  <h2 className="text-xs font-bold leading-tight text-ink-700">{title}</h2>
+                  <p className="mt-1 text-xs leading-snug text-ink-500">{body}</p>
                 </div>
               </div>
             ))}
@@ -155,7 +155,7 @@ export default async function PurchaseHistoryPage() {
                   </span>
                   <div>
                     <p className="text-sm font-bold text-ink-500">{label}</p>
-                    <p className="mt-1 font-display text-2xl font-bold text-ink-700">{value}</p>
+                    <p className="mt-1 font-display text-sm font-bold text-ink-700">{value}</p>
                   </div>
                 </div>
               ))}
@@ -228,7 +228,7 @@ export default async function PurchaseHistoryPage() {
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 font-bold text-ink-500">2</button>
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 text-ink-500">›</button>
                 </div>
-                <p className="text-center text-sm text-ink-400 sm:text-base xl:text-lg">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
+                <p className="text-center text-sm text-ink-400 sm:text-base xl:text-sm">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
               </div>
             </section>
 
@@ -239,7 +239,7 @@ export default async function PurchaseHistoryPage() {
                 </div>
                 <div className="hidden h-16 w-px bg-ink-100 sm:block" aria-hidden="true" />
                 <div>
-                  <h2 className="font-display text-lg font-bold text-ink-600">Need help with your order?</h2>
+                  <h2 className="font-display text-sm font-bold text-ink-600">Need help with your order?</h2>
                   <p className="mt-1 max-w-md text-base leading-relaxed text-ink-400">
                     We&apos;re here to help! Contact our support team and we&apos;ll get back to you.
                   </p>

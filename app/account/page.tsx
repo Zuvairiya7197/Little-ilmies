@@ -78,7 +78,7 @@ function AccountActionCard({
         )}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block font-display text-[1.65rem] font-bold leading-tight text-ink-700 xl:text-sm">{title}</span>
+        <span className="block font-display text-sm font-bold leading-tight text-ink-700">{title}</span>
         <span className="mt-1.5 block text-[1.35rem] font-medium leading-snug text-ink-400 xl:mt-0.5 xl:text-xs">{description}</span>
       </span>
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-blossom-600 transition-colors group-hover:bg-ink-600 group-hover:text-cream-50 xl:h-8 xl:w-8 xl:bg-blossom-50 xl:shadow-soft">
@@ -132,10 +132,10 @@ export default async function AccountPage() {
 
       <div className="container-content relative">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-display text-5xl font-bold text-ink-700 xl:text-4xl">
+          <h1 className="font-display text-[1.7rem] font-bold text-ink-700 xl:text-4xl">
             My Account <span className="text-blossom-400">⌁</span>
           </h1>
-          <p className="mt-5 text-2xl font-semibold leading-relaxed text-ink-400 xl:mt-3 xl:text-sm">
+          <p className="mt-5 text-sm font-semibold leading-relaxed text-ink-400 xl:mt-3 xl:text-sm">
             Signed in as <br className="xl:hidden" />
             <span className="text-ink-700">{session.user.email}</span>{" "}
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink-600 align-middle text-cream-50 xl:h-5 xl:w-5">
@@ -184,7 +184,7 @@ export default async function AccountPage() {
         </div>
 
         <div className="mx-auto mt-6 max-w-[42rem] xl:mt-4 xl:max-w-xl">
-          <LogoutButton className="tap-target flex w-full items-center justify-center gap-4 rounded-2xl bg-blossom-50/70 py-5 text-2xl font-bold text-blossom-600 shadow-clay-sm transition-colors hover:bg-blossom-100 [&_svg]:h-7 [&_svg]:w-7 xl:gap-2 xl:py-3 xl:text-sm xl:[&_svg]:h-4 xl:[&_svg]:w-4" />
+          <LogoutButton className="tap-target flex w-full items-center justify-center gap-4 rounded-2xl bg-blossom-50/70 py-5 text-sm font-bold text-blossom-600 shadow-clay-sm transition-colors hover:bg-blossom-100 [&_svg]:h-7 [&_svg]:w-7 xl:gap-2 xl:py-3 xl:text-sm xl:[&_svg]:h-4 xl:[&_svg]:w-4" />
         </div>
 
         <section className="mx-auto mt-9 grid max-w-[48rem] grid-cols-4 gap-0 rounded-3xl bg-cream-50/90 px-4 py-7 shadow-soft xl:mt-5 xl:max-w-5xl xl:grid-cols-4 xl:gap-3 xl:p-3">
@@ -194,8 +194,8 @@ export default async function AccountPage() {
                 <Icon className="h-8 w-8 xl:h-6 xl:w-6" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <h2 className="text-base font-bold leading-tight text-ink-700 xl:text-xs">{title}</h2>
-                <p className="mt-2 text-base leading-snug text-ink-500 xl:mt-0.5 xl:text-[11px] xl:leading-tight xl:text-ink-400">{body}</p>
+                <h2 className="text-xs font-bold leading-tight text-ink-700">{title}</h2>
+                <p className="mt-1 text-xs leading-snug text-ink-500 xl:mt-0.5 xl:text-[11px] xl:leading-tight xl:text-ink-400">{body}</p>
               </div>
             </div>
           ))}
