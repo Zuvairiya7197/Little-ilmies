@@ -5,10 +5,14 @@ import Link from "next/link";
 import {
   Calendar,
   Check,
+  CloudDownload,
   Download,
+  Heart,
   Mail,
   MoreVertical,
+  ShieldCheck,
   ShoppingBag,
+  Star,
 } from "lucide-react";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getOrdersForUser } from "@/lib/db/orders";
@@ -18,6 +22,33 @@ export const metadata: Metadata = {
   title: "Purchase History",
   robots: { index: false },
 };
+
+const trustItems = [
+  {
+    icon: ShieldCheck,
+    title: "Secure & Private",
+    body: "Your data is always safe with us.",
+    tint: "bg-lilac-50 text-violet-700",
+  },
+  {
+    icon: CloudDownload,
+    title: "Instant Access",
+    body: "Download and read your books instantly.",
+    tint: "bg-teal-50 text-teal-500",
+  },
+  {
+    icon: Heart,
+    title: "Made with Love",
+    body: "For little hearts and curious minds.",
+    tint: "bg-blossom-50 text-blossom-500",
+  },
+  {
+    icon: Star,
+    title: "Trusted by Parents",
+    body: "Loved by thousands of families.",
+    tint: "bg-lemon-50 text-lemon-500",
+  },
+] as const;
 
 export default async function PurchaseHistoryPage() {
   const session = await getAuthSession();
@@ -35,13 +66,13 @@ export default async function PurchaseHistoryPage() {
     : null;
 
   return (
-    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-6 pt-3 xl:pb-6 xl:pt-4">
+    <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-44 pt-14 xl:pb-6 xl:pt-4">
       <div className="container-content relative">
-        <div className="relative min-h-0">
-          <h1 className="font-display text-2xl font-bold leading-tight text-ink-700 xs:text-3xl xl:text-4xl">
+        <div className="relative min-h-0 text-center xl:text-left">
+          <h1 className="font-display text-6xl font-bold leading-tight text-ink-700 xl:text-4xl">
             Purchase History <span className="text-blossom-400">♥</span>
           </h1>
-          <p className="mt-2 flex flex-wrap items-center gap-2 text-sm font-medium text-ink-400 xl:text-base">
+          <p className="mt-7 flex flex-col items-center gap-1 text-2xl font-medium leading-snug text-ink-400 xl:mt-2 xl:flex-row xl:flex-wrap xl:items-center xl:gap-2 xl:text-base">
             {orders.length === 0 ? "Signed in as" : "Orders linked to"}{" "}
             <span className="font-bold text-ink-600">{session.user.email}</span>
             {orders.length === 0 && (
@@ -67,8 +98,9 @@ export default async function PurchaseHistoryPage() {
         </div>
 
         {orders.length === 0 ? (
-          <div className="mx-auto mt-0 flex max-w-md flex-col items-center text-center">
-            <div className="relative aspect-[4/3] w-full max-w-[17rem] xl:max-w-xs">
+          <>
+          <div className="mx-auto mt-14 flex max-w-[47.5rem] flex-col items-center rounded-[2rem] bg-cream-50 px-8 pb-16 pt-12 text-center shadow-clay-sm xl:mt-0 xl:max-w-md xl:bg-transparent xl:p-0 xl:shadow-none">
+            <div className="relative aspect-[4/3] w-full max-w-[27rem] xl:max-w-xs">
               <Image
                 src="/images/no purchase yet.png"
                 alt="Clipboard illustration for no purchases yet"
@@ -78,19 +110,36 @@ export default async function PurchaseHistoryPage() {
                 priority
               />
             </div>
-            <h2 className="-mt-5 font-display text-2xl font-bold text-ink-700 xl:text-3xl">
+            <h2 className="mt-5 font-display text-5xl font-bold leading-tight text-ink-700 xl:-mt-5 xl:text-3xl">
               No purchases yet
             </h2>
-            <p className="mt-1.5 max-w-sm text-sm font-medium leading-relaxed text-ink-400 xl:text-base">
-              Once you buy a book, your orders and receipts
-              <br className="hidden sm:block" />
+            <p className="mt-6 max-w-[34rem] text-2xl font-medium leading-relaxed text-ink-500 xl:mt-1.5 xl:max-w-sm xl:text-base xl:text-ink-400">
+              Once you buy a book,
+              <br />
+              your orders and receipts
+              <br className="hidden xl:block" />
               will show up here.
             </p>
-            <Link href="/shop" className="btn-primary mt-3 rounded-3xl px-7 py-2.5 text-sm xl:text-base">
-              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+            <Link href="/shop" className="btn-primary mt-9 rounded-3xl px-11 py-5 text-3xl xl:mt-3 xl:px-7 xl:py-2.5 xl:text-base">
+              <ShoppingBag className="h-8 w-8 xl:h-5 xl:w-5" aria-hidden="true" />
               Browse Books
             </Link>
           </div>
+
+          <section className="mx-auto mt-11 grid max-w-[48rem] grid-cols-4 gap-0 rounded-3xl bg-cream-50/90 px-4 py-7 shadow-soft xl:hidden">
+            {trustItems.map(({ icon: Icon, title, body, tint }) => (
+              <div key={title} className="flex flex-col items-center gap-3 border-r border-ink-100 px-3 text-center last:border-r-0">
+                <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-soft ${tint}`}>
+                  <Icon className="h-8 w-8" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-base font-bold leading-tight text-ink-700">{title}</h2>
+                  <p className="mt-2 text-base leading-snug text-ink-500">{body}</p>
+                </div>
+              </div>
+            ))}
+          </section>
+          </>
         ) : (
           <div className="mt-5">
             <section className="grid rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:grid-cols-4 xl:divide-x xl:divide-ink-100">

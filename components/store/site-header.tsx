@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, ArrowLeft, Heart, ShoppingBag } from "lucide-react";
+import { Menu, ArrowLeft, Heart, ShoppingBag, User } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
 import { SearchOverlay } from "@/components/store/search-overlay";
@@ -24,6 +24,8 @@ export function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const isProductPage = pathname.startsWith("/product/");
+  const isAccountSubPage = pathname.startsWith("/account/");
+  const isWishlistPage = pathname === "/wishlist";
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,8 +59,8 @@ export function SiteHeader() {
             : "bg-cream-50/95 shadow-clay-sm backdrop-blur"
         )}
       >
-        <div className="container-content flex h-16 items-center justify-between gap-3 xs:h-18">
-          {isProductPage ? (
+        <div className="container-content flex h-20 items-center justify-between gap-3 xs:h-24 lg:h-16 xl:h-18">
+          {isProductPage || isAccountSubPage || isWishlistPage ? (
             <button
               type="button"
               onClick={() => router.back()}
@@ -78,7 +80,7 @@ export function SiteHeader() {
             </button>
           )}
 
-          <Logo className="h-16 xs:h-20" />
+          <Logo className="h-16 xs:h-20 lg:h-16 xl:h-20" />
 
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-1">
@@ -104,7 +106,7 @@ export function SiteHeader() {
             <Link
               href="/wishlist"
               aria-label={`Wishlist${mounted && wishlistCount > 0 ? `, ${wishlistCount} items` : ""}`}
-              className="tap-target relative hidden items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm md:flex"
+              className="tap-target relative flex items-center justify-center rounded-full text-ink-500 transition-all duration-200 hover:shadow-clay-sm"
             >
               <Heart className="h-5 w-5" aria-hidden="true" />
               {mounted && <IconBadge count={wishlistCount} />}
@@ -123,6 +125,14 @@ export function SiteHeader() {
             <div className="hidden lg:block">
               <AccountMenu />
             </div>
+
+            <Link
+              href="/account"
+              aria-label="Account"
+              className="tap-target flex items-center justify-center rounded-full bg-lilac-50 text-ink-500 transition-all duration-200 hover:shadow-clay-sm lg:hidden"
+            >
+              <User className="h-5 w-5" aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </div>

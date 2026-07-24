@@ -23,7 +23,13 @@
     /* Height of the persistent mobile bottom tab bar (MobileBottomNav) —
        page-level sticky action bars (checkout pay bar) sit just above it
        instead of overlapping, since the tab bar never hides on mobile. */
-    --mobile-nav-height: 52px;
+    --mobile-nav-height: 76px;
+  }
+
+  @media (min-width: 480px) and (max-width: 1279px) {
+    :root {
+      --mobile-nav-height: 96px;
+    }
   }
 
   * {
@@ -31,13 +37,33 @@
   }
 
   html {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    background-color: theme("colors.cream.DEFAULT");
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-cream text-ink-500 antialiased;
+    width: 100vw;
+    min-width: 100vw;
+    max-width: 100%;
+    overflow-x: hidden;
     font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  @supports (width: 100dvw) {
+    body {
+      width: 100dvw;
+      min-width: 100dvw;
+    }
+  }
+
+  body > * {
+    max-width: 100%;
   }
 
   h1,

@@ -33,8 +33,8 @@ export function MobileBottomNav() {
 
   const tabClass = (active: boolean) =>
     cn(
-      "tap-target flex flex-1 flex-col items-center justify-center gap-1 py-2 text-sm font-semibold transition-colors",
-      active ? "text-ink-700" : "text-ink-400"
+      "tap-target flex flex-1 flex-col items-center justify-center gap-1 py-2 text-sm font-semibold transition-colors sm:py-3 sm:text-[1.15rem]",
+      active ? "text-blossom-600" : "text-ink-400"
     );
 
   return (
@@ -44,12 +44,12 @@ export function MobileBottomNav() {
       className="safe-bottom fixed inset-x-0 bottom-0 z-50 flex border-t border-ink-100 bg-cream-50/95 shadow-lifted backdrop-blur xl:hidden"
     >
       <Link href="/" className={tabClass(isActive("/") && pathname === "/")}>
-        <Home className="h-5 w-5" aria-hidden={true} />
+        <Home className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden={true} />
         Home
       </Link>
 
       <Link href="/categories" className={tabClass(isActive("/categories"))}>
-        <LayoutGrid className="h-5 w-5" aria-hidden={true} />
+        <LayoutGrid className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden={true} />
         Categories
       </Link>
 
@@ -58,7 +58,7 @@ export function MobileBottomNav() {
         aria-label={`Wishlist${mounted && wishlistCount > 0 ? `, ${wishlistCount} items` : ""}`}
         className={cn("relative", tabClass(isActive("/wishlist")))}
       >
-        <Heart className="h-5 w-5" aria-hidden={true} />
+        <Heart className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden={true} />
         Wishlist
         {mounted && (
           <span className="absolute right-[calc(50%-20px)] top-0">
@@ -73,7 +73,7 @@ export function MobileBottomNav() {
         aria-label={`Cart${mounted && cartCount > 0 ? `, ${cartCount} items` : ""}`}
         className={cn("relative", tabClass(false))}
       >
-        <ShoppingBag className="h-5 w-5" aria-hidden={true} />
+        <ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden={true} />
         Cart
         {mounted && (
           <span className="absolute right-[calc(50%-20px)] top-0">
@@ -84,9 +84,15 @@ export function MobileBottomNav() {
 
       <Link
         href={status === "authenticated" ? "/account" : "/login"}
-        className={tabClass(isActive("/account"))}
+        className={cn("relative", tabClass(isActive("/account")))}
       >
-        <User className="h-5 w-5" aria-hidden={true} />
+        {isActive("/account") ? (
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lilac-50 text-blossom-600 shadow-soft sm:h-14 sm:w-14">
+            <User className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden={true} />
+          </span>
+        ) : (
+          <User className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden={true} />
+        )}
         Account
       </Link>
     </nav>

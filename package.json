@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "rm -rf .next && next dev",
-    "build": "prisma generate && next build",
+    "clean": "rm -rf .next",
+    "dev": "npm run clean && next dev",
+    "build": "npm run clean && prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint .",
