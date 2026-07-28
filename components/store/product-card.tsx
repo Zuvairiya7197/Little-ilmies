@@ -48,7 +48,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
             alt={`${product.title} book cover`}
             fill
             sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
-            className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+            className="object-contain object-center"
           />
         </Link>
 

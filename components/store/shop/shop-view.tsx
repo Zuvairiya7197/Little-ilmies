@@ -7,7 +7,7 @@ import { FilterSidebar } from "@/components/store/shop/filter-sidebar";
 import { FilterDrawer } from "@/components/store/shop/filter-drawer";
 import { ShopToolbar } from "@/components/store/shop/shop-toolbar";
 import { ProductGrid } from "@/components/store/shop/product-grid";
-import { ProductRow } from "@/components/store/shop/product-row";
+import { ProductCard } from "@/components/store/product-card";
 import { SortSelect } from "@/components/store/shop/sort-select";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { filterProducts, sortProducts } from "@/lib/catalog";
@@ -142,9 +142,9 @@ export function ShopView({
           <SortSelect />
         </div>
 
-        <div className="mt-4 flex flex-col gap-4">
-          {mobileResults.map((product) => (
-            <ProductRow key={product.id} product={product} />
+        <div className="mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-6">
+          {mobileResults.map((product, index) => (
+            <ProductCard key={product.id} product={product} tintIndex={index} />
           ))}
         </div>
 
