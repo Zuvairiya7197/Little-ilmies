@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 
 const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_PREVIEW_SIZE = 10 * 1024 * 1024; // 10MB per page
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +23,11 @@ export async function POST(request: NextRequest) {
       body,
       getSignedToken: async (pathname, clientPayload) => {
         const payload = clientPayload ? JSON.parse(clientPayload) : null;
-        if (payload?.kind !== "pdf" || typeof payload.productId !== "string") {
-          throw new Error("Invalid PDF upload payload.");
+        if (
+          (payload?.kind !== "pdf" && payload?.kind !== "preview") ||
+          typeof payload.productId !== "string"
+        ) {
+          throw new Error("Invalid upload payload.");
         }
 
         const product = await prisma.product.findUnique({
@@ -33,22 +37,33 @@ export async function POST(request: NextRequest) {
         if (!product) {
           throw new Error("Product not found.");
         }
-        if (!pathname.startsWith(`pdfs/${payload.productId}/`) || !pathname.endsWith(".pdf")) {
-          throw new Error("Invalid PDF upload path.");
+
+        const isPdf = payload.kind === "pdf";
+        const validPath = isPdf
+          ? pathname.startsWith(`pdfs/${payload.productId}/`) && pathname.endsWith(".pdf")
+          : pathname.startsWith(`previews/${payload.productId}/`) &&
+            /\.(jpe?g|png|webp)$/i.test(pathname);
+        if (!validPath) {
+          throw new Error("Invalid upload path.");
         }
 
         const validUntil = Date.now() + 60 * 60 * 1000;
+        const allowedContentTypes = isPdf
+          ? ["application/pdf"]
+          : ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+        const maximumSizeInBytes = isPdf ? MAX_PDF_SIZE : MAX_PREVIEW_SIZE;
+
         return {
           token: await issueSignedToken({
             pathname,
             operations: ["put"],
-            allowedContentTypes: ["application/pdf"],
-            maximumSizeInBytes: MAX_PDF_SIZE,
+            allowedContentTypes,
+            maximumSizeInBytes,
             validUntil,
           }),
           urlOptions: {
-            allowedContentTypes: ["application/pdf"],
-            maximumSizeInBytes: MAX_PDF_SIZE,
+            allowedContentTypes,
+            maximumSizeInBytes,
             validUntil,
             addRandomSuffix: false,
             tokenPayload: clientPayload,

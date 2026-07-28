@@ -2,14 +2,48 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { savePreviewPages } from "@/lib/storage";
+import { z } from "zod";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB per page
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+const attachedPreviewSchema = z.object({
+  productId: z.string().min(1),
+  pathnames: z.array(z.string().min(1)).min(1).max(20),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const denied = await requireAdminApi();
     if (denied) return denied;
+
+    const contentType = request.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      const parsed = attachedPreviewSchema.safeParse(await request.json());
+      if (!parsed.success) {
+        return NextResponse.json({ error: "Invalid uploaded preview data" }, { status: 400 });
+      }
+
+      const { productId, pathnames } = parsed.data;
+      if (
+        pathnames.some(
+          (pathname) =>
+            !pathname.startsWith(`previews/${productId}/`) || !/\.(jpe?g|png|webp)$/i.test(pathname)
+        )
+      ) {
+        return NextResponse.json({ error: "Invalid uploaded preview path" }, { status: 400 });
+      }
+
+      const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+      if (!product) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+
+      await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: pathnames } });
+      return NextResponse.json({
+        previewImagePaths: pathnames.map((_, index) => `/api/product-assets/previews/${productId}/${index}`),
+      });
+    }
 
     const formData = await request.formData();
     const files = formData.getAll("files");
