@@ -4,6 +4,7 @@ import { useState, useId, cloneElement } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { upload } from "@vercel/blob/client";
 import { Loader2, AlertTriangle, Upload, Trash2 } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import type { CurrencyCode } from "@/types/pricing";
@@ -29,6 +30,7 @@ export function ProductForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfUploadProgress, setPdfUploadProgress] = useState<number | null>(null);
   const [previewFiles, setPreviewFiles] = useState<File[]>([]);
 
   const {
@@ -78,10 +80,16 @@ export function ProductForm({
         await uploadFile("/api/admin/products/upload-cover", fd, "cover image");
       }
       if (pdfFile) {
-        const fd = new FormData();
-        fd.append("file", pdfFile);
-        fd.append("productId", savedId);
-        await uploadFile("/api/admin/products/upload-pdf", fd, "PDF");
+        setPdfUploadProgress(0);
+        const blob = await upload(pdfPathname(savedId, pdfFile.name), pdfFile, {
+          access: "private",
+          contentType: "application/pdf",
+          handleUploadUrl: "/api/admin/products/client-upload",
+          clientPayload: JSON.stringify({ kind: "pdf", productId: savedId }),
+          multipart: true,
+          onUploadProgress: ({ percentage }) => setPdfUploadProgress(percentage),
+        });
+        await attachUploadedPdf(savedId, blob.pathname);
       }
       if (previewFiles.length > 0) {
         const fd = new FormData();
@@ -96,6 +104,7 @@ export function ProductForm({
       setSubmitError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setPdfUploadProgress(null);
     }
   }
 
@@ -288,6 +297,19 @@ export function ProductForm({
             onChange={setCoverFile}
           />
           <FileField label="Full PDF (private)" accept="application/pdf" file={pdfFile} onChange={setPdfFile} />
+          {pdfUploadProgress !== null && (
+            <div className="rounded-xl bg-cream-50 px-3 py-2">
+              <div className="h-2 overflow-hidden rounded-full bg-ink-100">
+                <div
+                  className="h-full rounded-full bg-sage-500 transition-all"
+                  style={{ width: `${pdfUploadProgress}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-xs font-semibold text-ink-400">
+                Uploading PDF {Math.round(pdfUploadProgress)}%
+              </p>
+            </div>
+          )}
           <PreviewPagesField files={previewFiles} onChange={setPreviewFiles} />
         </div>
       </div>
@@ -460,4 +482,24 @@ async function uploadFile(endpoint: string, formData: FormData, label: string) {
   const data = contentType.includes("application/json") ? await res.json().catch(() => null) : null;
   const fallback = `${res.status} ${res.statusText}`.trim();
   throw new Error(data?.error ?? `Could not upload ${label}${fallback ? ` (${fallback})` : ""}.`);
+}
+
+async function attachUploadedPdf(productId: string, pathname: string) {
+  const res = await fetch("/api/admin/products/upload-pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, pathname }),
+  });
+  if (res.ok) return;
+
+  const data = await res.json().catch(() => null);
+  throw new Error(data?.error ?? "Could not attach uploaded PDF to this product.");
+}
+
+function pdfPathname(productId: string, filename: string) {
+  const base = filename
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[^a-zA-Z0-9-_]/g, "-")
+    .slice(0, 80);
+  return `pdfs/${productId}/${base || "book"}-${crypto.randomUUID()}.pdf`;
 }

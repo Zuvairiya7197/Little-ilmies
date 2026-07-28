@@ -1,0 +1,55 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { prisma } from "@/lib/db/prisma";
+import { requireAdminApi } from "@/lib/auth/require-admin-api";
+
+const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100MB
+
+export async function POST(request: NextRequest) {
+  const body = (await request.json()) as HandleUploadBody;
+
+  if (body.type === "blob.upload-completed") {
+    return NextResponse.json({ response: "ok" });
+  }
+
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
+  try {
+    const response = await handleUpload({
+      request,
+      body,
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        const payload = clientPayload ? JSON.parse(clientPayload) : null;
+        if (payload?.kind !== "pdf" || typeof payload.productId !== "string") {
+          throw new Error("Invalid PDF upload payload.");
+        }
+
+        const product = await prisma.product.findUnique({
+          where: { id: payload.productId },
+          select: { id: true },
+        });
+        if (!product) {
+          throw new Error("Product not found.");
+        }
+        if (!pathname.startsWith(`pdfs/${payload.productId}/`) || !pathname.endsWith(".pdf")) {
+          throw new Error("Invalid PDF upload path.");
+        }
+
+        return {
+          allowedContentTypes: ["application/pdf"],
+          maximumSizeInBytes: MAX_PDF_SIZE,
+          addRandomSuffix: false,
+          tokenPayload: clientPayload,
+        };
+      },
+    });
+
+    return NextResponse.json(response);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Could not prepare PDF upload." },
+      { status: 400 }
+    );
+  }
+}
