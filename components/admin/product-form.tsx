@@ -4,7 +4,7 @@ import { useState, useId, cloneElement } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { upload } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
 import { Loader2, AlertTriangle, Upload, Trash2 } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import type { CurrencyCode } from "@/types/pricing";
@@ -495,7 +495,7 @@ async function uploadPdfToBlob(
   onProgress: (percentage: number) => void
 ) {
   try {
-    return await upload(pdfPathname(productId, file.name), file, {
+    return await uploadPresigned(pdfPathname(productId, file.name), file, {
       access: "private",
       contentType: "application/pdf",
       handleUploadUrl: "/api/admin/products/client-upload",

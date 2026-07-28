@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { issueSignedToken } from "@vercel/blob";
+import { handleUploadPresigned, type HandleUploadPresignedBody } from "@vercel/blob/client";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 
@@ -7,7 +8,7 @@ const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100MB
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as HandleUploadBody;
+    const body = (await request.json()) as HandleUploadPresignedBody;
 
     if (body.type === "blob.upload-completed") {
       return NextResponse.json({ response: "ok" });
@@ -16,10 +17,10 @@ export async function POST(request: NextRequest) {
     const denied = await requireAdminApi();
     if (denied) return denied;
 
-    const response = await handleUpload({
+    const response = await handleUploadPresigned({
       request,
       body,
-      onBeforeGenerateToken: async (pathname, clientPayload) => {
+      getSignedToken: async (pathname, clientPayload) => {
         const payload = clientPayload ? JSON.parse(clientPayload) : null;
         if (payload?.kind !== "pdf" || typeof payload.productId !== "string") {
           throw new Error("Invalid PDF upload payload.");
@@ -36,11 +37,22 @@ export async function POST(request: NextRequest) {
           throw new Error("Invalid PDF upload path.");
         }
 
+        const validUntil = Date.now() + 60 * 60 * 1000;
         return {
-          allowedContentTypes: ["application/pdf"],
-          maximumSizeInBytes: MAX_PDF_SIZE,
-          addRandomSuffix: false,
-          tokenPayload: clientPayload,
+          token: await issueSignedToken({
+            pathname,
+            operations: ["put"],
+            allowedContentTypes: ["application/pdf"],
+            maximumSizeInBytes: MAX_PDF_SIZE,
+            validUntil,
+          }),
+          urlOptions: {
+            allowedContentTypes: ["application/pdf"],
+            maximumSizeInBytes: MAX_PDF_SIZE,
+            validUntil,
+            addRandomSuffix: false,
+            tokenPayload: clientPayload,
+          },
         };
       },
     });
