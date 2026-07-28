@@ -6,16 +6,16 @@ import { requireAdminApi } from "@/lib/auth/require-admin-api";
 const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100MB
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as HandleUploadBody;
-
-  if (body.type === "blob.upload-completed") {
-    return NextResponse.json({ response: "ok" });
-  }
-
-  const denied = await requireAdminApi();
-  if (denied) return denied;
-
   try {
+    const body = (await request.json()) as HandleUploadBody;
+
+    if (body.type === "blob.upload-completed") {
+      return NextResponse.json({ response: "ok" });
+    }
+
+    const denied = await requireAdminApi();
+    if (denied) return denied;
+
     const response = await handleUpload({
       request,
       body,
@@ -47,8 +47,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
+    console.error("Client PDF upload setup failed", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not prepare PDF upload." },
+      { error: error instanceof Error ? `Could not prepare PDF upload: ${error.message}` : "Could not prepare PDF upload." },
       { status: 400 }
     );
   }

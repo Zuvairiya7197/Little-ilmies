@@ -81,14 +81,7 @@ export function ProductForm({
       }
       if (pdfFile) {
         setPdfUploadProgress(0);
-        const blob = await upload(pdfPathname(savedId, pdfFile.name), pdfFile, {
-          access: "private",
-          contentType: "application/pdf",
-          handleUploadUrl: "/api/admin/products/client-upload",
-          clientPayload: JSON.stringify({ kind: "pdf", productId: savedId }),
-          multipart: true,
-          onUploadProgress: ({ percentage }) => setPdfUploadProgress(percentage),
-        });
+        const blob = await uploadPdfToBlob(savedId, pdfFile, setPdfUploadProgress);
         await attachUploadedPdf(savedId, blob.pathname);
       }
       if (previewFiles.length > 0) {
@@ -494,6 +487,26 @@ async function attachUploadedPdf(productId: string, pathname: string) {
 
   const data = await res.json().catch(() => null);
   throw new Error(data?.error ?? "Could not attach uploaded PDF to this product.");
+}
+
+async function uploadPdfToBlob(
+  productId: string,
+  file: File,
+  onProgress: (percentage: number) => void
+) {
+  try {
+    return await upload(pdfPathname(productId, file.name), file, {
+      access: "private",
+      contentType: "application/pdf",
+      handleUploadUrl: "/api/admin/products/client-upload",
+      clientPayload: JSON.stringify({ kind: "pdf", productId }),
+      multipart: true,
+      onUploadProgress: ({ percentage }) => onProgress(percentage),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Blob upload error";
+    throw new Error(`Could not upload PDF to Vercel Blob: ${message}`);
+  }
 }
 
 function pdfPathname(productId: string, filename: string) {
