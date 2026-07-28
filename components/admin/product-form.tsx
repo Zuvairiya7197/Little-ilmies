@@ -288,21 +288,7 @@ export function ProductForm({
             onChange={setCoverFile}
           />
           <FileField label="Full PDF (private)" accept="application/pdf" file={pdfFile} onChange={setPdfFile} />
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-ink-600">
-              Sample Preview Pages (public)
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setPreviewFiles(Array.from(e.target.files ?? []))}
-              className="tap-target block w-full rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500"
-            />
-            {previewFiles.length > 0 && (
-              <p className="mt-1.5 text-xs text-ink-400">{previewFiles.length} page(s) selected</p>
-            )}
-          </div>
+          <PreviewPagesField files={previewFiles} onChange={setPreviewFiles} />
         </div>
       </div>
 
@@ -388,6 +374,80 @@ function FileField({
           onChange={(e) => onChange(e.target.files?.[0] ?? null)}
         />
       </label>
+    </div>
+  );
+}
+
+function PreviewPagesField({
+  files,
+  onChange,
+}: {
+  files: File[];
+  onChange: (files: File[]) => void;
+}) {
+  function addFiles(fileList: FileList | null) {
+    if (!fileList) return;
+    onChange([...files, ...Array.from(fileList)]);
+  }
+
+  function removeFile(indexToRemove: number) {
+    onChange(files.filter((_, index) => index !== indexToRemove));
+  }
+
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-semibold text-ink-600">
+        Sample Preview Pages (flipbook)
+      </label>
+      <label className="tap-target flex w-full cursor-pointer items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300">
+        <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
+        Choose multiple page images
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          className="sr-only"
+          onChange={(e) => {
+            addFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+      </label>
+
+      {files.length > 0 && (
+        <div className="mt-3 rounded-xl border border-ink-100 bg-cream-50 p-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold text-ink-500">{files.length} preview page(s) selected</p>
+            <button
+              type="button"
+              onClick={() => onChange([])}
+              className="text-xs font-semibold text-gold-700 hover:underline"
+            >
+              Clear all
+            </button>
+          </div>
+          <ol className="flex flex-col gap-2">
+            {files.map((file, index) => (
+              <li
+                key={`${file.name}-${file.lastModified}-${index}`}
+                className="flex items-center justify-between gap-3 rounded-lg bg-cream-100 px-3 py-2 text-sm text-ink-500"
+              >
+                <span className="min-w-0 truncate">
+                  Page {index + 1}: {file.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  aria-label={`Remove ${file.name}`}
+                  className="tap-target shrink-0 rounded-full p-1 text-ink-300 hover:bg-gold-50 hover:text-gold-700"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   );
 }
