@@ -1,17 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
+import { savePreviewPages } from "@/lib/storage";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB per page
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-/**
- * Sample preview pages are intentionally public (limited excerpts, not the
- * full book — see README security notes), so they're written straight to
- * /public rather than the private-only storage path used for full PDFs.
- */
 export async function POST(request: NextRequest) {
   const denied = await requireAdminApi();
   if (denied) return denied;
@@ -29,10 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
 
-  const publicDir = path.join(process.cwd(), "public", "images", "previews", productId);
-  await mkdir(publicDir, { recursive: true });
-
-  const paths: string[] = [];
+  const buffers: Buffer[] = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     if (!(file instanceof File)) continue;
@@ -44,12 +35,17 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `page-${i + 1}.jpg`;
-    await writeFile(path.join(publicDir, filename), buffer);
-    paths.push(`/images/previews/${productId}/${filename}`);
+    buffers.push(buffer);
   }
 
-  await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: paths } });
+  if (buffers.length === 0) {
+    return NextResponse.json({ error: "No valid preview images were uploaded" }, { status: 400 });
+  }
 
-  return NextResponse.json({ previewImagePaths: paths });
+  const storedPaths = await savePreviewPages(buffers, product.slug);
+  const previewImagePaths = storedPaths.map((_, index) => `/api/product-assets/previews/${productId}/${index}`);
+
+  await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: storedPaths } });
+
+  return NextResponse.json({ previewImagePaths });
 }

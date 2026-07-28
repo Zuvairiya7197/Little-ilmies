@@ -75,25 +75,25 @@ export function ProductForm({
         const fd = new FormData();
         fd.append("file", coverFile);
         fd.append("productId", savedId);
-        await fetch("/api/admin/products/upload-cover", { method: "POST", body: fd });
+        await uploadFile("/api/admin/products/upload-cover", fd, "cover image");
       }
       if (pdfFile) {
         const fd = new FormData();
         fd.append("file", pdfFile);
         fd.append("productId", savedId);
-        await fetch("/api/admin/products/upload-pdf", { method: "POST", body: fd });
+        await uploadFile("/api/admin/products/upload-pdf", fd, "PDF");
       }
       if (previewFiles.length > 0) {
         const fd = new FormData();
         previewFiles.forEach((f) => fd.append("files", f));
         fd.append("productId", savedId);
-        await fetch("/api/admin/products/upload-preview", { method: "POST", body: fd });
+        await uploadFile("/api/admin/products/upload-preview", fd, "preview pages");
       }
 
       router.push("/admin/products");
       router.refresh();
-    } catch {
-      setSubmitError("Something went wrong. Please try again.");
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -390,4 +390,12 @@ function FileField({
       </label>
     </div>
   );
+}
+
+async function uploadFile(endpoint: string, formData: FormData, label: string) {
+  const res = await fetch(endpoint, { method: "POST", body: formData });
+  if (res.ok) return;
+
+  const data = await res.json().catch(() => null);
+  throw new Error(data?.error ?? `Could not upload ${label}.`);
 }

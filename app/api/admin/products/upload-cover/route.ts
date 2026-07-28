@@ -2,8 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { saveCoverImage } from "@/lib/storage";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
@@ -27,20 +25,9 @@ export async function POST(request: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const relativePath = await saveCoverImage(buffer, file.name);
 
-  // Cover images are shown publicly on product cards, so mirror the
-  // private-storage copy into /public — this is the one asset type in
-  // lib/storage that's intentionally also served statically.
-  await saveCoverImage(buffer, file.name);
+  await prisma.product.update({ where: { id: productId }, data: { coverImage: relativePath } });
 
-  const publicDir = path.join(process.cwd(), "public", "images", "products", "uploads");
-  await mkdir(publicDir, { recursive: true });
-  const ext = path.extname(file.name) || ".jpg";
-  const publicFilename = `${productId}${ext}`;
-  await writeFile(path.join(publicDir, publicFilename), buffer);
-  const publicPath = `/images/products/uploads/${publicFilename}`;
-
-  await prisma.product.update({ where: { id: productId }, data: { coverImage: publicPath } });
-
-  return NextResponse.json({ coverImage: publicPath });
+  return NextResponse.json({ coverImage: `/api/product-assets/covers/${productId}` });
 }

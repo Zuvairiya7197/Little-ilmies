@@ -5,6 +5,7 @@ import { Heart } from "lucide-react";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { cn } from "@/lib/utils/cn";
 import type { ProductDetail } from "@/types/catalog";
+import { BookPreviewCard } from "@/components/book-preview/book-preview-card";
 
 /** Mobile & tablet: single cover image with bestseller/sale badge, wishlist
  * heart, and pagination dots — matches app-style PDP design. Desktop keeps
@@ -66,6 +67,16 @@ export function ProductMobileHero({ product }: { product: ProductDetail }) {
           ))}
         </div>
       )}
+
+      <BookPreviewCard
+        title={product.title}
+        coverImage={product.coverImage}
+        previewImages={product.previewImages}
+        productSlug={product.slug}
+        pageCount={product.pageCount}
+        hasFreePreview={product.hasFreePreview}
+        showCover={false}
+      />
     </div>
   );
 }

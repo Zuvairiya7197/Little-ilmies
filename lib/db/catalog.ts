@@ -11,6 +11,7 @@ import type {
 import type { CurrencyCode } from "@/types/pricing";
 import { Prisma } from "@prisma/client";
 import { defaultExtra, detailExtras } from "@/data/product-details";
+import { productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
 
 const productWithRelations = Prisma.validator<Prisma.ProductDefaultArgs>()({
   include: { prices: true, categories: { include: { category: true } } },
@@ -26,7 +27,7 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     slug: product.slug,
     title: product.title,
     shortDescription: product.shortDescription,
-    coverImage: product.coverImage,
+    coverImage: productCoverUrl(product.id, product.coverImage),
     prices: product.prices
       .filter((p) => p.isActive)
       .map((p) => ({
@@ -104,7 +105,10 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
     whatsInside: extra.whatsInside,
     learningBenefits: extra.learningBenefits,
     bestFor: extra.bestFor,
-    previewImages: product.previewImagePaths.length > 0 ? product.previewImagePaths : extra.previewImages,
+    previewImages:
+      product.previewImagePaths.length > 0
+        ? productPreviewUrls(product.id, product.previewImagePaths)
+        : extra.previewImages,
     reviews: extra.reviews,
     relatedSlugs: related.map((p) => p.slug),
   };
@@ -142,7 +146,7 @@ export async function getHomepageSampleProduct(): Promise<{
 } | null> {
   const product = await prisma.product.findFirst({
     where: { status: "PUBLISHED", isHomepageSample: true },
-    select: { slug: true, title: true, pageCount: true, previewImagePaths: true },
+    select: { id: true, slug: true, title: true, pageCount: true, previewImagePaths: true },
   });
 
   if (!product || product.previewImagePaths.length === 0) return null;
@@ -151,7 +155,7 @@ export async function getHomepageSampleProduct(): Promise<{
     slug: product.slug,
     title: product.title,
     pageCount: product.pageCount,
-    previewImages: product.previewImagePaths,
+    previewImages: productPreviewUrls(product.id, product.previewImagePaths),
   };
 }
 

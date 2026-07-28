@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { BookOpen, Clock } from "lucide-react";
 import { BookPreviewModal } from "@/components/book-preview/book-preview-modal";
+import { cn } from "@/lib/utils/cn";
 
 export function BookPreviewCard({
   title,
@@ -12,6 +13,7 @@ export function BookPreviewCard({
   productSlug,
   pageCount,
   hasFreePreview,
+  showCover = true,
 }: {
   title: string;
   coverImage: string;
@@ -19,12 +21,14 @@ export function BookPreviewCard({
   productSlug: string;
   pageCount: number;
   hasFreePreview: boolean;
+  showCover?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const previewAvailable = hasFreePreview && previewImages.length > 0;
 
   return (
     <div id="preview">
+      {showCover && (
       <div className="group relative mx-auto hidden max-w-sm md:block">
         <div
           className="pointer-events-none absolute inset-x-0 top-2 -right-2 aspect-[3/4] rounded-2xl bg-sage-200/60"
@@ -62,12 +66,16 @@ export function BookPreviewCard({
           </span>
         )}
       </div>
+      )}
 
       {previewAvailable && (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="tap-target mx-auto mt-4 flex items-center justify-center gap-2 rounded-full bg-cream-50 px-5 py-2.5 text-sm font-semibold text-ink-600 shadow-clay-sm md:hidden"
+          className={cn(
+            "tap-target mx-auto mt-4 flex items-center justify-center gap-2 rounded-full bg-cream-50 px-5 py-2.5 text-sm font-semibold text-ink-600 shadow-clay-sm",
+            showCover && "md:hidden"
+          )}
         >
           <BookOpen className="h-4 w-4 text-ink-500" aria-hidden="true" />
           Flip Through Sample Pages
