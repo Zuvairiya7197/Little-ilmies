@@ -396,6 +396,8 @@ async function uploadFile(endpoint: string, formData: FormData, label: string) {
   const res = await fetch(endpoint, { method: "POST", body: formData });
   if (res.ok) return;
 
-  const data = await res.json().catch(() => null);
-  throw new Error(data?.error ?? `Could not upload ${label}.`);
+  const contentType = res.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json") ? await res.json().catch(() => null) : null;
+  const fallback = `${res.status} ${res.statusText}`.trim();
+  throw new Error(data?.error ?? `Could not upload ${label}${fallback ? ` (${fallback})` : ""}.`);
 }
