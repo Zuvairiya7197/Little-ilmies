@@ -38,9 +38,20 @@ export function useCartLineItems() {
   return useMemo<CartLineItem[]>(() => {
     return items.flatMap((item) => {
       const product = getProductBySlug(item.slug);
-      if (!product) return [];
+      const productSnapshot =
+        item.prices && item.ageRange && item.pageCount
+          ? {
+              prices: item.prices,
+              ageRange: item.ageRange,
+              pageCount: item.pageCount,
+              isBestseller: item.isBestseller,
+              isNewArrival: item.isNewArrival,
+            }
+          : null;
+      const lineProduct = product ?? productSnapshot;
+      if (!lineProduct) return [];
 
-      const resolved = resolveProductPrice(product, currency);
+      const resolved = resolveProductPrice(lineProduct, currency);
       const unitPrice = resolved.salePrice ?? resolved.regularPrice;
 
       return [
@@ -56,10 +67,10 @@ export function useCartLineItems() {
           currencyCode: resolved.currencyCode,
           isFallbackPrice: resolved.isFallback,
           isOnSale: Boolean(resolved.salePrice),
-          ageRange: product.ageRange,
-          pageCount: product.pageCount,
-          isBestseller: product.isBestseller,
-          isNewArrival: product.isNewArrival,
+          ageRange: lineProduct.ageRange,
+          pageCount: lineProduct.pageCount,
+          isBestseller: lineProduct.isBestseller,
+          isNewArrival: lineProduct.isNewArrival,
         },
       ];
     });

@@ -26,6 +26,11 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
       slug: product.slug,
       title: product.title,
       coverImage: product.coverImage,
+      prices: product.prices,
+      ageRange: product.ageRange,
+      pageCount: product.pageCount,
+      isBestseller: product.isBestseller,
+      isNewArrival: product.isNewArrival,
     });
   }
 

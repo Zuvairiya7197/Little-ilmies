@@ -40,7 +40,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
       <div className={cn("relative overflow-hidden", COVER_TINTS[tintIndex % COVER_TINTS.length])}>
         <Link
           href={`/product/${product.slug}`}
-          className="relative block aspect-[3/4] p-2 xs:p-3"
+          className="relative block aspect-[3/4]"
           aria-label={`View ${product.title}`}
         >
           <Image
@@ -48,7 +48,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
             alt={`${product.title} book cover`}
             fill
             sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
-            className="object-contain object-center"
+            className="object-cover object-center"
           />
         </Link>
 
@@ -153,6 +153,11 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
                 slug: product.slug,
                 title: product.title,
                 coverImage: product.coverImage,
+                prices: product.prices,
+                ageRange: product.ageRange,
+                pageCount: product.pageCount,
+                isBestseller: product.isBestseller,
+                isNewArrival: product.isNewArrival,
               })
             }
             className="tap-target hidden items-center gap-1.5 rounded-full bg-ink-600 px-4 py-2 text-xs font-semibold text-cream-50 transition-all hover:bg-ink-700 active:scale-95 lg:flex"
@@ -168,6 +173,11 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
                 slug: product.slug,
                 title: product.title,
                 coverImage: product.coverImage,
+                prices: product.prices,
+                ageRange: product.ageRange,
+                pageCount: product.pageCount,
+                isBestseller: product.isBestseller,
+                isNewArrival: product.isNewArrival,
               })
             }
             aria-label={`Add ${product.title} to cart`}

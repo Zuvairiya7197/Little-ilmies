@@ -1,11 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ProductSummary } from "@/types/catalog";
 
 export interface CartItem {
   productId: string;
   slug: string;
   title: string;
   coverImage: string;
+  prices?: ProductSummary["prices"];
+  ageRange?: ProductSummary["ageRange"];
+  pageCount?: number;
+  isBestseller?: boolean;
+  isNewArrival?: boolean;
   quantity: number;
 }
 
@@ -29,7 +35,13 @@ export const useCartStore = create<CartState>()(
       closeCart: () => set({ isOpen: false }),
       addItem: (item) => {
         const existing = get().items.find((i) => i.productId === item.productId);
-        if (existing) return;
+        if (existing) {
+          set({
+            items: get().items.map((i) => (i.productId === item.productId ? { ...i, ...item } : i)),
+            isOpen: true,
+          });
+          return;
+        }
         set({ items: [...get().items, { ...item, quantity: 1 }], isOpen: true });
       },
       removeItem: (productId) =>
