@@ -33,7 +33,7 @@ export function MobileBottomNav() {
 
   const tabClass = (active: boolean) =>
     cn(
-      "tap-target flex flex-1 flex-col items-center justify-center gap-1 py-2 text-sm font-semibold transition-colors sm:py-3 sm:text-[1.15rem]",
+      "tap-target flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs font-semibold transition-colors sm:py-3 sm:text-sm",
       active ? "text-blossom-600" : "text-ink-400"
     );
 

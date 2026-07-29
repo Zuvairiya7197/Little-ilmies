@@ -196,4 +196,82 @@
   .rotate-y-180 {
     transform: rotateY(180deg);
   }
+
+  /*
+   * Mobile/tablet typography guardrail.
+   * Several screens intentionally scale headings at the `xs`/`sm` breakpoints,
+   * but phones around 390-430px wide can trip those classes while still having
+   * very little real reading room. Keep desktop unchanged and cap only touch
+   * viewport sizes so text remains comfortable across Android phones/tablets.
+   */
+  @media (max-width: 767px) {
+    .text-5xl {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+
+    .text-4xl,
+    .xs\:text-4xl,
+    .sm\:text-4xl {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+
+    .text-3xl,
+    .xs\:text-3xl,
+    .sm\:text-3xl {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+
+    .text-2xl,
+    .xs\:text-2xl,
+    .sm\:text-2xl {
+      font-size: 1.375rem;
+      line-height: 1.875rem;
+    }
+
+    .text-xl,
+    .xs\:text-xl,
+    .sm\:text-xl {
+      font-size: 1.0625rem;
+      line-height: 1.5rem;
+    }
+
+    .text-lg,
+    .xs\:text-lg,
+    .sm\:text-lg {
+      font-size: 1rem;
+      line-height: 1.45rem;
+    }
+
+    .text-\[1\.7rem\] {
+      font-size: 1.45rem;
+      line-height: 1.9rem;
+    }
+
+    .text-\[1\.35rem\] {
+      font-size: 1rem;
+      line-height: 1.45rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .text-5xl {
+      font-size: 2.75rem;
+      line-height: 1.05;
+    }
+
+    .text-4xl,
+    .sm\:text-4xl {
+      font-size: 2.125rem;
+      line-height: 2.5rem;
+    }
+
+    .text-3xl,
+    .sm\:text-3xl {
+      font-size: 1.75rem;
+      line-height: 2.25rem;
+    }
+  }
 }
