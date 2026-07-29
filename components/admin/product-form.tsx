@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useId, cloneElement } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,16 +15,24 @@ interface CategoryOption {
   name: string;
 }
 
+interface CurrentProductFiles {
+  coverImage?: string;
+  hasPdf?: boolean;
+  previewPageCount?: number;
+}
+
 const CURRENCY_OPTIONS: CurrencyCode[] = ["INR", "USD", "GBP", "AED"];
 
 export function ProductForm({
   categories,
   productId,
   defaultValues,
+  currentFiles,
 }: {
   categories: CategoryOption[];
   productId?: string;
   defaultValues?: Partial<ProductFormValues>;
+  currentFiles?: CurrentProductFiles;
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -283,14 +292,54 @@ export function ProductForm({
 
       <div className="card-surface p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Files</h2>
+        {productId && (
+          <div className="mb-4 rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
+            <p className="text-sm font-semibold text-ink-600">Current uploads</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <CurrentFileStatus label="Cover image" status={currentFiles?.coverImage ? "Uploaded" : "Missing"}>
+                {currentFiles?.coverImage && (
+                  <div className="relative mt-2 aspect-[3/4] w-20 overflow-hidden rounded-lg bg-cream-200">
+                    <Image
+                      src={currentFiles.coverImage}
+                      alt=""
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+              </CurrentFileStatus>
+              <CurrentFileStatus
+                label="Full PDF"
+                status={currentFiles?.hasPdf ? "Uploaded" : "Missing"}
+              />
+              <CurrentFileStatus
+                label="Preview pages"
+                status={
+                  currentFiles?.previewPageCount
+                    ? `${currentFiles.previewPageCount} page${currentFiles.previewPageCount === 1 ? "" : "s"}`
+                    : "Missing"
+                }
+              />
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-ink-300">
+              Choosing a new file below replaces the current upload when you save changes.
+            </p>
+          </div>
+        )}
         <div className="flex flex-col gap-4">
           <FileField
-            label="Cover Image"
+            label={productId ? "Replace Cover Image" : "Cover Image"}
             accept="image/*"
             file={coverFile}
             onChange={setCoverFile}
           />
-          <FileField label="Full PDF (private)" accept="application/pdf" file={pdfFile} onChange={setPdfFile} />
+          <FileField
+            label={productId ? "Replace Full PDF (private)" : "Full PDF (private)"}
+            accept="application/pdf"
+            file={pdfFile}
+            onChange={setPdfFile}
+          />
           {pdfUploadProgress !== null && (
             <div className="rounded-xl bg-cream-50 px-3 py-2">
               <div className="h-2 overflow-hidden rounded-full bg-ink-100">
@@ -304,7 +353,7 @@ export function ProductForm({
               </p>
             </div>
           )}
-          <PreviewPagesField files={previewFiles} onChange={setPreviewFiles} />
+          <PreviewPagesField files={previewFiles} onChange={setPreviewFiles} isReplacing={Boolean(productId)} />
           {previewUploadProgress !== null && (
             <div className="rounded-xl bg-cream-50 px-3 py-2">
               <div className="h-2 overflow-hidden rounded-full bg-ink-100">
@@ -338,6 +387,27 @@ export function ProductForm({
         )}
       </button>
     </form>
+  );
+}
+
+function CurrentFileStatus({
+  label,
+  status,
+  children,
+}: {
+  label: string;
+  status: string;
+  children?: React.ReactNode;
+}) {
+  const isMissing = status === "Missing";
+  return (
+    <div className="rounded-xl border border-ink-100 bg-cream-100 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-300">{label}</p>
+      <p className={`mt-1 text-sm font-semibold ${isMissing ? "text-gold-700" : "text-sage-700"}`}>
+        {status}
+      </p>
+      {children}
+    </div>
   );
 }
 
@@ -410,9 +480,11 @@ function FileField({
 function PreviewPagesField({
   files,
   onChange,
+  isReplacing = false,
 }: {
   files: File[];
   onChange: (files: File[]) => void;
+  isReplacing?: boolean;
 }) {
   function addFiles(fileList: FileList | null) {
     if (!fileList) return;
@@ -426,7 +498,7 @@ function PreviewPagesField({
   return (
     <div>
       <label className="mb-1.5 block text-sm font-semibold text-ink-600">
-        Sample Preview Pages (flipbook)
+        {isReplacing ? "Replace Sample Preview Pages (flipbook)" : "Sample Preview Pages (flipbook)"}
       </label>
       <label className="tap-target flex w-full cursor-pointer items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300">
         <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />

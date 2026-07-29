@@ -118,6 +118,19 @@ export async function deletePrivatePdf(relativePath: string): Promise<void> {
   await unlink(fullPath).catch(() => {}); // idempotent
 }
 
+export async function deletePreviewPages(relativePaths: string[]): Promise<void> {
+  if (USE_BLOB_STORAGE) {
+    await Promise.all(relativePaths.map((relativePath) => del(relativePath).catch(() => {})));
+    return;
+  }
+
+  await Promise.all(
+    relativePaths.map((relativePath) =>
+      unlink(assertWithin(PREVIEWS_DIR, path.join(PRIVATE_ROOT, relativePath))).catch(() => {})
+    )
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Sample preview pages — private on disk, but safe to expose publicly since
 // they're intentionally limited excerpts, not the full book. Served through
@@ -199,4 +212,16 @@ export async function getCoverImage(relativePath: string): Promise<Buffer> {
 
   const fullPath = assertWithin(COVERS_DIR, path.join(PRIVATE_ROOT, relativePath));
   return readFile(fullPath);
+}
+
+export async function deleteCoverImage(relativePath: string): Promise<void> {
+  if (!relativePath.startsWith("covers/")) return;
+
+  if (USE_BLOB_STORAGE) {
+    await del(relativePath).catch(() => {});
+    return;
+  }
+
+  const fullPath = assertWithin(COVERS_DIR, path.join(PRIVATE_ROOT, relativePath));
+  await unlink(fullPath).catch(() => {});
 }

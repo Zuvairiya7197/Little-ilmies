@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { ProductForm } from "@/components/admin/product-form";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
+import { productCoverUrl } from "@/lib/catalog-assets";
 import type { CurrencyCode } from "@/types/pricing";
 
 export const metadata: Metadata = {
@@ -38,6 +39,11 @@ export default async function EditProductPage({ params }: PageProps) {
       <ProductForm
         categories={categories}
         productId={product.id}
+        currentFiles={{
+          coverImage: productCoverUrl(product.id, product.coverImage),
+          hasPdf: Boolean(product.privatePdfPath),
+          previewPageCount: product.previewImagePaths.length,
+        }}
         defaultValues={{
           title: product.title,
           slug: product.slug,

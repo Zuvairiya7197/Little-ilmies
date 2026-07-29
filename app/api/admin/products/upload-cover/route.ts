@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
-import { saveCoverImage } from "@/lib/storage";
+import { deleteCoverImage, saveCoverImage } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -26,7 +26,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unsupported image type. Please upload JPG, PNG, WebP, or SVG." }, { status: 415 });
     }
 
-    const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true, slug: true } });
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, slug: true, coverImage: true },
+    });
     if (!product) {
       return NextResponse.json({ error: "Product was saved, but the cover could not be attached because the product was not found." }, { status: 404 });
     }
@@ -35,6 +38,9 @@ export async function POST(request: NextRequest) {
     const relativePath = await saveCoverImage(buffer, file.name);
 
     await prisma.product.update({ where: { id: productId }, data: { coverImage: relativePath } });
+    if (product.coverImage !== relativePath) {
+      await deleteCoverImage(product.coverImage);
+    }
     revalidateCatalogPaths(product.slug);
 
     return NextResponse.json({ coverImage: `/api/product-assets/covers/${productId}` });

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
-import { savePreviewPages } from "@/lib/storage";
+import { deletePreviewPages, savePreviewPages } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { z } from "zod";
 
@@ -35,12 +35,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Invalid uploaded preview path" }, { status: 400 });
       }
 
-      const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true, slug: true } });
+      const product = await prisma.product.findUnique({
+        where: { id: productId },
+        select: { id: true, slug: true, previewImagePaths: true },
+      });
       if (!product) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
       }
 
       await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: pathnames } });
+      await deletePreviewPages(product.previewImagePaths);
       revalidateCatalogPaths(product.slug);
       return NextResponse.json({
         previewImagePaths: pathnames.map((_, index) => `/api/product-assets/previews/${productId}/${index}`),
@@ -86,6 +90,7 @@ export async function POST(request: NextRequest) {
     const previewImagePaths = storedPaths.map((_, index) => `/api/product-assets/previews/${productId}/${index}`);
 
     await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: storedPaths } });
+    await deletePreviewPages(product.previewImagePaths);
     revalidateCatalogPaths(product.slug);
 
     return NextResponse.json({ previewImagePaths });
