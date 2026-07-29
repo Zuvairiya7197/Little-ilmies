@@ -37,7 +37,9 @@ export function InteractiveBook({
   const [currentPageIndex, setCurrentPageIndex] = useState(-1);
   const [isHovering, setIsHovering] = useState(false);
 
-  const totalLeaves = previewImages.length + 1; // + the locked page
+  const previewCoverImage = previewImages[0] ?? coverImage;
+  const contentLeafCount = Math.ceil(previewImages.length / 2);
+  const totalLeaves = contentLeafCount + 1; // + the locked page
 
   const handleOpenBook = () => setIsOpen(true);
 
@@ -113,8 +115,8 @@ export function InteractiveBook({
             style={{ transform: "translateZ(0.5px)" }}
           >
             <Image
-              src={coverImage}
-              alt={`${bookTitle} book cover`}
+              src={previewCoverImage}
+              alt={`${bookTitle} preview cover`}
               fill
               sizes="(max-width: 480px) 90vw, 520px"
               className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -138,22 +140,24 @@ export function InteractiveBook({
 
         {/* Page stack — turned leaves rest flat to the left, showing their back */}
         <div className="preserve-3d absolute inset-0 z-0 h-full w-full">
-          {previewImages.map((image, index) => {
+          {Array.from({ length: contentLeafCount }).map((_, index) => {
+            const rightImage = previewImages[index * 2];
+            const leftImage = previewImages[index * 2 + 1];
             const isFlipped = index <= currentPageIndex;
             return (
               <motion.div
-                key={image}
+                key={`${rightImage}-${leftImage ?? "blank"}`}
                 className="preserve-3d absolute inset-0 h-full w-full origin-left rounded-l-sm rounded-r-md border border-ink-100 bg-cream-50 shadow-sm"
-                initial={{ rotateY: 0, zIndex: previewImages.length - index }}
+                initial={{ rotateY: 0, zIndex: contentLeafCount - index }}
                 animate={{
                   rotateY: isFlipped ? -180 : 0,
-                  zIndex: isFlipped ? index + 1 : previewImages.length - index,
+                  zIndex: isFlipped ? index + 1 : contentLeafCount - index,
                 }}
                 transition={{ duration: 0.55, ease: [0.645, 0.045, 0.355, 1] }}
               >
                 <button
                   type="button"
-                  aria-label={`Sample page ${index + 1}, go to next page`}
+                  aria-label={`Sample page ${index * 2 + 1}, go to next page`}
                   className="backface-hidden relative h-full w-full cursor-pointer overflow-hidden bg-cream-50 transition-colors hover:brightness-95"
                   style={{ transform: "translateZ(0.5px)" }}
                   onClick={(e) => {
@@ -161,27 +165,55 @@ export function InteractiveBook({
                     nextPage();
                   }}
                 >
-                  <Image src={image} alt={`Sample page ${index + 1} of ${bookTitle}`} fill sizes="520px" className="object-cover" />
+                  <Image
+                    src={rightImage}
+                    alt={`Sample page ${index * 2 + 1} of ${bookTitle}`}
+                    fill
+                    sizes="520px"
+                    className="object-cover"
+                  />
                   <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
-                    Sample Page {index + 1}
+                    Sample Page {index * 2 + 1}
                   </span>
                 </button>
 
-                <button
-                  type="button"
-                  aria-label={`Sample page ${index + 1}, go to previous page`}
-                  className="backface-hidden rotate-y-180 absolute inset-0 h-full w-full cursor-pointer overflow-hidden border-r border-ink-100 bg-cream-50 transition-colors hover:brightness-95"
-                  style={{ transform: "rotateY(180deg) translateZ(0.5px)" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    prevPage();
-                  }}
-                >
-                  <Image src={image} alt={`Sample page ${index + 1} of ${bookTitle}`} fill sizes="520px" className="object-cover" />
-                  <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
-                    Sample Page {index + 1}
-                  </span>
-                </button>
+                {leftImage ? (
+                  <button
+                    type="button"
+                    aria-label={`Sample page ${index * 2 + 2}, go to previous page`}
+                    className="backface-hidden rotate-y-180 absolute inset-0 h-full w-full cursor-pointer overflow-hidden border-r border-ink-100 bg-cream-50 transition-colors hover:brightness-95"
+                    style={{ transform: "rotateY(180deg) translateZ(0.5px)" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevPage();
+                    }}
+                  >
+                    <Image
+                      src={leftImage}
+                      alt={`Sample page ${index * 2 + 2} of ${bookTitle}`}
+                      fill
+                      sizes="520px"
+                      className="object-cover"
+                    />
+                    <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
+                      Sample Page {index * 2 + 2}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    aria-label="Go to previous page"
+                    className="backface-hidden rotate-y-180 absolute inset-0 flex h-full w-full cursor-pointer flex-col items-center justify-center border-r border-ink-100 bg-cream-100 p-6 text-center transition-colors hover:bg-cream-200"
+                    style={{ transform: "rotateY(180deg) translateZ(0.5px)" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevPage();
+                    }}
+                  >
+                    <p className="text-xs uppercase tracking-widest text-ink-300">{bookTitle}</p>
+                    <p className="mt-2 text-[11px] text-ink-300">End of sample pages</p>
+                  </button>
+                )}
               </motion.div>
             );
           })}
@@ -192,8 +224,8 @@ export function InteractiveBook({
             className="preserve-3d absolute inset-0 h-full w-full origin-left rounded-l-sm rounded-r-md border border-ink-100 shadow-sm"
             initial={{ rotateY: 0, zIndex: 0 }}
             animate={{
-              rotateY: currentPageIndex >= previewImages.length ? -180 : 0,
-              zIndex: currentPageIndex >= previewImages.length ? previewImages.length + 1 : 0,
+              rotateY: currentPageIndex >= contentLeafCount ? -180 : 0,
+              zIndex: currentPageIndex >= contentLeafCount ? contentLeafCount + 1 : 0,
             }}
             transition={{ duration: 0.55, ease: [0.645, 0.045, 0.355, 1] }}
           >

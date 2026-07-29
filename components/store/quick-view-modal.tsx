@@ -99,13 +99,13 @@ function QuickViewContent({ product, onClose }: { product: ProductSummary; onClo
           </div>
 
           <div className="flex flex-col gap-5 p-5 sm:flex-row sm:p-6">
-            <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden rounded-2xl bg-cream-200 sm:w-40">
+            <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden rounded-2xl bg-cream-200 p-2 sm:w-40">
               <Image
                 src={product.coverImage}
                 alt={`${product.title} book cover`}
                 fill
                 sizes="(max-width: 639px) 90vw, 160px"
-                className="object-cover"
+                className="object-contain object-center"
               />
             </div>
 

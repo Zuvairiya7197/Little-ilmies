@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Star, Moon } from "lucide-react";
+import { BookOpen, Star } from "lucide-react";
 import type { ProductSummary } from "@/types/catalog";
 
 export function HeroSection({}: { products: ProductSummary[] }) {
@@ -12,15 +12,26 @@ export function HeroSection({}: { products: ProductSummary[] }) {
   );
 }
 
-/** Mobile & tablet: purple gradient card with a book/moon motif, matches
+/** Mobile & tablet: purple gradient card with playful image accents, matches
  * app-style home design. Desktop keeps the wide illustration hero below. */
 function MobileHero() {
   return (
     <section className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-b from-ink-600 via-ink-500 to-ink-600 px-6 pb-9 pt-8 text-center md:hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <Star className="absolute left-[10%] top-[10%] h-3 w-3 fill-cream-50/60 text-cream-50/60" />
-        <Star className="absolute right-[14%] top-[30%] h-2.5 w-2.5 fill-cream-50/40 text-cream-50/40" />
-        <Moon className="absolute right-[8%] top-[6%] h-9 w-9 fill-ink-200/30 text-ink-200/50" />
+        <Image
+          src="/images/star.png"
+          alt=""
+          width={34}
+          height={34}
+          className="absolute left-[9%] top-[9%] h-8 w-8 object-contain opacity-90"
+        />
+        <Image
+          src="/images/rainbow.png"
+          alt=""
+          width={74}
+          height={74}
+          className="absolute right-[5%] top-[5%] h-16 w-16 rotate-6 object-contain opacity-90"
+        />
       </div>
 
       <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cream-50/15">

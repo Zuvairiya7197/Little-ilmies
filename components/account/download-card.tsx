@@ -50,7 +50,7 @@ export function DownloadCard({ download }: { download: DownloadRecord }) {
         href={`/product/${download.slug}`}
         className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-cream-200 xs:h-28"
       >
-        <Image src={download.coverImage} alt="" fill sizes="80px" className="object-cover" />
+        <Image src={download.coverImage} alt="" fill sizes="80px" className="object-contain object-center p-1" />
       </Link>
 
       <div className="flex min-w-0 flex-1 flex-col justify-between">

@@ -49,7 +49,7 @@ function BundleCard({ bundle, index }: { bundle: BundleSummary; index: number })
             className="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-t-lg shadow-clay-sm transition-transform duration-300 group-hover:-translate-y-1"
             style={{ zIndex: covers.length - i, transform: `rotate(${(i - 1) * 5}deg)` }}
           >
-            <Image src={product.coverImage} alt="" fill sizes="80px" className="object-cover" />
+            <Image src={product.coverImage} alt="" fill sizes="80px" className="object-contain object-center p-1" />
           </div>
         ))}
       </div>

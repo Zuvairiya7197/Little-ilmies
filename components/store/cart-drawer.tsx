@@ -99,7 +99,7 @@ export function CartDrawer() {
                           alt=""
                           fill
                           sizes="64px"
-                          className="object-cover"
+                          className="object-contain object-center p-1"
                         />
                       </div>
                       <div className="flex flex-1 flex-col justify-between">

@@ -40,7 +40,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
       <div className={cn("relative overflow-hidden", COVER_TINTS[tintIndex % COVER_TINTS.length])}>
         <Link
           href={`/product/${product.slug}`}
-          className="relative block aspect-[3/4]"
+          className="relative block aspect-[3/4] p-2 xs:p-3"
           aria-label={`View ${product.title}`}
         >
           <Image
@@ -48,7 +48,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
             alt={`${product.title} book cover`}
             fill
             sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
-            className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.03] xs:p-3"
+            className="object-contain object-center"
           />
         </Link>
 
@@ -159,6 +159,21 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           >
             <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
             Add
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              addItem({
+                productId: product.id,
+                slug: product.slug,
+                title: product.title,
+                coverImage: product.coverImage,
+              })
+            }
+            aria-label={`Add ${product.title} to cart`}
+            className="tap-target flex shrink-0 items-center justify-center rounded-full bg-ink-600 p-2.5 text-cream-50 transition-all active:scale-95 lg:hidden"
+          >
+            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>

@@ -34,7 +34,7 @@ export function OrderCard({ order }: { order: OrderRecord }) {
         {order.items.map((item) => (
           <li key={item.productId} className="flex items-center gap-3">
             <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-md bg-cream-200">
-              <Image src={item.coverImage} alt="" fill sizes="44px" className="object-cover" />
+              <Image src={item.coverImage} alt="" fill sizes="44px" className="object-contain object-center p-1" />
             </div>
             <Link
               href={`/product/${item.slug}`}
