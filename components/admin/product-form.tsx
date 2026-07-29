@@ -115,112 +115,104 @@ export function ProductForm({
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
       <div className="card-surface p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Basic Info</h2>
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Field label="Title" error={errors.title?.message}>
             <input {...register("title")} className="admin-input" />
           </Field>
           <Field label="Slug" error={errors.slug?.message} hint="lowercase-with-hyphens">
             <input {...register("slug")} className="admin-input" />
           </Field>
-          <Field label="Short Description" error={errors.shortDescription?.message}>
+          <Field label="Short Description" error={errors.shortDescription?.message} className="lg:col-span-2">
             <input {...register("shortDescription")} className="admin-input" />
           </Field>
-          <Field label="Full Description" error={errors.description?.message}>
+          <Field label="Full Description" error={errors.description?.message} className="lg:col-span-2">
             <textarea {...register("description")} rows={4} className="admin-input resize-none" />
           </Field>
         </div>
       </div>
 
       <div className="card-surface p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Categories</h2>
-        <Controller
-          control={control}
-          name="categoryIds"
-          render={({ field }) => (
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => {
-                const checked = field.value?.includes(cat.id);
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() =>
-                      field.onChange(
-                        checked ? field.value.filter((id) => id !== cat.id) : [...(field.value ?? []), cat.id]
-                      )
-                    }
-                    className={`tap-target rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
-                      checked ? "border-sage-500 bg-sage-500 text-cream-50" : "border-ink-100 text-ink-500"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        />
-        {errors.categoryIds && <p className="mt-2 text-xs text-gold-700">{errors.categoryIds.message}</p>}
-      </div>
+        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Catalog Details</h2>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.75fr)]">
+          <div>
+            <p className="mb-2 text-sm font-semibold text-ink-600">Categories</p>
+            <Controller
+              control={control}
+              name="categoryIds"
+              render={({ field }) => (
+                <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-2xl bg-cream-50 p-3 shadow-clay-pressed">
+                  {categories.map((cat) => {
+                    const checked = field.value?.includes(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() =>
+                          field.onChange(
+                            checked ? field.value.filter((id) => id !== cat.id) : [...(field.value ?? []), cat.id]
+                          )
+                        }
+                        className={`min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          checked ? "border-sage-500 bg-sage-500 text-cream-50" : "border-ink-100 text-ink-500"
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            />
+            {errors.categoryIds && <p className="mt-2 text-xs text-gold-700">{errors.categoryIds.message}</p>}
+          </div>
 
-      <div className="card-surface p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Details</h2>
-        <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
-          <Field label="Age Range" error={errors.ageRange?.message}>
-            <select {...register("ageRange")} className="admin-input">
-              {["0-3", "3-6", "6-9", "9-12", "12+"].map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Language" error={errors.language?.message}>
-            <select {...register("language")} className="admin-input">
-              {["English", "Arabic", "Hindi", "Marathi"].map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Format" error={errors.format?.message}>
-            <select {...register("format")} className="admin-input">
-              {["PDF", "Printable PDF", "Interactive PDF"].map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Page Count" error={errors.pageCount?.message}>
-            <input type="number" {...register("pageCount")} className="admin-input" />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Age Range" error={errors.ageRange?.message}>
+              <select {...register("ageRange")} className="admin-input">
+                {["0-3", "3-6", "6-9", "9-12", "12+"].map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Language" error={errors.language?.message}>
+              <select {...register("language")} className="admin-input">
+                {["English", "Arabic", "Hindi", "Marathi"].map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Format" error={errors.format?.message}>
+              <select {...register("format")} className="admin-input">
+                {["PDF", "Printable PDF", "Interactive PDF"].map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Page Count" error={errors.pageCount?.message}>
+              <input type="number" {...register("pageCount")} className="admin-input" />
+            </Field>
+            <Field label="Status">
+              <select {...register("status")} className="admin-input">
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+              </select>
+            </Field>
+          </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-4">
+        <div className="mt-4 grid gap-3 rounded-2xl bg-cream-50 p-3 shadow-clay-pressed sm:grid-cols-2 lg:grid-cols-4">
           <Checkbox label="Bestseller" {...register("isBestseller")} />
           <Checkbox label="New Arrival" {...register("isNewArrival")} />
           <Checkbox label="Has Free Preview" {...register("hasFreePreview")} />
-          <Checkbox
-            label="Feature as homepage sample"
-            {...register("isHomepageSample")}
-          />
+          <Checkbox label="Homepage sample" {...register("isHomepageSample")} />
         </div>
-        <p className="mt-2 text-xs text-ink-300">
-          &quot;Feature as homepage sample&quot; shows this book&apos;s uploaded preview pages in the
-          homepage &quot;See before you buy&quot; section. Only one product can be featured at a
-          time — selecting it here unfeatures any other product.
-        </p>
-
-        <div className="mt-4">
-          <Field label="Status">
-            <select {...register("status")} className="admin-input">
-              <option value="DRAFT">Draft</option>
-              <option value="PUBLISHED">Published</option>
-            </select>
-          </Field>
-        </div>
+        <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
       </div>
 
       <div className="card-surface p-5">
@@ -234,7 +226,7 @@ export function ProductForm({
             + Add currency
           </button>
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {priceFields.map((field, index) => (
             <div key={field.id} className="flex flex-wrap items-end gap-3 rounded-xl border border-ink-100 p-3">
               <Field label="Currency" className="w-28">
@@ -292,8 +284,9 @@ export function ProductForm({
 
       <div className="card-surface p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Files</h2>
-        {productId && (
-          <div className="mb-4 rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+          {productId && (
+          <div className="rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
             <p className="text-sm font-semibold text-ink-600">Current uploads</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <CurrentFileStatus label="Cover image" status={currentFiles?.coverImage ? "Uploaded" : "Missing"}>
@@ -326,47 +319,51 @@ export function ProductForm({
               Choosing a new file below replaces the current upload when you save changes.
             </p>
           </div>
-        )}
-        <div className="flex flex-col gap-4">
-          <FileField
-            label={productId ? "Replace Cover Image" : "Cover Image"}
-            accept="image/*"
-            file={coverFile}
-            onChange={setCoverFile}
-          />
-          <FileField
-            label={productId ? "Replace Full PDF (private)" : "Full PDF (private)"}
-            accept="application/pdf"
-            file={pdfFile}
-            onChange={setPdfFile}
-          />
-          {pdfUploadProgress !== null && (
-            <div className="rounded-xl bg-cream-50 px-3 py-2">
-              <div className="h-2 overflow-hidden rounded-full bg-ink-100">
-                <div
-                  className="h-full rounded-full bg-sage-500 transition-all"
-                  style={{ width: `${pdfUploadProgress}%` }}
-                />
-              </div>
-              <p className="mt-1.5 text-xs font-semibold text-ink-400">
-                Uploading PDF {Math.round(pdfUploadProgress)}%
-              </p>
-            </div>
           )}
-          <PreviewPagesField files={previewFiles} onChange={setPreviewFiles} isReplacing={Boolean(productId)} />
-          {previewUploadProgress !== null && (
-            <div className="rounded-xl bg-cream-50 px-3 py-2">
-              <div className="h-2 overflow-hidden rounded-full bg-ink-100">
-                <div
-                  className="h-full rounded-full bg-sage-500 transition-all"
-                  style={{ width: `${previewUploadProgress}%` }}
-                />
-              </div>
-              <p className="mt-1.5 text-xs font-semibold text-ink-400">
-                Uploading preview pages {Math.round(previewUploadProgress)}%
-              </p>
+
+          <div className={productId ? "flex flex-col gap-4" : "flex flex-col gap-4 xl:col-span-2"}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FileField
+                label={productId ? "Replace Cover Image" : "Cover Image"}
+                accept="image/*"
+                file={coverFile}
+                onChange={setCoverFile}
+              />
+              <FileField
+                label={productId ? "Replace Full PDF (private)" : "Full PDF (private)"}
+                accept="application/pdf"
+                file={pdfFile}
+                onChange={setPdfFile}
+              />
             </div>
-          )}
+            {pdfUploadProgress !== null && (
+              <div className="rounded-xl bg-cream-50 px-3 py-2">
+                <div className="h-2 overflow-hidden rounded-full bg-ink-100">
+                  <div
+                    className="h-full rounded-full bg-sage-500 transition-all"
+                    style={{ width: `${pdfUploadProgress}%` }}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs font-semibold text-ink-400">
+                  Uploading PDF {Math.round(pdfUploadProgress)}%
+                </p>
+              </div>
+            )}
+            <PreviewPagesField files={previewFiles} onChange={setPreviewFiles} isReplacing={Boolean(productId)} />
+            {previewUploadProgress !== null && (
+              <div className="rounded-xl bg-cream-50 px-3 py-2">
+                <div className="h-2 overflow-hidden rounded-full bg-ink-100">
+                  <div
+                    className="h-full rounded-full bg-sage-500 transition-all"
+                    style={{ width: `${previewUploadProgress}%` }}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs font-semibold text-ink-400">
+                  Uploading preview pages {Math.round(previewUploadProgress)}%
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
