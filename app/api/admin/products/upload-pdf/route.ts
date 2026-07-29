@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { savePrivatePdf, deletePrivatePdf } from "@/lib/storage";
+import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { z } from "zod";
 
 const MAX_SIZE = 100 * 1024 * 1024; // 100MB
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
       }
 
       await prisma.product.update({ where: { id: productId }, data: { privatePdfPath: pathname } });
+      revalidateCatalogPaths(product.slug);
       return NextResponse.json({ status: "uploaded" });
     }
 
@@ -68,6 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     await prisma.product.update({ where: { id: productId }, data: { privatePdfPath: relativePath } });
+    revalidateCatalogPaths(product.slug);
 
     return NextResponse.json({ status: "uploaded" });
   } catch (error) {

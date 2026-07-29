@@ -40,7 +40,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
       <div className={cn("relative overflow-hidden", COVER_TINTS[tintIndex % COVER_TINTS.length])}>
         <Link
           href={`/product/${product.slug}`}
-          className="relative block aspect-[4/5]"
+          className="relative block aspect-[3/4]"
           aria-label={`View ${product.title}`}
         >
           <Image
@@ -48,7 +48,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
             alt={`${product.title} book cover`}
             fill
             sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
-            className="object-cover object-center"
+            className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.03] xs:p-3"
           />
         </Link>
 

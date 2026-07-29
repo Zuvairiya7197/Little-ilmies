@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { InteractiveBook } from "@/components/book-preview/interactive-book";
+
+const BOOK_WIDTH = 380;
+const BOOK_HEIGHT = 520;
+const BOOK_STAGE_WIDTH = BOOK_WIDTH * 2 + 120;
+const BOOK_STAGE_HEIGHT = BOOK_HEIGHT + 90;
+const MODAL_PADDING = 32;
 
 export function BookPreviewModal({
   open,
@@ -21,6 +27,8 @@ export function BookPreviewModal({
   productSlug: string;
   pageCount: number;
 }) {
+  const [scale, setScale] = useState(1);
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -28,6 +36,25 @@ export function BookPreviewModal({
         document.body.style.overflow = "";
       };
     }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function updateScale() {
+      const availableWidth = Math.max(280, window.innerWidth - MODAL_PADDING);
+      const availableHeight = Math.max(320, window.innerHeight - MODAL_PADDING);
+      setScale(Math.min(availableWidth / BOOK_STAGE_WIDTH, availableHeight / BOOK_STAGE_HEIGHT, 1));
+    }
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    window.addEventListener("orientationchange", updateScale);
+
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("orientationchange", updateScale);
+    };
   }, [open]);
 
   return (
@@ -46,7 +73,14 @@ export function BookPreviewModal({
             if (e.target === e.currentTarget) onClose();
           }}
         >
-          <div className="max-w-full origin-center scale-[0.62] xs:scale-75 sm:scale-100">
+          <div
+            className="origin-center"
+            style={{
+              width: BOOK_STAGE_WIDTH,
+              height: BOOK_STAGE_HEIGHT,
+              transform: `scale(${scale})`,
+            }}
+          >
             <InteractiveBook
               coverImage={coverImage}
               bookTitle={title}
@@ -54,8 +88,8 @@ export function BookPreviewModal({
               productSlug={productSlug}
               pageCount={pageCount}
               onClose={onClose}
-              width={380}
-              height={520}
+              width={BOOK_WIDTH}
+              height={BOOK_HEIGHT}
             />
           </div>
         </motion.div>

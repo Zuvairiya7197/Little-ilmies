@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { productFormSchema } from "@/lib/validation/admin-product";
 import { deletePrivatePdf } from "@/lib/storage";
+import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 
 interface RouteParams {
   params: Promise<{ productId: string }>;
@@ -69,6 +70,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     ),
   ]);
 
+  revalidateCatalogPaths(current.slug);
+  if (current.slug !== productData.slug) {
+    revalidateCatalogPaths(productData.slug);
+  }
+
   return NextResponse.json({ id: productId });
 }
 
@@ -87,6 +93,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     // Preserve order history integrity — unpublish instead of hard-deleting
     // a product that's part of a real purchase record.
     await prisma.product.update({ where: { id: productId }, data: { status: "DRAFT" } });
+    revalidateCatalogPaths(product.slug);
     return NextResponse.json({
       status: "unpublished",
       message: "Product has past orders, so it was unpublished instead of deleted.",
@@ -98,5 +105,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   }
 
   await prisma.product.delete({ where: { id: productId } });
+  revalidateCatalogPaths(product.slug);
   return NextResponse.json({ status: "deleted" });
 }

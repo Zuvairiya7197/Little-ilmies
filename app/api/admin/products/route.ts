@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { productFormSchema } from "@/lib/validation/admin-product";
 import { deletePrivatePdf } from "@/lib/storage";
+import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { z } from "zod";
 
 const bulkDeleteSchema = z.object({
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  revalidateCatalogPaths(product.slug);
+
   return NextResponse.json({ id: product.id, slug: product.slug }, { status: 201 });
 }
 
@@ -95,6 +98,8 @@ export async function DELETE(request: NextRequest) {
       where: { id: { in: productsToDelete.map((product) => product.id) } },
     });
   }
+
+  products.forEach((product) => revalidateCatalogPaths(product.slug));
 
   return NextResponse.json({
     deletedCount: productsToDelete.length,

@@ -167,13 +167,21 @@ export function InteractiveBook({
                   </span>
                 </button>
 
-                <div
-                  className="backface-hidden rotate-y-180 absolute inset-0 flex h-full w-full flex-col items-center justify-center border-r border-ink-100 bg-cream-100 p-6 text-center"
+                <button
+                  type="button"
+                  aria-label={`Sample page ${index + 1}, go to previous page`}
+                  className="backface-hidden rotate-y-180 absolute inset-0 h-full w-full cursor-pointer overflow-hidden border-r border-ink-100 bg-cream-50 transition-colors hover:brightness-95"
                   style={{ transform: "rotateY(180deg) translateZ(0.5px)" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevPage();
+                  }}
                 >
-                  <p className="text-xs uppercase tracking-widest text-ink-300">{bookTitle}</p>
-                  <p className="mt-2 text-[11px] text-ink-300">Page {index + 1}</p>
-                </div>
+                  <Image src={image} alt={`Sample page ${index + 1} of ${bookTitle}`} fill sizes="520px" className="object-cover" />
+                  <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
+                    Sample Page {index + 1}
+                  </span>
+                </button>
               </motion.div>
             );
           })}

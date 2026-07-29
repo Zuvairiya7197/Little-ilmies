@@ -42,7 +42,7 @@ export function ProductForm({
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: defaultValues ?? {
-      status: "DRAFT",
+      status: "PUBLISHED",
       hasFreePreview: true,
       categoryIds: [],
       prices: [{ currencyCode: "INR", regularPrice: 0, isActive: true }],
