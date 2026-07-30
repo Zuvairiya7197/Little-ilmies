@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { deletePreviewPages, savePreviewPages } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
+import { productPreviewUrls } from "@/lib/catalog-assets";
 import { z } from "zod";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB per page
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       await deletePreviewPages(product.previewImagePaths);
       revalidateCatalogPaths(product.slug);
       return NextResponse.json({
-        previewImagePaths: pathnames.map((_, index) => `/api/product-assets/previews/${productId}/${index}`),
+        previewImagePaths: productPreviewUrls(productId, pathnames),
       });
     }
 
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const storedPaths = await savePreviewPages(buffers, product.slug);
-    const previewImagePaths = storedPaths.map((_, index) => `/api/product-assets/previews/${productId}/${index}`);
+    const previewImagePaths = productPreviewUrls(productId, storedPaths);
 
     await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: storedPaths } });
     await deletePreviewPages(product.previewImagePaths);

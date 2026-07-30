@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { deleteCoverImage, saveCoverImage } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
+import { productCoverUrl } from "@/lib/catalog-assets";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"];
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
     revalidateCatalogPaths(product.slug);
 
-    return NextResponse.json({ coverImage: `/api/product-assets/covers/${productId}` });
+    return NextResponse.json({ coverImage: productCoverUrl(productId, relativePath) });
   } catch (error) {
     console.error("Cover upload failed", error);
     return NextResponse.json(

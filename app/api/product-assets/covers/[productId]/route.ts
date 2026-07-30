@@ -29,7 +29,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": contentTypeFor(product.coverImage),
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "no-store",
       },
     });
   } catch {
