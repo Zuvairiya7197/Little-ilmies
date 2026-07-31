@@ -3,7 +3,18 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Sparkles, Star, ArrowRight, Download, Printer, Baby, ShieldCheck } from "lucide-react";
+import {
+  Search,
+  Sparkles,
+  Star,
+  ArrowRight,
+  Download,
+  Printer,
+  Baby,
+  ShieldCheck,
+  CheckCircle2,
+  Package,
+} from "lucide-react";
 import { FilterSidebar } from "@/components/store/shop/filter-sidebar";
 import { FilterDrawer } from "@/components/store/shop/filter-drawer";
 import { ShopToolbar } from "@/components/store/shop/shop-toolbar";
@@ -13,8 +24,10 @@ import { BundleCard } from "@/components/store/home/bundle-collections";
 import { SortSelect } from "@/components/store/shop/sort-select";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { filterProducts, sortProducts } from "@/lib/catalog";
+import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { cn } from "@/lib/utils/cn";
+import { formatPrice } from "@/lib/utils/format";
 import type { BundleSummary, Category, ProductSummary } from "@/types/catalog";
 
 const ACTIVITY_CATEGORY_SLUGS = ["creative-learning", "printables", "games-and-activities"];
@@ -55,6 +68,7 @@ export function ShopView({
     if (bundleFilter === "all") return bundles;
     return bundles.filter((bundle) => bundle.slug === bundleFilter);
   }, [bundles, bundleFilter]);
+  const selectedBundle = bundleFilter && bundleFilter !== "all" ? visibleBundles[0] : undefined;
   const isBundleView = Boolean(bundleFilter);
 
   const results = useMemo(() => {
@@ -147,7 +161,9 @@ export function ShopView({
           <SortSelect />
         </div>
 
-        {isBundleView || typeFilter === "Bundles" ? (
+        {selectedBundle ? (
+          <BundleDetail bundle={selectedBundle} />
+        ) : isBundleView || typeFilter === "Bundles" ? (
           <BundleResults bundles={isBundleView ? visibleBundles : bundles ?? []} />
         ) : (
           <div className="mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-6">
@@ -199,7 +215,13 @@ export function ShopView({
         <div className="min-w-0 flex-1">
           {!isBundleView && <ShopToolbar resultCount={results.length} onOpenFilters={() => setFiltersOpen(true)} />}
           <div className="pt-6">
-            {isBundleView ? <BundleResults bundles={visibleBundles} /> : <ProductGrid products={results} />}
+            {selectedBundle ? (
+              <BundleDetail bundle={selectedBundle} />
+            ) : isBundleView ? (
+              <BundleResults bundles={visibleBundles} />
+            ) : (
+              <ProductGrid products={results} />
+            )}
           </div>
         </div>
       </div>
@@ -228,6 +250,59 @@ function BundleResults({ bundles }: { bundles: BundleSummary[] }) {
       {bundles.map((bundle, index) => (
         <BundleCard key={bundle.id} bundle={bundle} index={index} />
       ))}
+    </div>
+  );
+}
+
+function BundleDetail({ bundle }: { bundle: BundleSummary }) {
+  const currency = useCurrencyStore((s) => s.currency);
+  const bundlePrice = resolveProductPrice(bundle, currency);
+  const regularTotal = bundle.products.reduce((sum, product) => {
+    const resolved = resolveProductPrice(product, bundlePrice.currencyCode);
+    return sum + resolved.regularPrice;
+  }, 0);
+  const savings = Math.max(0, regularTotal - bundlePrice.regularPrice);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="rounded-3xl bg-cream-50 p-5 shadow-clay xs:p-6 md:p-8">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-sage-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-sage-700">
+              <Package className="h-3.5 w-3.5" aria-hidden="true" />
+              Bundle
+            </span>
+            <h2 className="mt-3 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
+              {bundle.name}
+            </h2>
+            {bundle.description && (
+              <p className="mt-2 text-sm leading-relaxed text-ink-400 xs:text-base">
+                {bundle.description}
+              </p>
+            )}
+            <p className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-sage-700">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              {bundle.products.length} books included
+            </p>
+          </div>
+
+          <div className="shrink-0 rounded-2xl bg-cream-100 px-5 py-4 shadow-clay-pressed">
+            <p className="text-xs font-bold uppercase tracking-wide text-ink-300">Bundle price</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="font-display text-2xl font-semibold text-ink-700">
+                {formatPrice(bundlePrice.regularPrice, bundlePrice.currencyCode)}
+              </span>
+              {savings > 0 && (
+                <span className="text-sm text-ink-300 line-through">
+                  {formatPrice(regularTotal, bundlePrice.currencyCode)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ProductGrid products={bundle.products} />
     </div>
   );
 }
