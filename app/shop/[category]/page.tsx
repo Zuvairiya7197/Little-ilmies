@@ -8,6 +8,7 @@ import { getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
 import { categoryGroups, getCategoryGroupBySlug } from "@/data/category-groups";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
+import type { ProductSummary } from "@/types/catalog";
 
 interface PageProps {
   params: Promise<{ category: string }>;
@@ -18,12 +19,14 @@ export const revalidate = 60;
 const resolveCategory = cache(async (slug: string) => {
   const group = getCategoryGroupBySlug(slug);
   const [products, categories] = await Promise.all([getPublishedProducts(), getAllCategories()]);
+  const productHasCategory = (product: ProductSummary, categorySlug: string) =>
+    product.categorySlugs?.includes(categorySlug) || product.category.slug === categorySlug;
 
   if (group) {
     return {
       title: group.name,
       description: group.description,
-      matchedProducts: products.filter((p) => group.categorySlugs.includes(p.category.slug)),
+      matchedProducts: products.filter((p) => group.categorySlugs.some((categorySlug) => productHasCategory(p, categorySlug))),
       categories: categories.filter((c) => group.categorySlugs.includes(c.slug)),
     };
   }
@@ -33,7 +36,7 @@ const resolveCategory = cache(async (slug: string) => {
     return {
       title: category.name,
       description: category.description ?? `Browse ${category.name} e-books.`,
-      matchedProducts: products.filter((p) => p.category.slug === slug),
+      matchedProducts: products.filter((p) => productHasCategory(p, slug)),
       categories,
     };
   }

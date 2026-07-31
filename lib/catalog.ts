@@ -11,7 +11,12 @@ export function filterProducts(
     const resolved = resolveProductPrice(p, currency);
     const price = resolved.salePrice ?? resolved.regularPrice;
 
-    if (filters.categorySlugs?.length && !filters.categorySlugs.includes(p.category.slug)) {
+    const productCategorySlugs = p.categorySlugs?.length ? p.categorySlugs : [p.category.slug];
+
+    if (
+      filters.categorySlugs?.length &&
+      !filters.categorySlugs.some((slug) => productCategorySlugs.includes(slug))
+    ) {
       return false;
     }
     if (filters.ageRanges?.length && !filters.ageRanges.includes(p.ageRange)) {
@@ -35,7 +40,8 @@ export function filterProducts(
     if (filters.query) {
       const q = filters.query.trim().toLowerCase();
       if (q) {
-        const haystack = `${p.title} ${p.category.name} ${p.language} ${p.shortDescription}`.toLowerCase();
+        const categoryNames = p.categories?.map((category) => category.name).join(" ") ?? p.category.name;
+        const haystack = `${p.title} ${categoryNames} ${p.language} ${p.shortDescription}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
     }

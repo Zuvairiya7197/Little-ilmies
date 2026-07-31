@@ -28,6 +28,8 @@ export interface ProductSummary {
    */
   prices: RegionalPrice[];
   category: Pick<Category, "slug" | "name">;
+  categories?: Pick<Category, "slug" | "name">[];
+  categorySlugs?: string[];
   ageRange: AgeRange;
   pageCount: number;
   language: Language;

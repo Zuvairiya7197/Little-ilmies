@@ -21,6 +21,10 @@ type ProductWithRelations = Prisma.ProductGetPayload<typeof productWithRelations
 
 function toProductSummary(product: ProductWithRelations): ProductSummary {
   const primaryCategory = product.categories[0]?.category;
+  const categories = product.categories.map(({ category }) => ({
+    slug: category.slug,
+    name: category.name,
+  }));
 
   return {
     id: product.id,
@@ -40,6 +44,8 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     category: primaryCategory
       ? { slug: primaryCategory.slug, name: primaryCategory.name }
       : { slug: product.slug, name: product.title },
+    categories,
+    categorySlugs: categories.map((category) => category.slug),
     ageRange: product.ageRange as AgeRange,
     pageCount: product.pageCount,
     language: product.language as Language,
@@ -72,14 +78,15 @@ export async function getPublishedProductBySlug(slug: string): Promise<ProductSu
 }
 
 export async function getRelatedProducts(
-  product: Pick<ProductSummary, "id" | "category">,
+  product: Pick<ProductSummary, "id" | "category" | "categorySlugs">,
   limit = 4
 ): Promise<ProductSummary[]> {
+  const categorySlugs = product.categorySlugs?.length ? product.categorySlugs : [product.category.slug];
   const products = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
       id: { not: product.id },
-      categories: { some: { category: { slug: product.category.slug } } },
+      categories: { some: { category: { slug: { in: categorySlugs } } } },
     },
     take: limit,
     orderBy: { publishedAt: "desc" },
