@@ -18,7 +18,7 @@ const BUNDLE_ICONS: Record<string, LucideIcon> = {
 const BADGE_TINTS = ["bg-ink-100 text-ink-600", "bg-blossom-100 text-blossom-600", "bg-ink-100 text-ink-600", "bg-teal-100 text-teal-600"];
 const SAVE_TINTS = ["bg-ink-600", "bg-blossom-500", "bg-ink-600", "bg-blossom-500"];
 
-function BundleCard({ bundle, index }: { bundle: BundleSummary; index: number }) {
+export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: number }) {
   const currency = useCurrencyStore((s) => s.currency);
   const bundlePrice = resolveProductPrice(bundle, currency);
   const regularTotal = bundle.products.reduce((sum, product) => {

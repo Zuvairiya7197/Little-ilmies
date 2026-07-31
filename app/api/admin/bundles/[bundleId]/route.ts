@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { bundleFormSchema } from "@/lib/validation/admin-bundle";
+import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 
 interface RouteParams {
   params: Promise<{ bundleId: string }>;
@@ -37,6 +38,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }),
   ]);
 
+  revalidateCatalogPaths();
   return NextResponse.json({ id: bundleId });
 }
 
@@ -46,5 +48,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
   const { bundleId } = await params;
   await prisma.bundle.delete({ where: { id: bundleId } });
+  revalidateCatalogPaths();
   return NextResponse.json({ status: "deleted" });
 }

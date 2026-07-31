@@ -8,10 +8,11 @@ import { ShopByLearningGoal } from "@/components/store/home/shop-by-learning-goa
 import { ShopByAge } from "@/components/store/home/shop-by-age";
 import { BundleCollections } from "@/components/store/home/bundle-collections";
 import { RecommendedBooks } from "@/components/store/home/recommended-books";
+import { BookPreviewShowcase } from "@/components/store/home/book-preview-showcase";
 import { WhyParentsChoose } from "@/components/store/home/why-parents-choose";
 import { ExploreMore } from "@/components/store/home/explore-more";
 import { ParentCta } from "@/components/store/home/parent-cta";
-import { getActiveBundles, getPublishedProducts } from "@/lib/db/catalog";
+import { getActiveBundles, getHomepageSampleProduct, getPublishedProducts } from "@/lib/db/catalog";
 import { Reveal } from "@/components/ui/reveal";
 
 export const revalidate = 60;
@@ -26,9 +27,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, bundles] = await Promise.all([
+  const [products, bundles, homepageSample] = await Promise.all([
     getPublishedProducts(),
     getActiveBundles(),
+    getHomepageSampleProduct(),
   ]);
 
   return (
@@ -57,6 +59,9 @@ export default async function HomePage() {
       )}
       <Reveal>
         <RecommendedBooks products={products} />
+      </Reveal>
+      <Reveal>
+        <BookPreviewShowcase product={homepageSample} />
       </Reveal>
       <Reveal>
         <WhyParentsChoose />

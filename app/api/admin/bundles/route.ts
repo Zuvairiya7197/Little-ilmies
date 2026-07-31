@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { bundleFormSchema } from "@/lib/validation/admin-bundle";
+import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 
 export async function POST(request: NextRequest) {
   const denied = await requireAdminApi();
@@ -28,5 +29,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  revalidateCatalogPaths();
   return NextResponse.json({ id: bundle.id }, { status: 201 });
 }

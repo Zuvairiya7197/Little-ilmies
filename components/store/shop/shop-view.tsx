@@ -2,18 +2,20 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Search, Sparkles, Star, ArrowRight, Download, Printer, Baby, ShieldCheck } from "lucide-react";
 import { FilterSidebar } from "@/components/store/shop/filter-sidebar";
 import { FilterDrawer } from "@/components/store/shop/filter-drawer";
 import { ShopToolbar } from "@/components/store/shop/shop-toolbar";
 import { ProductGrid } from "@/components/store/shop/product-grid";
 import { ProductCard } from "@/components/store/product-card";
+import { BundleCard } from "@/components/store/home/bundle-collections";
 import { SortSelect } from "@/components/store/shop/sort-select";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { filterProducts, sortProducts } from "@/lib/catalog";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { cn } from "@/lib/utils/cn";
-import type { Category, ProductSummary } from "@/types/catalog";
+import type { BundleSummary, Category, ProductSummary } from "@/types/catalog";
 
 const ACTIVITY_CATEGORY_SLUGS = ["creative-learning", "printables", "games-and-activities"];
 
@@ -29,21 +31,31 @@ const mobileTrustBadges = [
 
 export function ShopView({
   products,
+  bundles,
   categories,
   title,
   description,
   hideCategoryFilter,
 }: {
   products: ProductSummary[];
+  bundles?: BundleSummary[];
   categories: Category[];
   title: string;
   description?: string;
   hideCategoryFilter?: boolean;
 }) {
+  const searchParams = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("All");
   const { filters, sort, setQuery } = useShopFilters();
   const currency = useCurrencyStore((s) => s.currency);
+  const bundleFilter = searchParams.get("bundle");
+  const visibleBundles = useMemo(() => {
+    if (!bundles?.length || !bundleFilter) return [];
+    if (bundleFilter === "all") return bundles;
+    return bundles.filter((bundle) => bundle.slug === bundleFilter);
+  }, [bundles, bundleFilter]);
+  const isBundleView = Boolean(bundleFilter);
 
   const results = useMemo(() => {
     const filtered = filterProducts(products, filters, currency);
@@ -51,6 +63,9 @@ export function ShopView({
   }, [products, filters, sort, currency]);
 
   const mobileResults = useMemo(() => {
+    if (typeFilter === "Bundles") {
+      return [];
+    }
     if (typeFilter === "Activities") {
       return results.filter((p) => ACTIVITY_CATEGORY_SLUGS.includes(p.category.slug));
     }
@@ -113,40 +128,34 @@ export function ShopView({
       {/* Mobile & tablet: segmented type filter + sort + horizontal-row list, matches app-style "View all" design */}
       <div className="md:hidden">
         <div className="flex items-center gap-1 overflow-x-auto rounded-full bg-cream-100 p-1 no-scrollbar">
-          {typeFilters.map((option) =>
-            option === "Bundles" ? (
-              <Link
-                key={option}
-                href="/shop?bundle=all"
-                className="tap-target shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-ink-500"
-              >
-                {option}
-              </Link>
-            ) : (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setTypeFilter(option)}
-                className={cn(
-                  "tap-target shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors",
-                  typeFilter === option ? "bg-ink-600 text-cream-50" : "text-ink-500"
-                )}
-              >
-                {option}
-              </button>
-            )
-          )}
+          {typeFilters.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setTypeFilter(option)}
+              className={cn(
+                "tap-target shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                typeFilter === option ? "bg-ink-600 text-cream-50" : "text-ink-500"
+              )}
+            >
+              {option}
+            </button>
+          ))}
         </div>
 
         <div className="mt-3 flex justify-end">
           <SortSelect />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-6">
-          {mobileResults.map((product, index) => (
-            <ProductCard key={product.id} product={product} tintIndex={index} />
-          ))}
-        </div>
+        {isBundleView || typeFilter === "Bundles" ? (
+          <BundleResults bundles={isBundleView ? visibleBundles : bundles ?? []} />
+        ) : (
+          <div className="mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-6">
+            {mobileResults.map((product, index) => (
+              <ProductCard key={product.id} product={product} tintIndex={index} />
+            ))}
+          </div>
+        )}
 
         <div className="mt-6 grid grid-cols-4 gap-2 rounded-3xl bg-cream-50 p-4 shadow-lifted xs:gap-3 xs:p-5">
           {mobileTrustBadges.map(({ label, description: badgeDescription, icon: Icon, iconBg, iconColor }) => (
@@ -164,6 +173,7 @@ export function ShopView({
       </div>
 
       {/* Desktop: search bar + sidebar filters + grid, unchanged */}
+      {!isBundleView && (
       <div className="relative mb-6 hidden md:block">
         <Search
           className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300"
@@ -181,14 +191,15 @@ export function ShopView({
           className="tap-target w-full rounded-full border-0 bg-cream-50 py-3.5 pl-12 pr-4 text-sm text-ink-600 placeholder:text-ink-300 shadow-clay transition-shadow focus-visible:shadow-clay-pressed"
         />
       </div>
+      )}
 
       <div className="hidden md:flex md:items-start md:gap-8">
-        {!hideCategoryFilter && <FilterSidebar categories={categories} />}
+        {!hideCategoryFilter && !isBundleView && <FilterSidebar categories={categories} />}
 
         <div className="min-w-0 flex-1">
-          <ShopToolbar resultCount={results.length} onOpenFilters={() => setFiltersOpen(true)} />
+          {!isBundleView && <ShopToolbar resultCount={results.length} onOpenFilters={() => setFiltersOpen(true)} />}
           <div className="pt-6">
-            <ProductGrid products={results} />
+            {isBundleView ? <BundleResults bundles={visibleBundles} /> : <ProductGrid products={results} />}
           </div>
         </div>
       </div>
@@ -199,6 +210,24 @@ export function ShopView({
         resultCount={results.length}
         categories={categories}
       />
+    </div>
+  );
+}
+
+function BundleResults({ bundles }: { bundles: BundleSummary[] }) {
+  if (bundles.length === 0) {
+    return (
+      <div className="rounded-3xl bg-cream-50 p-8 text-center text-sm font-semibold text-ink-400 shadow-clay">
+        No bundles found.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:mt-0">
+      {bundles.map((bundle, index) => (
+        <BundleCard key={bundle.id} bundle={bundle} index={index} />
+      ))}
     </div>
   );
 }
