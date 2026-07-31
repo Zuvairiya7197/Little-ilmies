@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { uploadPresigned } from "@vercel/blob/client";
-import { Loader2, AlertTriangle, Upload, Trash2 } from "lucide-react";
+import { Loader2, AlertTriangle, Upload, Trash2, ChevronDown, Check } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
+import { booksMenuSections } from "@/lib/store-navigation";
 import type { CurrencyCode } from "@/types/pricing";
 
 interface CategoryOption {
   id: string;
   name: string;
+  slug: string;
 }
 
 interface CurrentProductFiles {
@@ -139,29 +141,7 @@ export function ProductForm({
             <Controller
               control={control}
               name="categoryIds"
-              render={({ field }) => (
-                <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-2xl bg-cream-50 p-3 shadow-clay-pressed">
-                  {categories.map((cat) => {
-                    const checked = field.value?.includes(cat.id);
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() =>
-                          field.onChange(
-                            checked ? field.value.filter((id) => id !== cat.id) : [...(field.value ?? []), cat.id]
-                          )
-                        }
-                        className={`min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          checked ? "border-sage-500 bg-sage-500 text-cream-50" : "border-ink-100 text-ink-500"
-                        }`}
-                      >
-                        {cat.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              render={({ field }) => <CategoryDropdown categories={categories} value={field.value ?? []} onChange={field.onChange} />}
             />
             {errors.categoryIds && <p className="mt-2 text-xs text-gold-700">{errors.categoryIds.message}</p>}
           </div>
@@ -385,6 +365,125 @@ export function ProductForm({
       </button>
     </form>
   );
+}
+
+function CategoryDropdown({
+  categories,
+  value,
+  onChange,
+}: {
+  categories: CategoryOption[];
+  value: string[];
+  onChange: (value: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = categories.filter((category) => value.includes(category.id));
+  const groupedCategories = buildCategoryGroups(categories);
+
+  function toggleCategory(categoryId: string) {
+    onChange(value.includes(categoryId) ? value.filter((id) => id !== categoryId) : [...value, categoryId]);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        className="admin-input flex min-h-12 w-full items-center justify-between gap-3 text-left"
+      >
+        <span className="min-w-0 flex-1 truncate">
+          {selected.length > 0 ? selected.map((category) => category.name).join(", ") : "Choose categories"}
+        </span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-ink-300 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-96 overflow-y-auto rounded-2xl border border-ink-100 bg-cream-50 p-3 shadow-lifted">
+          {groupedCategories.map((group) => (
+            <div key={group.title} className="py-2 first:pt-0 last:pb-0">
+              <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wide text-ink-300">{group.title}</p>
+              <div className="grid gap-1 sm:grid-cols-2">
+                {group.categories.map((category) => {
+                  const checked = value.includes(category.id);
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => toggleCategory(category.id)}
+                      className={`flex min-h-9 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                        checked ? "bg-sage-500 font-semibold text-cream-50" : "text-ink-500 hover:bg-cream-100"
+                      }`}
+                    >
+                      <span>{category.name}</span>
+                      {checked && <Check className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selected.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {selected.map((category) => (
+            <button
+              key={category.id}
+              type="button"
+              onClick={() => toggleCategory(category.id)}
+              className="rounded-full bg-sage-50 px-3 py-1 text-xs font-semibold text-sage-700 hover:bg-gold-50 hover:text-gold-700"
+            >
+              {category.name} x
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface CategoryOptionGroup {
+  title: string;
+  categories: CategoryOption[];
+}
+
+function buildCategoryGroups(categories: CategoryOption[]): CategoryOptionGroup[] {
+  const bySlug = new Map(categories.map((category) => [category.slug, category]));
+  const used = new Set<string>();
+  const groups: CategoryOptionGroup[] = booksMenuSections
+    .filter((section) => section.title !== "Shop by Age")
+    .map((section) => {
+      const sectionSlugs = [slugFromHref(section.href), ...section.links.map((link) => slugFromHref(link.href))].filter(
+        (slug): slug is string => Boolean(slug)
+      );
+      const groupCategories = sectionSlugs
+        .map((slug) => bySlug.get(slug))
+        .filter((category): category is CategoryOption => Boolean(category));
+      groupCategories.forEach((category) => used.add(category.id));
+      return { title: section.title, categories: uniqueCategories(groupCategories) };
+    })
+    .filter((group) => group.categories.length > 0);
+
+  const otherCategories = categories.filter((category) => !used.has(category.id));
+  if (otherCategories.length > 0) groups.push({ title: "Other", categories: otherCategories });
+
+  return groups;
+}
+
+function uniqueCategories(categories: CategoryOption[]) {
+  const seen = new Set<string>();
+  return categories.filter((category) => {
+    if (seen.has(category.id)) return false;
+    seen.add(category.id);
+    return true;
+  });
+}
+
+function slugFromHref(href: string) {
+  const match = href.match(/^\/shop\/([^?/#]+)/);
+  return match?.[1];
 }
 
 function CurrentFileStatus({
