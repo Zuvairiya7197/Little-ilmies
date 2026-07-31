@@ -19,7 +19,6 @@ import { ShopToolbar } from "@/components/store/shop/shop-toolbar";
 import { ProductGrid } from "@/components/store/shop/product-grid";
 import { ProductCard } from "@/components/store/product-card";
 import { BundleCard } from "@/components/store/home/bundle-collections";
-import { SortSelect } from "@/components/store/shop/sort-select";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { filterProducts, sortProducts } from "@/lib/catalog";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
@@ -73,10 +72,15 @@ export function ShopView({
     selectedBundle?.description ??
     (isBundleView ? "Browse curated learning bundles and family packs." : description);
   const selectedBundlePrice = selectedBundle ? resolveProductPrice(selectedBundle, currency) : null;
+  const filteredVisibleBundles = useMemo(() => {
+    const bundleList = isBundleView ? visibleBundles : bundles ?? [];
+    return bundleList.filter((bundle) => filterProducts(bundle.products, filters, currency).length > 0);
+  }, [bundles, currency, filters, isBundleView, visibleBundles]);
+  const visibleBundleCount = filteredVisibleBundles.length;
 
   const results = useMemo(() => {
-    if (selectedBundle) return selectedBundle.products;
-    const filtered = filterProducts(products, filters, currency);
+    const sourceProducts = selectedBundle ? selectedBundle.products : products;
+    const filtered = filterProducts(sourceProducts, filters, currency);
     return sortProducts(filtered, sort, currency);
   }, [products, filters, sort, currency, selectedBundle]);
 
@@ -171,12 +175,19 @@ export function ShopView({
           ))}
         </div>
 
-        <div className="mt-3 flex justify-end">
-          <SortSelect />
+        <div className="mt-3">
+          <ShopToolbar
+            resultCount={
+              (isBundleView && !selectedBundle) || typeFilter === "Bundles"
+                ? visibleBundleCount
+                : mobileResults.length
+            }
+            onOpenFilters={() => setFiltersOpen(true)}
+          />
         </div>
 
         {(isBundleView && !selectedBundle) || typeFilter === "Bundles" ? (
-          <BundleResults bundles={isBundleView ? visibleBundles : bundles ?? []} />
+          <BundleResults bundles={filteredVisibleBundles} />
         ) : (
           <div className="mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-6">
             {mobileResults.map((product, index) => (
@@ -226,7 +237,7 @@ export function ShopView({
           <ShopToolbar resultCount={isBundleView && !selectedBundle ? visibleBundles.length : results.length} onOpenFilters={() => setFiltersOpen(true)} />
           <div className="pt-6">
             {isBundleView && !selectedBundle ? (
-              <BundleResults bundles={visibleBundles} />
+              <BundleResults bundles={filteredVisibleBundles} />
             ) : (
               <ProductGrid products={results} />
             )}
@@ -237,7 +248,9 @@ export function ShopView({
       <FilterDrawer
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
-        resultCount={results.length}
+        resultCount={
+          (isBundleView && !selectedBundle) || typeFilter === "Bundles" ? visibleBundleCount : results.length
+        }
         categories={categories}
       />
     </div>
