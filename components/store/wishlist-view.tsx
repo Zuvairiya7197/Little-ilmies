@@ -19,7 +19,8 @@ import { useWishlistLineItems } from "@/hooks/use-wishlist-line-items";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { formatPrice } from "@/lib/utils/format";
-import { products } from "@/data/products";
+import { ProductCarousel } from "@/components/store/home/product-carousel";
+import type { ProductSummary } from "@/types/catalog";
 
 const wishlistStarterLinks = [
   { label: "Stories of the Prophets", href: "/shop/stories-of-the-prophets", icon: Sparkles },
@@ -35,12 +36,12 @@ const wishlistTrustPoints = [
   { label: "Made with Love", description: "Designed for little hearts & minds", icon: Heart, tint: "text-blossom-500" },
 ] as const;
 
-export function WishlistView() {
-  const items = useWishlistLineItems();
+export function WishlistView({ products }: { products: ProductSummary[] }) {
+  const items = useWishlistLineItems(products);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
   const clearWishlist = useWishlistStore((s) => s.clear);
   const addToCart = useCartStore((s) => s.addItem);
-  const relatedProducts = products.filter((product) => !items.some((item) => item.slug === product.slug)).slice(0, 5);
+  const availableProducts = products.filter((product) => !items.some((item) => item.slug === product.slug)).slice(0, 5);
 
   if (items.length === 0) {
     return (
@@ -117,6 +118,7 @@ export function WishlistView() {
           </section>
 
           <TrustStrip />
+          <AvailableBooks products={availableProducts} title="Available books" />
         </div>
       </div>
     );
@@ -213,23 +215,8 @@ export function WishlistView() {
                 </div>
               </div>
 
-              <div className="col-span-2 grid grid-cols-[1fr_auto_auto] items-center gap-3 sm:col-span-1 sm:flex sm:shrink-0 sm:flex-col sm:items-end sm:justify-center sm:gap-7 xl:col-span-2 xl:flex-row xl:items-center xl:justify-end xl:gap-2 sm:xl:col-span-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    toggleWishlist({
-                      productId: item.productId,
-                      slug: item.slug,
-                      title: item.title,
-                      coverImage: item.coverImage,
-                    })
-                  }
-                  aria-label={`Remove ${item.title} from wishlist`}
-                  className="tap-target order-2 flex h-11 w-11 items-center justify-center rounded-full bg-blossom-50 text-blossom-500 shadow-soft sm:h-14 sm:w-14 xl:h-auto xl:w-auto xl:bg-cream-50"
-                >
-                  <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 xl:h-4 xl:w-4" aria-hidden="true" />
-                </button>
-                <p className="order-1 font-display text-sm font-bold text-ink-700 sm:text-sm xl:hidden">
+              <div className="col-span-2 flex flex-wrap items-center justify-between gap-3 sm:col-span-1 sm:shrink-0 sm:flex-col sm:items-end sm:justify-center sm:gap-4 xl:col-span-2 xl:flex-row xl:items-center xl:justify-end xl:gap-2 sm:xl:col-span-1">
+                <p className="font-display text-sm font-bold text-ink-700 sm:text-sm xl:mr-2">
                   {formatPrice(item.price, item.currencyCode)}
                 </p>
                 <button
@@ -243,13 +230,13 @@ export function WishlistView() {
                     })
                   }
                   aria-label={`Add ${item.title} to cart`}
-                  className="tap-target hidden items-center justify-center rounded-full bg-blossom-50 text-blossom-600 shadow-soft xl:flex"
+                  className="tap-target flex h-11 w-11 items-center justify-center rounded-full bg-blossom-50 text-blossom-600 shadow-soft sm:h-14 sm:w-14 xl:h-auto xl:w-auto"
                 >
-                  <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+                  <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 xl:h-4 xl:w-4" aria-hidden="true" />
                 </button>
                 <Link
                   href={`/product/${item.slug}`}
-                  className="tap-target order-3 flex items-center justify-center rounded-full bg-ink-600 px-5 py-2.5 text-base font-bold text-cream-50 shadow-clay-primary sm:px-9 sm:py-3 sm:text-sm xl:px-4 xl:py-0 xl:text-xs"
+                  className="tap-target flex items-center justify-center rounded-full bg-ink-600 px-5 py-2.5 text-base font-bold text-cream-50 shadow-clay-primary sm:px-9 sm:py-3 sm:text-sm xl:px-4 xl:py-0 xl:text-xs"
                 >
                   View
                 </Link>
@@ -264,9 +251,9 @@ export function WishlistView() {
                     })
                   }
                   aria-label={`Remove ${item.title} from wishlist`}
-                  className="tap-target order-4 flex h-11 w-11 items-center justify-center rounded-full bg-cream-50 text-blossom-500 shadow-soft sm:h-14 sm:w-14 xl:h-auto xl:w-auto"
+                  className="tap-target flex h-11 w-11 items-center justify-center rounded-full bg-cream-50 text-blossom-500 shadow-soft sm:h-14 sm:w-14 xl:h-auto xl:w-auto"
                 >
-                  <Heart className="h-5 w-5 fill-blossom-500 sm:h-7 sm:w-7 xl:h-4 xl:w-4" aria-hidden="true" />
+                  <Trash2 className="h-5 w-5 sm:h-6 sm:w-6 xl:h-4 xl:w-4" aria-hidden="true" />
                 </button>
               </div>
             </li>
@@ -274,39 +261,39 @@ export function WishlistView() {
         </ul>
       </div>
 
-      {relatedProducts.length > 0 && (
-        <section className="mt-12 xl:mt-4 xl:rounded-3xl xl:bg-cream-50/95 xl:p-4 xl:shadow-clay-sm">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink-700 xl:gap-2 xl:text-base">
-              <Star className="h-6 w-6 fill-lemon-400 text-lemon-400 sm:h-8 sm:w-8 xl:h-4 xl:w-4" aria-hidden="true" />
-              You may also like
-            </h2>
-            <Link href="/shop" className="flex items-center gap-1 text-base font-bold text-violet-700 hover:text-blossom-600 sm:gap-2 sm:text-sm xl:gap-1 xl:text-xs xl:text-ink-600">
-              View all books
-              <ChevronRight className="h-5 w-5 xl:h-3.5 xl:w-3.5" aria-hidden="true" />
-            </Link>
-          </div>
-          <div className="-mx-4 mt-7 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 no-scrollbar xl:mx-0 xl:mt-3 xl:grid xl:grid-cols-5 xl:gap-3 xl:overflow-visible xl:px-0 xl:pb-0">
-            {relatedProducts.map((product) => (
-              <Link key={product.id} href={`/product/${product.slug}`} className="group w-36 shrink-0 snap-start overflow-hidden rounded-3xl bg-cream-50 shadow-soft transition-transform hover:-translate-y-1 sm:w-[11.5rem] xl:w-auto xl:min-w-0 xl:rounded-2xl">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-t-3xl bg-blossom-50 xl:aspect-[4/3] xl:rounded-t-2xl">
-                  <Image src={product.coverImage} alt="" fill sizes="(max-width: 1279px) 184px, 180px" className="object-contain p-2 transition-transform group-hover:scale-105" />
-                </div>
-                <div className="p-4 xl:p-2.5">
-                  <h3 className="line-clamp-3 min-h-16 text-sm font-bold leading-snug text-ink-700 sm:min-h-20 sm:text-base xl:line-clamp-2 xl:min-h-9 xl:text-xs">{product.title}</h3>
-                  <p className="mt-5 font-display text-sm font-bold text-ink-700 sm:mt-8 sm:text-sm xl:mt-2 xl:text-sm">
-                    {formatPrice(product.prices[0].salePrice ?? product.prices[0].regularPrice, product.prices[0].currencyCode)}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      <AvailableBooks products={availableProducts} title="You may also like" />
 
       <TrustStrip />
     </div>
     </div>
+  );
+}
+
+function AvailableBooks({
+  products,
+  title,
+}: {
+  products: ProductSummary[];
+  title: string;
+}) {
+  if (products.length === 0) return null;
+
+  return (
+    <section className="mt-12 xl:mt-4 xl:rounded-3xl xl:bg-cream-50/95 xl:p-4 xl:shadow-clay-sm">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink-700 xl:gap-2 xl:text-base">
+          <Star className="h-6 w-6 fill-lemon-400 text-lemon-400 sm:h-8 sm:w-8 xl:h-4 xl:w-4" aria-hidden="true" />
+          {title}
+        </h2>
+        <Link href="/shop" className="flex items-center gap-1 text-base font-bold text-violet-700 hover:text-blossom-600 sm:gap-2 sm:text-sm xl:gap-1 xl:text-xs xl:text-ink-600">
+          View all books
+          <ChevronRight className="h-5 w-5 xl:h-3.5 xl:w-3.5" aria-hidden="true" />
+        </Link>
+      </div>
+      <div className="mt-7 xl:mt-3">
+        <ProductCarousel products={products} />
+      </div>
+    </section>
   );
 }
 

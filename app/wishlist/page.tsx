@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { WishlistView } from "@/components/store/wishlist-view";
+import { getPublishedProducts } from "@/lib/db/catalog";
 
 export const metadata: Metadata = {
   title: "Wishlist",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WishlistPage() {
-  return <WishlistView />;
+export default async function WishlistPage() {
+  const products = await getPublishedProducts();
+  return <WishlistView products={products} />;
 }

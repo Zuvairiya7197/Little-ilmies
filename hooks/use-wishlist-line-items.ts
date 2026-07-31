@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
-import { getProductBySlug } from "@/data/products";
+import type { ProductSummary } from "@/types/catalog";
 import type { CurrencyCode } from "@/types/pricing";
 
 export interface WishlistLineItem {
@@ -20,13 +20,13 @@ export interface WishlistLineItem {
   pageCount: number;
 }
 
-export function useWishlistLineItems() {
+export function useWishlistLineItems(products: ProductSummary[]) {
   const items = useWishlistStore((s) => s.items);
   const currency = useCurrencyStore((s) => s.currency);
 
   return useMemo<WishlistLineItem[]>(() => {
     return items.flatMap((item) => {
-      const product = getProductBySlug(item.slug);
+      const product = products.find((candidate) => candidate.slug === item.slug || candidate.id === item.productId);
       if (!product) return [];
 
       const resolved = resolveProductPrice(product, currency);
@@ -45,5 +45,5 @@ export function useWishlistLineItems() {
         },
       ];
     });
-  }, [items, currency]);
+  }, [items, currency, products]);
 }
