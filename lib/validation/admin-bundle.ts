@@ -8,8 +8,8 @@ export const bundleFormSchema = z.object({
     .min(2, "Slug is required")
     .regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, and hyphens only"),
   description: z.string().trim().optional(),
-  bundlePriceInr: z.coerce.number().int().min(0).optional(),
-  bundlePriceUsd: z.coerce.number().int().min(0).optional(),
+  bundlePriceInr: z.coerce.number().min(0).optional(),
+  bundlePriceUsd: z.coerce.number().min(0).optional(),
   productIds: z.array(z.string()).min(2, "Select at least 2 products"),
 });
 

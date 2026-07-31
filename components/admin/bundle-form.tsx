@@ -83,7 +83,7 @@ export function BundleForm({
       <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
         <div>
           <label htmlFor="bundle-price-inr" className="mb-1.5 block text-sm font-semibold text-ink-600">
-            Bundle price — INR (paise)
+            Bundle price — INR
           </label>
           <input
             id="bundle-price-inr"
@@ -94,7 +94,7 @@ export function BundleForm({
         </div>
         <div>
           <label htmlFor="bundle-price-usd" className="mb-1.5 block text-sm font-semibold text-ink-600">
-            Bundle price — USD (cents)
+            Bundle price — USD
           </label>
           <input
             id="bundle-price-usd"

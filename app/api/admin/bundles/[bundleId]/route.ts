@@ -4,6 +4,10 @@ import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { bundleFormSchema } from "@/lib/validation/admin-bundle";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 
+function toMinorUnits(value: number | undefined) {
+  return value == null ? undefined : Math.round(value * 100);
+}
+
 interface RouteParams {
   params: Promise<{ bundleId: string }>;
 }
@@ -31,8 +35,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         name: parsed.data.name,
         slug: parsed.data.slug,
         description: parsed.data.description,
-        bundlePriceInr: parsed.data.bundlePriceInr,
-        bundlePriceUsd: parsed.data.bundlePriceUsd,
+        bundlePriceInr: toMinorUnits(parsed.data.bundlePriceInr),
+        bundlePriceUsd: toMinorUnits(parsed.data.bundlePriceUsd),
         products: { create: parsed.data.productIds.map((productId) => ({ productId })) },
       },
     }),

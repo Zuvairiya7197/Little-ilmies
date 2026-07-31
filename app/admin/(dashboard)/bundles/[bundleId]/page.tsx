@@ -32,8 +32,8 @@ export default async function EditBundlePage({ params }: PageProps) {
           name: bundle.name,
           slug: bundle.slug,
           description: bundle.description ?? undefined,
-          bundlePriceInr: bundle.bundlePriceInr ?? undefined,
-          bundlePriceUsd: bundle.bundlePriceUsd ?? undefined,
+          bundlePriceInr: bundle.bundlePriceInr != null ? bundle.bundlePriceInr / 100 : undefined,
+          bundlePriceUsd: bundle.bundlePriceUsd != null ? bundle.bundlePriceUsd / 100 : undefined,
           productIds: bundle.products.map((p) => p.productId),
         }}
       />
