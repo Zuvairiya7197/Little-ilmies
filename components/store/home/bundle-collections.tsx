@@ -57,9 +57,12 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
             return (
               <div
                 key={product.id}
-                className={`absolute aspect-[3/4] overflow-hidden rounded-lg bg-white p-1 shadow-[0_14px_30px_rgba(45,24,79,0.16)] ring-1 ring-white/80 transition-transform duration-300 ${coverStyles[i] ?? coverStyles[0]}`}
+                className={`absolute aspect-[3/4] overflow-hidden rounded-[0.55rem] bg-cream-50 shadow-[0_14px_30px_rgba(45,24,79,0.18)] ring-1 ring-ink-100/20 transition-transform duration-300 ${coverStyles[i] ?? coverStyles[0]}`}
               >
-                <Image src={product.coverImage} alt="" fill sizes="96px" className="object-contain object-center p-1.5" />
+                <div className="absolute inset-y-0 left-0 z-10 w-2 bg-gradient-to-r from-ink-700/20 via-ink-400/8 to-transparent" aria-hidden="true" />
+                <div className="absolute inset-y-1 right-1 z-10 w-1 rounded-full bg-white/55" aria-hidden="true" />
+                <Image src={product.coverImage} alt="" fill sizes="112px" className="object-cover object-center" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-ink-700/8" aria-hidden="true" />
               </div>
             );
           })}
