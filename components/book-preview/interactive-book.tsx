@@ -18,6 +18,7 @@ export function InteractiveBook({
   pageCount,
   onClose,
   className,
+  openOnMount = false,
   width = 380,
   height = 520,
 }: {
@@ -28,10 +29,11 @@ export function InteractiveBook({
   pageCount: number;
   onClose: () => void;
   className?: string;
+  openOnMount?: boolean;
   width?: number;
   height?: number;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(openOnMount);
   // -1 = cover closed/open with no page turned yet; index into previewImages,
   // or previewImages.length for the locked "buy to unlock" page.
   const [currentPageIndex, setCurrentPageIndex] = useState(-1);
@@ -51,7 +53,16 @@ export function InteractiveBook({
     if (currentPageIndex >= 0) setCurrentPageIndex((prev) => prev - 1);
   };
 
-  const restartBook = () => setCurrentPageIndex(-1);
+  const restartBook = () => {
+    setIsOpen(true);
+    setCurrentPageIndex(-1);
+  };
+
+  useEffect(() => {
+    setIsOpen(openOnMount);
+    setCurrentPageIndex(-1);
+    setIsHovering(false);
+  }, [openOnMount, previewImages]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {

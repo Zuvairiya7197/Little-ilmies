@@ -88,6 +88,7 @@ export function BookPreviewModal({
               productSlug={productSlug}
               pageCount={pageCount}
               onClose={onClose}
+              openOnMount
               width={BOOK_WIDTH}
               height={BOOK_HEIGHT}
             />

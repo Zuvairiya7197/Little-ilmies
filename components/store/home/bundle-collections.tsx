@@ -35,23 +35,36 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
       href={`/shop?bundle=${bundle.slug}`}
       className="group flex flex-col overflow-hidden rounded-3xl bg-cream-50 shadow-clay transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
     >
-      <div className="relative flex h-44 items-end justify-center gap-2 bg-gradient-to-b from-cream-100 to-cream-200 px-5 pb-0 pt-6">
+      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-sage-50 px-5 pt-6">
+        <div className="absolute inset-x-8 bottom-0 h-16 rounded-t-[2rem] bg-cream-50/80 shadow-[0_-18px_45px_rgba(45,24,79,0.08)]" aria-hidden="true" />
+        <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-blossom-100/60 blur-2xl" aria-hidden="true" />
+        <div className="absolute right-10 bottom-8 h-24 w-24 rounded-full bg-sage-100/70 blur-2xl" aria-hidden="true" />
         {savingsPercent > 0 && (
           <span
-            className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-cream-50 shadow-soft ${SAVE_TINTS[index % SAVE_TINTS.length]}`}
+            className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-cream-50 shadow-soft ${SAVE_TINTS[index % SAVE_TINTS.length]}`}
           >
             Save {savingsPercent}%
           </span>
         )}
-        {covers.map((product, i) => (
-          <div
-            key={product.id}
-            className="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-t-lg shadow-clay-sm transition-transform duration-300 group-hover:-translate-y-1"
-            style={{ zIndex: covers.length - i, transform: `rotate(${(i - 1) * 5}deg)` }}
-          >
-            <Image src={product.coverImage} alt="" fill sizes="80px" className="object-contain object-center p-1" />
-          </div>
-        ))}
+        <div className="absolute inset-x-5 bottom-3 flex h-32 items-end justify-center">
+          {covers.map((product, i) => {
+            const coverStyles = [
+              "z-30 w-[5.7rem] -translate-x-8 rotate-[-5deg] group-hover:-translate-y-1.5 group-hover:rotate-[-7deg]",
+              "z-20 w-[5.15rem] translate-x-8 -translate-y-1 rotate-[4deg] group-hover:-translate-y-2 group-hover:rotate-[6deg]",
+              "z-10 w-[4.55rem] translate-x-16 translate-y-2 rotate-[10deg] opacity-95 group-hover:translate-x-[4.5rem]",
+            ];
+
+            return (
+              <div
+                key={product.id}
+                className={`absolute aspect-[3/4] overflow-hidden rounded-lg bg-white p-1 shadow-[0_14px_30px_rgba(45,24,79,0.16)] ring-1 ring-white/80 transition-transform duration-300 ${coverStyles[i] ?? coverStyles[0]}`}
+              >
+                <Image src={product.coverImage} alt="" fill sizes="96px" className="object-contain object-center p-1.5" />
+              </div>
+            );
+          })}
+          <div className="absolute bottom-0 h-3 w-40 rounded-full bg-ink-500/10 blur-md" aria-hidden="true" />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col p-5">

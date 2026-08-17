@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -15,11 +15,33 @@ export interface HomepageSampleProduct {
 
 export function BookPreviewShowcase({ product }: { product: HomepageSampleProduct | null }) {
   const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+
+  useEffect(() => {
+    product?.previewImages.forEach((src) => {
+      const image = new window.Image();
+      image.src = src;
+    });
+  }, [product?.previewImages]);
 
   if (!product) return null;
 
   const isLastSample = index === product.previewImages.length - 1;
   const buyHref = `/product/${product.slug}`;
+  const lastPreviewIndex = product.previewImages.length - 1;
+  const previousImage = product.previewImages[Math.max(0, index - 1)];
+  const currentImage = product.previewImages[index];
+  const nextImage = product.previewImages[Math.min(lastPreviewIndex, index + 1)];
+
+  function goToPreviousPage() {
+    setDirection(-1);
+    setIndex((i) => Math.max(0, i - 1));
+  }
+
+  function goToNextPage() {
+    setDirection(1);
+    setIndex((i) => Math.min(lastPreviewIndex, i + 1));
+  }
 
   return (
     <section
@@ -41,29 +63,59 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
           </Link>
         </div>
 
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-md">
           <div
-            className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-cream-50 shadow-lifted"
+            className="relative aspect-[4/3] overflow-visible rounded-2xl"
             role="group"
             aria-roledescription="carousel"
             aria-label={`Sample pages from ${product.title}`}
           >
+            <div className="absolute inset-x-8 bottom-0 h-8 rounded-full bg-ink-700/10 blur-xl" aria-hidden="true" />
+            <div className="absolute inset-0 rounded-2xl bg-cream-100 shadow-lifted" aria-hidden="true" />
+            <div className="absolute left-1/2 top-4 z-20 h-[calc(100%-2rem)] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-ink-200/70 to-transparent shadow-[0_0_18px_rgba(45,24,79,0.22)]" aria-hidden="true" />
+
+            <div className="absolute inset-3 flex overflow-hidden rounded-xl bg-cream-50 shadow-inner">
+              <div className="relative h-full w-1/2 border-r border-ink-100 bg-cream-50">
+                <Image
+                  src={previousImage}
+                  alt=""
+                  fill
+                  sizes="240px"
+                  className="object-contain object-center p-2"
+                  loading="eager"
+                  priority={index <= 1}
+                />
+              </div>
+              <div className="relative h-full w-1/2 bg-cream-50">
+                <Image
+                  src={currentImage}
+                  alt={`Sample page ${index + 1} of ${product.title}`}
+                  fill
+                  sizes="240px"
+                  className="object-contain object-center p-2"
+                  loading="eager"
+                  priority={index <= 1}
+                />
+              </div>
+            </div>
+
             <AnimatePresence mode="wait">
               {!isLastSample || index < product.previewImages.length ? (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, x: 24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -24 }}
-                  transition={{ duration: 0.25 }}
-                  className="absolute inset-0"
+                  initial={{ rotateY: direction > 0 ? 0 : -180, opacity: 0.85 }}
+                  animate={{ rotateY: direction > 0 ? -180 : 0, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.72, ease: [0.645, 0.045, 0.355, 1] }}
+                  className="pointer-events-none absolute inset-y-3 left-1/2 z-30 w-[calc(50%-0.75rem)] origin-left overflow-hidden rounded-r-xl bg-cream-50 shadow-[0_16px_38px_rgba(45,24,79,0.18)]"
+                  style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
                 >
                   <Image
-                    src={product.previewImages[index]}
-                    alt={`Sample page ${index + 1} of ${product.title}`}
+                    src={direction > 0 ? currentImage : nextImage}
+                    alt=""
                     fill
-                    sizes="380px"
-                    className="object-cover"
+                    sizes="240px"
+                    className="object-contain object-center p-2"
                     loading="eager"
                   />
                 </motion.div>
@@ -86,19 +138,19 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
 
             <button
               type="button"
-              onClick={() => setIndex((i) => Math.max(0, i - 1))}
+              onClick={goToPreviousPage}
               disabled={index === 0}
               aria-label="Previous page"
-              className="tap-target absolute left-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-cream-50/90 text-ink-600 shadow-soft disabled:opacity-0"
+              className="tap-target absolute left-0 top-1/2 z-40 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-cream-50/95 text-ink-600 shadow-soft disabled:opacity-0"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
             {!isLastSample && (
               <button
                 type="button"
-                onClick={() => setIndex((i) => Math.min(product.previewImages.length - 1, i + 1))}
+                onClick={goToNextPage}
                 aria-label="Next page"
-                className="tap-target absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full bg-cream-50/90 text-ink-600 shadow-soft"
+                className="tap-target absolute right-0 top-1/2 z-40 flex -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-cream-50/95 text-ink-600 shadow-soft"
               >
                 <ChevronRight className="h-5 w-5" aria-hidden="true" />
               </button>
