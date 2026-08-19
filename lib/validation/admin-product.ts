@@ -38,7 +38,9 @@ export const productFormSchema = z.object({
   shortDescription: z.string().trim().min(5, "Short description is required"),
   categoryIds: z.array(z.string()).min(1, "Select at least one category"),
   tags: stringListSchema,
-  ageRange: z.enum(["0-3", "3-6", "6-9", "9-12", "12+"]),
+  ageRange: z.enum(["0-3", "3-6", "6-9", "9-12", "12+"], {
+    errorMap: () => ({ message: "Choose an age range" }),
+  }),
   language: z.enum(["English", "Arabic", "Hindi", "Marathi"]),
   format: z.enum(["PDF", "Printable PDF", "Interactive PDF"]),
   pageCount: z.coerce.number().int().min(1, "Must be at least 1 page"),

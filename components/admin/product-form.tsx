@@ -68,6 +68,9 @@ export function ProductForm({
       status: "PUBLISHED",
       hasFreePreview: true,
       author: "Zuvairiya Maryam",
+      ageRange: "" as ProductFormValues["ageRange"],
+      language: "English",
+      format: "PDF",
       baseCurrency: "INR",
       tags: [],
       whatsIncluded: [],
@@ -82,8 +85,13 @@ export function ProductForm({
   const title = watch("title");
   const hasFreePreview = watch("hasFreePreview");
   const slug = watch("slug");
+  const shortDescription = watch("shortDescription") ?? "";
   const seoTitle = watch("seoTitle") ?? "";
   const seoDescription = watch("seoDescription") ?? "";
+  const previewSlug = slug || slugify(title ?? "");
+  const previewTitle = seoTitle || title || "Product SEO title";
+  const previewDescription =
+    seoDescription || shortDescription || "A short description used by search engines and social previews.";
 
   useEffect(() => {
     if (productId || !title) return;
@@ -200,6 +208,7 @@ export function ProductForm({
           <div className="grid grid-cols-2 gap-3">
             <Field label="Age Range" error={errors.ageRange?.message}>
               <select {...register("ageRange")} className="admin-input">
+                <option value="">Choose age range</option>
                 {AGE_OPTIONS.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
@@ -398,8 +407,11 @@ export function ProductForm({
       </div>
 
       <div className="card-surface p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Files & Preview</h2>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+        <details open>
+          <summary className="cursor-pointer list-none font-display text-lg font-semibold text-ink-700">
+            Files & Preview
+          </summary>
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
           {productId && (
           <div className="rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
             <p className="text-sm font-semibold text-ink-600">Current uploads</p>
@@ -527,6 +539,7 @@ export function ProductForm({
             )}
           </div>
         </div>
+        </details>
       </div>
 
       <div className="card-surface p-5">
@@ -563,13 +576,13 @@ export function ProductForm({
             <div className="rounded-2xl border border-ink-100 bg-cream-50 p-4 lg:col-span-2">
               <p className="text-xs font-bold uppercase tracking-wide text-ink-300">SEO Preview</p>
               <p className="mt-2 line-clamp-1 text-sm font-semibold text-ink-700">
-                {seoTitle || title || "Product SEO title"}
+                {previewTitle}
               </p>
               <p className="mt-1 line-clamp-1 text-xs text-sage-700">
-                littleilmies.com/product/{slug || "product-slug"}
+                littleilmies.com/product/{previewSlug || "product-slug"}
               </p>
               <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-400">
-                {seoDescription || "A short description used by search engines and social previews."}
+                {previewDescription}
               </p>
             </div>
           </div>
