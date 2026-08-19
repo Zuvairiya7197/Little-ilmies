@@ -36,7 +36,6 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
       className="group flex flex-col overflow-hidden rounded-3xl bg-cream-50 shadow-clay transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
     >
       <div className="relative h-44 overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-sage-50 px-5 pt-6">
-        <div className="absolute inset-x-8 bottom-0 h-16 rounded-t-[2rem] bg-cream-50/80 shadow-[0_-18px_45px_rgba(45,24,79,0.08)]" aria-hidden="true" />
         <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-blossom-100/60 blur-2xl" aria-hidden="true" />
         <div className="absolute right-10 bottom-8 h-24 w-24 rounded-full bg-sage-100/70 blur-2xl" aria-hidden="true" />
         {savingsPercent > 0 && (
@@ -57,12 +56,9 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
             return (
               <div
                 key={product.id}
-                className={`absolute aspect-[3/4] overflow-hidden rounded-[0.55rem] bg-cream-50 shadow-[0_14px_30px_rgba(45,24,79,0.18)] ring-1 ring-ink-100/20 transition-transform duration-300 ${coverStyles[i] ?? coverStyles[0]}`}
+                className={`absolute aspect-[3/4] transition-transform duration-300 ${coverStyles[i] ?? coverStyles[0]}`}
               >
-                <div className="absolute inset-y-0 left-0 z-10 w-2 bg-gradient-to-r from-ink-700/20 via-ink-400/8 to-transparent" aria-hidden="true" />
-                <div className="absolute inset-y-1 right-1 z-10 w-1 rounded-full bg-white/55" aria-hidden="true" />
-                <Image src={product.coverImage} alt="" fill sizes="112px" className="object-cover object-center" />
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-ink-700/8" aria-hidden="true" />
+                <Image src={product.coverImage} alt="" fill sizes="112px" className="object-contain object-center" />
               </div>
             );
           })}
