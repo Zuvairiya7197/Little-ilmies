@@ -45,7 +45,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
         />
         <Link
           href={`/product/${product.slug}`}
-          className="relative block aspect-[3/4]"
+          className="relative block aspect-[3/4] p-6 xs:p-7"
           aria-label={`View ${product.title}`}
         >
           <Image
@@ -53,7 +53,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
             alt={`${product.title} book cover`}
             fill
             sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
-            className="object-cover object-center"
+            className="object-contain object-center p-6 xs:p-7"
           />
         </Link>
 
