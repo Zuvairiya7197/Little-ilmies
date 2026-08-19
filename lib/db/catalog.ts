@@ -25,6 +25,7 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     slug: category.slug,
     name: category.name,
   }));
+  const extra = detailExtras[product.slug] ?? defaultExtra(product.title);
 
   return {
     id: product.id,
@@ -57,6 +58,10 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     isBestseller: product.isBestseller,
     isNewArrival: product.isNewArrival,
     hasFreePreview: product.hasFreePreview,
+    previewImages:
+      product.previewImagePaths.length > 0
+        ? productPreviewUrls(product.id, product.previewImagePaths)
+        : extra.previewImages,
     tags: product.tags,
     usageLicense: product.usageLicense,
     licenseInfo: product.licenseInfo ?? undefined,
@@ -117,10 +122,7 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
     whatsInside: product.whatsIncluded.length > 0 ? product.whatsIncluded : extra.whatsInside,
     learningBenefits: product.learningObjectives.length > 0 ? product.learningObjectives : extra.learningBenefits,
     bestFor: product.suitableFor.length > 0 ? product.suitableFor : extra.bestFor,
-    previewImages:
-      product.previewImagePaths.length > 0
-        ? productPreviewUrls(product.id, product.previewImagePaths)
-        : extra.previewImages,
+    previewImages: summary.previewImages ?? extra.previewImages,
     reviews: extra.reviews,
     relatedSlugs: related.map((p) => p.slug),
   };

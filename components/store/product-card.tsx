@@ -3,14 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Heart, Eye, Search, ShoppingBag } from "lucide-react";
+import { Star, Heart, Eye, ShoppingBag } from "lucide-react";
 import type { ProductSummary } from "@/types/catalog";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useProductPrice } from "@/hooks/use-product-price";
-import { QuickViewModal } from "@/components/store/quick-view-modal";
+import { BookPreviewModal } from "@/components/book-preview/book-preview-modal";
 
 export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummary; tintIndex?: number }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -18,12 +18,14 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
   const isWishlisted = useWishlistStore((s) =>
     s.items.some((i) => i.productId === product.id)
   );
-  const [quickViewOpen, setQuickViewOpen] = useState(false);
 
   const resolvedPrice = useProductPrice(product);
   const displayPrice = resolvedPrice.salePrice ?? resolvedPrice.regularPrice;
   const isOnSale = Boolean(resolvedPrice.salePrice);
   void tintIndex;
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const previewImages = product.previewImages ?? [];
+  const previewAvailable = product.hasFreePreview && previewImages.length > 0;
 
   return (
     <div className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
@@ -80,21 +82,15 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           />
         </button>
 
-        <div className="absolute inset-x-2.5 bottom-2.5 hidden items-center justify-between gap-1.5 lg:flex">
-          <Link
-            href={`/product/${product.slug}#preview`}
-            className="tap-target flex items-center gap-1.5 rounded-full bg-cream-50 px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft"
+        <div className="absolute inset-x-2.5 bottom-2.5 hidden lg:flex">
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            disabled={!previewAvailable}
+            className="tap-target flex items-center gap-1.5 rounded-full bg-cream-50 px-3 py-1.5 text-xs font-semibold text-ink-600 shadow-soft disabled:opacity-60"
           >
             <Eye className="h-3.5 w-3.5" aria-hidden="true" />
             Preview
-          </Link>
-          <button
-            type="button"
-            onClick={() => setQuickViewOpen(true)}
-            aria-label={`Quick view ${product.title}`}
-            className="tap-target hidden items-center justify-center rounded-full bg-cream-50 p-2 text-ink-600 shadow-soft transition-opacity sm:flex sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-          >
-            <Search className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -178,7 +174,17 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
         </div>
       </div>
 
-      <QuickViewModal product={quickViewOpen ? product : null} onClose={() => setQuickViewOpen(false)} />
+      {previewAvailable && (
+        <BookPreviewModal
+          open={previewOpen}
+          onClose={() => setPreviewOpen(false)}
+          title={product.title}
+          coverImage={product.coverImage}
+          previewImages={previewImages}
+          productSlug={product.slug}
+          pageCount={product.pageCount}
+        />
+      )}
     </div>
   );
 }

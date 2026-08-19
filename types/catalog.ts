@@ -41,6 +41,7 @@ export interface ProductSummary {
   isBestseller?: boolean;
   isNewArrival?: boolean;
   hasFreePreview: boolean;
+  previewImages?: string[];
   tags?: string[];
   usageLicense?: "PERSONAL_USE" | "PERSONAL_CLASSROOM" | "COMMERCIAL_USE";
   licenseInfo?: string;
