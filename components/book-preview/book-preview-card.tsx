@@ -29,13 +29,13 @@ export function BookPreviewCard({
   return (
     <div id="preview">
       {showCover && (
-      <div className="group relative mx-auto hidden max-w-sm md:block">
-        <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="group relative mx-auto hidden w-full max-w-xl md:block">
+        <div className="relative h-[clamp(25rem,38vw,34rem)] overflow-hidden">
           <Image
             src={coverImage}
             alt={`${title} book cover`}
             fill
-            sizes="(max-width: 480px) 90vw, 420px"
+            sizes="(max-width: 1024px) 46vw, 560px"
             className="object-contain object-center"
             priority
           />
