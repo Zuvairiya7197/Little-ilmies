@@ -13,6 +13,7 @@ const attachedPreviewSchema = z.object({
   productId: z.string().min(1),
   pathnames: z.array(z.string().min(1)).min(1).max(20),
 });
+const removePreviewSchema = z.object({ productId: z.string().min(1) });
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,5 +102,33 @@ export async function POST(request: NextRequest) {
       { error: error instanceof Error ? `Preview upload failed: ${error.message}` : "Preview upload failed." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const denied = await requireAdminApi();
+    if (denied) return denied;
+
+    const parsed = removePreviewSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid product data" }, { status: 400 });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: parsed.data.productId },
+      select: { id: true, slug: true, previewImagePaths: true },
+    });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    await deletePreviewPages(product.previewImagePaths);
+    await prisma.product.update({ where: { id: product.id }, data: { previewImagePaths: [] } });
+    revalidateCatalogPaths(product.slug);
+    return NextResponse.json({ status: "removed" });
+  } catch (error) {
+    console.error("Preview removal failed", error);
+    return NextResponse.json({ error: "Preview removal failed." }, { status: 500 });
   }
 }

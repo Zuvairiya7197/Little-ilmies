@@ -96,6 +96,7 @@ export function FileDetails({ product }: { product: ProductDetail }) {
     { icon: FileText, label: "File type", value: product.format },
     { icon: BookOpen, label: "Pages", value: `${product.pageCount} pages` },
     { icon: Globe, label: "Language", value: product.language },
+    { icon: Check, label: "License", value: licenseLabel(product.usageLicense) },
     { icon: Download, label: "Download", value: "Yes, at home in Letter or A4" },
   ];
 
@@ -120,8 +121,19 @@ export function FileDetails({ product }: { product: ProductDetail }) {
           </div>
         ))}
       </dl>
+      {product.licenseInfo && (
+        <p className="mt-4 rounded-2xl bg-cream-100 p-4 text-sm leading-relaxed text-ink-500">
+          {product.licenseInfo}
+        </p>
+      )}
     </SectionCard>
   );
+}
+
+function licenseLabel(license: ProductDetail["usageLicense"]) {
+  if (license === "PERSONAL_CLASSROOM") return "Personal + Classroom";
+  if (license === "COMMERCIAL_USE") return "Commercial Use";
+  return "Personal Use";
 }
 
 export function ProductReviews({ product }: { product: ProductDetail }) {

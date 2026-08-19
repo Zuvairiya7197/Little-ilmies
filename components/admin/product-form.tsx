@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { uploadPresigned } from "@vercel/blob/client";
-import { Loader2, AlertTriangle, Upload, Trash2, ChevronDown, Check } from "lucide-react";
+import { Loader2, AlertTriangle, Upload, Trash2, ChevronDown, Check, Wand2, X } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import { booksMenuSections } from "@/lib/store-navigation";
 import type { CurrencyCode } from "@/types/pricing";
@@ -20,6 +20,8 @@ interface CategoryOption {
 interface CurrentProductFiles {
   coverImage?: string;
   hasPdf?: boolean;
+  pdfFileName?: string;
+  pdfFileSize?: number;
   previewPageCount?: number;
 }
 
@@ -49,16 +51,25 @@ export function ProductForm({
     register,
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: defaultValues ?? {
       status: "PUBLISHED",
       hasFreePreview: true,
+      tags: [],
+      whatsIncluded: [],
+      learningObjectives: [],
+      suitableFor: [],
+      usageLicense: "PERSONAL_USE",
       categoryIds: [],
       prices: [{ currencyCode: "INR", regularPrice: 0, isActive: true }],
     },
   });
+  const title = watch("title");
+  const hasFreePreview = watch("hasFreePreview");
 
   const { fields: priceFields, append: appendPrice, remove: removePrice } = useFieldArray({
     control,
@@ -94,7 +105,7 @@ export function ProductForm({
       if (pdfFile) {
         setPdfUploadProgress(0);
         const blob = await uploadPdfToBlob(savedId, pdfFile, setPdfUploadProgress);
-        await attachUploadedPdf(savedId, blob.pathname);
+        await attachUploadedPdf(savedId, blob.pathname, pdfFile);
       }
       if (previewFiles.length > 0) {
         setPreviewUploadProgress(0);
@@ -121,8 +132,24 @@ export function ProductForm({
           <Field label="Title" error={errors.title?.message}>
             <input {...register("title")} className="admin-input" />
           </Field>
+          <Field label="Author" error={errors.author?.message}>
+            <input {...register("author")} className="admin-input" placeholder="Zuvairiya Maryam" />
+          </Field>
           <Field label="Slug" error={errors.slug?.message} hint="lowercase-with-hyphens">
             <input {...register("slug")} className="admin-input" />
+          </Field>
+          <Field label="Product SKU" error={errors.sku?.message} hint="Optional, unique product code">
+            <div className="flex gap-2">
+              <input {...register("sku")} className="admin-input uppercase" placeholder="LI-ASMA-001" />
+              <button
+                type="button"
+                onClick={() => setValue("sku", generateSku(title), { shouldDirty: true, shouldValidate: true })}
+                className="tap-target flex shrink-0 items-center gap-1.5 rounded-xl border border-ink-100 bg-cream-50 px-3 text-xs font-semibold text-sage-700 hover:bg-sage-50"
+              >
+                <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Generate
+              </button>
+            </div>
           </Field>
           <Field label="Short Description" error={errors.shortDescription?.message} className="lg:col-span-2">
             <input {...register("shortDescription")} className="admin-input" />
@@ -185,6 +212,14 @@ export function ProductForm({
             </Field>
           </div>
         </div>
+        <ArrayField
+          className="mt-5"
+          label="Tags / Keywords"
+          placeholder="Islamic Studies"
+          control={control}
+          name="tags"
+          error={errors.tags?.message}
+        />
 
         <div className="mt-4 grid gap-3 rounded-2xl bg-cream-50 p-3 shadow-clay-pressed sm:grid-cols-2 lg:grid-cols-4">
           <Checkbox label="Bestseller" {...register("isBestseller")} />
@@ -193,6 +228,54 @@ export function ProductForm({
           <Checkbox label="Homepage sample" {...register("isHomepageSample")} />
         </div>
         <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
+      </div>
+
+      <div className="card-surface p-5">
+        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Product Highlights</h2>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <ArrayField
+            label="What's Included"
+            placeholder="Child-friendly explanations"
+            control={control}
+            name="whatsIncluded"
+            error={errors.whatsIncluded?.message}
+          />
+          <ArrayField
+            label="Learning Objectives"
+            placeholder="Understand their meanings"
+            control={control}
+            name="learningObjectives"
+            error={errors.learningObjectives?.message}
+          />
+          <ArrayField
+            label="Suitable For"
+            placeholder="Home learning"
+            control={control}
+            name="suitableFor"
+            error={errors.suitableFor?.message}
+          />
+        </div>
+      </div>
+
+      <div className="card-surface p-5">
+        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">License / Usage</h2>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+          <Field label="Usage License" error={errors.usageLicense?.message}>
+            <select {...register("usageLicense")} className="admin-input">
+              <option value="PERSONAL_USE">Personal Use</option>
+              <option value="PERSONAL_CLASSROOM">Personal + Classroom</option>
+              <option value="COMMERCIAL_USE">Commercial Use</option>
+            </select>
+          </Field>
+          <Field label="License Information" error={errors.licenseInfo?.message}>
+            <textarea
+              {...register("licenseInfo")}
+              rows={3}
+              className="admin-input resize-none"
+              placeholder="This eBook is for individual use only. It may not be shared, redistributed, or resold."
+            />
+          </Field>
+        </div>
       </div>
 
       <div className="card-surface p-5">
@@ -263,7 +346,7 @@ export function ProductForm({
       </div>
 
       <div className="card-surface p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Files</h2>
+        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Files & Preview</h2>
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
           {productId && (
           <div className="rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
@@ -271,29 +354,63 @@ export function ProductForm({
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <CurrentFileStatus label="Cover image" status={currentFiles?.coverImage ? "Uploaded" : "Missing"}>
                 {currentFiles?.coverImage && (
-                  <div className="relative mt-2 aspect-[3/4] w-20 overflow-hidden rounded-lg bg-cream-200">
-                    <Image
-                      src={currentFiles.coverImage}
-                      alt=""
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  </div>
+                  <>
+                    <div className="relative mt-2 aspect-[3/4] w-20 overflow-hidden rounded-lg bg-cream-200">
+                      <Image
+                        src={currentFiles.coverImage}
+                        alt=""
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeUploadedAsset("cover", productId, router.refresh, setSubmitError)}
+                      className="mt-2 text-xs font-semibold text-gold-700 hover:underline"
+                    >
+                      Remove image
+                    </button>
+                  </>
                 )}
               </CurrentFileStatus>
               <CurrentFileStatus
-                label="Full PDF"
-                status={currentFiles?.hasPdf ? "Uploaded" : "Missing"}
-              />
+                label="Main Product PDF"
+                status={currentFiles?.hasPdf ? currentFiles.pdfFileName ?? "Uploaded" : "Missing"}
+              >
+                {currentFiles?.hasPdf && (
+                  <>
+                    {currentFiles.pdfFileSize != null && (
+                      <p className="mt-1 text-xs text-ink-300">{formatBytes(currentFiles.pdfFileSize)}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeUploadedAsset("pdf", productId, router.refresh, setSubmitError)}
+                      className="mt-2 text-xs font-semibold text-gold-700 hover:underline"
+                    >
+                      Remove file
+                    </button>
+                  </>
+                )}
+              </CurrentFileStatus>
               <CurrentFileStatus
-                label="Preview pages"
+                label="Free Preview"
                 status={
                   currentFiles?.previewPageCount
                     ? `${currentFiles.previewPageCount} page${currentFiles.previewPageCount === 1 ? "" : "s"}`
                     : "Missing"
                 }
-              />
+              >
+                {currentFiles?.previewPageCount ? (
+                  <button
+                    type="button"
+                    onClick={() => removeUploadedAsset("preview", productId, router.refresh, setSubmitError)}
+                    className="mt-2 text-xs font-semibold text-gold-700 hover:underline"
+                  >
+                    Remove preview
+                  </button>
+                ) : null}
+              </CurrentFileStatus>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-ink-300">
               Choosing a new file below replaces the current upload when you save changes.
@@ -305,12 +422,12 @@ export function ProductForm({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FileField
                 label={productId ? "Replace Cover Image" : "Cover Image"}
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 file={coverFile}
                 onChange={setCoverFile}
               />
               <FileField
-                label={productId ? "Replace Full PDF (private)" : "Full PDF (private)"}
+                label={productId ? "Replace Main Product PDF" : "Main Product PDF"}
                 accept="application/pdf"
                 file={pdfFile}
                 onChange={setPdfFile}
@@ -329,7 +446,12 @@ export function ProductForm({
                 </p>
               </div>
             )}
-            <PreviewPagesField files={previewFiles} onChange={setPreviewFiles} isReplacing={Boolean(productId)} />
+            <PreviewPagesField
+              files={previewFiles}
+              onChange={setPreviewFiles}
+              isReplacing={Boolean(productId)}
+              disabled={!hasFreePreview}
+            />
             {previewUploadProgress !== null && (
               <div className="rounded-xl bg-cream-50 px-3 py-2">
                 <div className="h-2 overflow-hidden rounded-full bg-ink-100">
@@ -545,6 +667,83 @@ function Checkbox({
   );
 }
 
+function ArrayField({
+  label,
+  placeholder,
+  control,
+  name,
+  error,
+  className,
+}: {
+  label: string;
+  placeholder: string;
+  control: Parameters<typeof Controller<ProductFormValues>>[0]["control"];
+  name: "tags" | "whatsIncluded" | "learningObjectives" | "suitableFor";
+  error?: string;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState("");
+
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => {
+        const values = field.value ?? [];
+        const addDraft = () => {
+          const next = draft.trim();
+          if (!next || values.includes(next)) return;
+          field.onChange([...values, next]);
+          setDraft("");
+        };
+
+        return (
+          <div className={className}>
+            <label className="mb-1.5 block text-sm font-semibold text-ink-600">{label}</label>
+            <div className="flex gap-2">
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addDraft();
+                  }
+                }}
+                className="admin-input"
+                placeholder={placeholder}
+              />
+              <button
+                type="button"
+                onClick={addDraft}
+                className="tap-target shrink-0 rounded-xl border border-ink-100 bg-cream-50 px-3 text-xs font-semibold text-sage-700 hover:bg-sage-50"
+              >
+                Add
+              </button>
+            </div>
+            {values.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {values.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => field.onChange(values.filter((item) => item !== value))}
+                    className="inline-flex items-center gap-1 rounded-full bg-sage-50 px-3 py-1 text-xs font-semibold text-sage-700 hover:bg-gold-50 hover:text-gold-700"
+                  >
+                    {value}
+                    <X className="h-3 w-3" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            )}
+            {error && <p className="mt-1 text-xs text-gold-700">{error}</p>}
+          </div>
+        );
+      }}
+    />
+  );
+}
+
 function FileField({
   label,
   accept,
@@ -577,10 +776,12 @@ function PreviewPagesField({
   files,
   onChange,
   isReplacing = false,
+  disabled = false,
 }: {
   files: File[];
   onChange: (files: File[]) => void;
   isReplacing?: boolean;
+  disabled?: boolean;
 }) {
   function addFiles(fileList: FileList | null) {
     if (!fileList) return;
@@ -594,15 +795,16 @@ function PreviewPagesField({
   return (
     <div>
       <label className="mb-1.5 block text-sm font-semibold text-ink-600">
-        {isReplacing ? "Replace Sample Preview Pages (flipbook)" : "Sample Preview Pages (flipbook)"}
+        {isReplacing ? "Replace Free Preview Pages" : "Free Preview Pages"}
       </label>
-      <label className="tap-target flex w-full cursor-pointer items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300">
+      <label className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
         <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
-        Choose multiple page images
+        {disabled ? "Enable free preview to upload preview pages" : "Choose multiple page images"}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
           multiple
+          disabled={disabled}
           className="sr-only"
           onChange={(e) => {
             addFiles(e.target.files);
@@ -649,6 +851,48 @@ function PreviewPagesField({
   );
 }
 
+function generateSku(title: string | undefined) {
+  const words = (title ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3);
+  const code = words.map((word) => word.replace(/[^a-zA-Z0-9]/g, "").slice(0, 4)).join("-").toUpperCase();
+  return `LI-${code || "BOOK"}-001`;
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function removeUploadedAsset(
+  kind: "pdf" | "cover" | "preview",
+  productId: string,
+  refresh: () => void,
+  setError: (message: string | null) => void
+) {
+  setError(null);
+  const endpoint =
+    kind === "pdf"
+      ? "/api/admin/products/upload-pdf"
+      : kind === "cover"
+        ? "/api/admin/products/upload-cover"
+        : "/api/admin/products/upload-preview";
+  const res = await fetch(endpoint, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    setError(data?.error ?? "Could not remove uploaded file.");
+    return;
+  }
+  refresh();
+}
+
 async function uploadFile(endpoint: string, formData: FormData, label: string) {
   const res = await fetch(endpoint, { method: "POST", body: formData });
   if (res.ok) return;
@@ -659,11 +903,11 @@ async function uploadFile(endpoint: string, formData: FormData, label: string) {
   throw new Error(data?.error ?? `Could not upload ${label}${fallback ? ` (${fallback})` : ""}.`);
 }
 
-async function attachUploadedPdf(productId: string, pathname: string) {
+async function attachUploadedPdf(productId: string, pathname: string, file: File) {
   const res = await fetch("/api/admin/products/upload-pdf", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, pathname }),
+    body: JSON.stringify({ productId, pathname, fileName: file.name, fileSize: file.size }),
   });
   if (res.ok) return;
 

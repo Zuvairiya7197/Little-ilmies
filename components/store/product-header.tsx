@@ -32,6 +32,7 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
         <p className="mt-5 text-xl text-ink-400">
           Ages {product.ageRange} · {product.pageCount}pg
         </p>
+        {product.author && <p className="mt-2 text-base font-semibold text-ink-500">By {product.author}</p>}
         {product.reviewCount > 0 && (
           <div className="mt-5 flex items-center gap-3">
             <StarRating rating={product.rating} size="md" />
@@ -67,11 +68,26 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
             <Globe className="h-3.5 w-3.5 text-ink-400" aria-hidden="true" />
             {product.language}
           </span>
+          {product.author && (
+            <span className="flex items-center gap-1.5 rounded-full bg-cream-100 px-3 py-1.5 text-ink-600">
+              <User className="h-3.5 w-3.5 text-ink-400" aria-hidden="true" />
+              {product.author}
+            </span>
+          )}
         </div>
 
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-500">
           {product.shortDescription}
         </p>
+        {product.tags && product.tags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {product.tags.slice(0, 6).map((tag) => (
+              <span key={tag} className="rounded-full bg-sage-50 px-3 py-1 text-xs font-semibold text-sage-700">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

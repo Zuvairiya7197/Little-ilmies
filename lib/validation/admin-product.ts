@@ -7,8 +7,18 @@ const regionalPriceSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+const stringListSchema = z
+  .array(z.string().trim().min(1, "Remove empty items"))
+  .default([]);
+
 export const productFormSchema = z.object({
   title: z.string().trim().min(2, "Title is required"),
+  author: z.string().trim().optional(),
+  sku: z
+    .string()
+    .trim()
+    .transform((value) => (value === "" ? undefined : value.toUpperCase()))
+    .optional(),
   slug: z
     .string()
     .trim()
@@ -17,6 +27,7 @@ export const productFormSchema = z.object({
   description: z.string().trim().min(10, "Description is required"),
   shortDescription: z.string().trim().min(5, "Short description is required"),
   categoryIds: z.array(z.string()).min(1, "Select at least one category"),
+  tags: stringListSchema,
   ageRange: z.enum(["0-3", "3-6", "6-9", "9-12", "12+"]),
   language: z.enum(["English", "Arabic", "Hindi", "Marathi"]),
   format: z.enum(["PDF", "Printable PDF", "Interactive PDF"]),
@@ -25,6 +36,11 @@ export const productFormSchema = z.object({
   isNewArrival: z.boolean().default(false),
   hasFreePreview: z.boolean().default(true),
   isHomepageSample: z.boolean().default(false),
+  whatsIncluded: stringListSchema,
+  learningObjectives: stringListSchema,
+  suitableFor: stringListSchema,
+  usageLicense: z.enum(["PERSONAL_USE", "PERSONAL_CLASSROOM", "COMMERCIAL_USE"]).default("PERSONAL_USE"),
+  licenseInfo: z.string().trim().optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
   seoTitle: z.string().trim().optional(),
   seoDescription: z.string().trim().optional(),

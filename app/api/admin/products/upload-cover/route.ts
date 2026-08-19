@@ -4,9 +4,11 @@ import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { deleteCoverImage, saveCoverImage } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { productCoverUrl } from "@/lib/catalog-assets";
+import { z } from "zod";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"];
+const removeCoverSchema = z.object({ productId: z.string().min(1) });
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,5 +53,36 @@ export async function POST(request: NextRequest) {
       { error: error instanceof Error ? `Cover upload failed: ${error.message}` : "Cover upload failed." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const denied = await requireAdminApi();
+    if (denied) return denied;
+
+    const parsed = removeCoverSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid product data" }, { status: 400 });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: parsed.data.productId },
+      select: { id: true, slug: true, coverImage: true },
+    });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    await deleteCoverImage(product.coverImage);
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { coverImage: "/images/products/placeholder.svg" },
+    });
+    revalidateCatalogPaths(product.slug);
+    return NextResponse.json({ status: "removed" });
+  } catch (error) {
+    console.error("Cover removal failed", error);
+    return NextResponse.json({ error: "Cover removal failed." }, { status: 500 });
   }
 }

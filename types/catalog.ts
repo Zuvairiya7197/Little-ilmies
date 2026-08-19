@@ -19,6 +19,8 @@ export interface ProductSummary {
   id: string;
   slug: string;
   title: string;
+  author?: string;
+  sku?: string;
   shortDescription: string;
   coverImage: string;
   /**
@@ -39,6 +41,9 @@ export interface ProductSummary {
   isBestseller?: boolean;
   isNewArrival?: boolean;
   hasFreePreview: boolean;
+  tags?: string[];
+  usageLicense?: "PERSONAL_USE" | "PERSONAL_CLASSROOM" | "COMMERCIAL_USE";
+  licenseInfo?: string;
   downloadCount: number;
   publishedAt: string; // ISO date
 }

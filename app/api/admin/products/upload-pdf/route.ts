@@ -10,7 +10,10 @@ const MAX_SIZE = 100 * 1024 * 1024; // 100MB
 const attachedPdfSchema = z.object({
   productId: z.string().min(1),
   pathname: z.string().min(1),
+  fileName: z.string().min(1).optional(),
+  fileSize: z.number().int().min(0).optional(),
 });
+const removePdfSchema = z.object({ productId: z.string().min(1) });
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Invalid uploaded PDF data" }, { status: 400 });
       }
 
-      const { productId, pathname } = parsed.data;
+      const { productId, pathname, fileName, fileSize } = parsed.data;
       if (!pathname.startsWith(`pdfs/${productId}/`) || !pathname.endsWith(".pdf")) {
         return NextResponse.json({ error: "Invalid uploaded PDF path" }, { status: 400 });
       }
@@ -38,7 +41,10 @@ export async function POST(request: NextRequest) {
         await deletePrivatePdf(product.privatePdfPath);
       }
 
-      await prisma.product.update({ where: { id: productId }, data: { privatePdfPath: pathname } });
+      await prisma.product.update({
+        where: { id: productId },
+        data: { privatePdfPath: pathname, pdfFileName: fileName ?? pathname.split("/").at(-1), pdfFileSize: fileSize },
+      });
       revalidateCatalogPaths(product.slug);
       return NextResponse.json({ status: "uploaded" });
     }
@@ -69,7 +75,10 @@ export async function POST(request: NextRequest) {
       await deletePrivatePdf(product.privatePdfPath);
     }
 
-    await prisma.product.update({ where: { id: productId }, data: { privatePdfPath: relativePath } });
+    await prisma.product.update({
+      where: { id: productId },
+      data: { privatePdfPath: relativePath, pdfFileName: file.name, pdfFileSize: file.size },
+    });
     revalidateCatalogPaths(product.slug);
 
     return NextResponse.json({ status: "uploaded" });
@@ -79,5 +88,35 @@ export async function POST(request: NextRequest) {
       { error: error instanceof Error ? `PDF upload failed: ${error.message}` : "PDF upload failed." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const denied = await requireAdminApi();
+    if (denied) return denied;
+
+    const parsed = removePdfSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid product data" }, { status: 400 });
+    }
+
+    const product = await prisma.product.findUnique({ where: { id: parsed.data.productId } });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    if (product.privatePdfPath) {
+      await deletePrivatePdf(product.privatePdfPath);
+    }
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { privatePdfPath: null, pdfFileName: null, pdfFileSize: null },
+    });
+    revalidateCatalogPaths(product.slug);
+    return NextResponse.json({ status: "removed" });
+  } catch (error) {
+    console.error("PDF removal failed", error);
+    return NextResponse.json({ error: "PDF removal failed." }, { status: 500 });
   }
 }

@@ -24,6 +24,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   if (existingWithSlug && existingWithSlug.id !== productId) {
     return NextResponse.json({ error: "A product with this slug already exists" }, { status: 409 });
   }
+  if (productData.sku) {
+    const existingWithSku = await prisma.product.findUnique({ where: { sku: productData.sku } });
+    if (existingWithSku && existingWithSku.id !== productId) {
+      return NextResponse.json({ error: "A product with this SKU already exists" }, { status: 409 });
+    }
+  }
 
   const current = await prisma.product.findUnique({ where: { id: productId } });
   if (!current) {

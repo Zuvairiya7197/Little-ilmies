@@ -24,6 +24,12 @@ export async function POST(request: NextRequest) {
   if (existing) {
     return NextResponse.json({ error: "A product with this slug already exists" }, { status: 409 });
   }
+  if (productData.sku) {
+    const existingSku = await prisma.product.findUnique({ where: { sku: productData.sku } });
+    if (existingSku) {
+      return NextResponse.json({ error: "A product with this SKU already exists" }, { status: 409 });
+    }
+  }
 
   // At most one product can be the homepage sample — clear any previous one.
   if (productData.isHomepageSample) {

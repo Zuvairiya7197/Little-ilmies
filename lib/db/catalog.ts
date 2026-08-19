@@ -30,6 +30,8 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     id: product.id,
     slug: product.slug,
     title: product.title,
+    author: product.author ?? undefined,
+    sku: product.sku ?? undefined,
     shortDescription: product.shortDescription,
     coverImage: productCoverUrl(product.id, product.coverImage),
     prices: product.prices
@@ -55,6 +57,9 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     isBestseller: product.isBestseller,
     isNewArrival: product.isNewArrival,
     hasFreePreview: product.hasFreePreview,
+    tags: product.tags,
+    usageLicense: product.usageLicense,
+    licenseInfo: product.licenseInfo ?? undefined,
     downloadCount: product.downloadCount,
     publishedAt: (product.publishedAt ?? product.createdAt).toISOString(),
   };
@@ -109,9 +114,9 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
   return {
     ...summary,
     description: product.description ?? extra.description,
-    whatsInside: extra.whatsInside,
-    learningBenefits: extra.learningBenefits,
-    bestFor: extra.bestFor,
+    whatsInside: product.whatsIncluded.length > 0 ? product.whatsIncluded : extra.whatsInside,
+    learningBenefits: product.learningObjectives.length > 0 ? product.learningObjectives : extra.learningBenefits,
+    bestFor: product.suitableFor.length > 0 ? product.suitableFor : extra.bestFor,
     previewImages:
       product.previewImagePaths.length > 0
         ? productPreviewUrls(product.id, product.previewImagePaths)
@@ -148,12 +153,13 @@ export async function getAllPublishedProductSlugs(): Promise<string[]> {
 export async function getHomepageSampleProduct(): Promise<{
   slug: string;
   title: string;
+  coverImage: string;
   pageCount: number;
   previewImages: string[];
 } | null> {
   const product = await prisma.product.findFirst({
     where: { status: "PUBLISHED", isHomepageSample: true },
-    select: { id: true, slug: true, title: true, pageCount: true, previewImagePaths: true },
+    select: { id: true, slug: true, title: true, coverImage: true, pageCount: true, previewImagePaths: true },
   });
 
   if (!product || product.previewImagePaths.length === 0) return null;
@@ -161,6 +167,7 @@ export async function getHomepageSampleProduct(): Promise<{
   return {
     slug: product.slug,
     title: product.title,
+    coverImage: productCoverUrl(product.id, product.coverImage),
     pageCount: product.pageCount,
     previewImages: productPreviewUrls(product.id, product.previewImagePaths),
   };

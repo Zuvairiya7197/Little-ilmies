@@ -1,4 +1,4 @@
-import { BookOpen, Download, Smartphone, Globe, User, ShoppingBag, BookMarked, Palette, Sparkles } from "lucide-react";
+import { BookOpen, Download, Smartphone, Globe, User, ShoppingBag, BookMarked, Palette, Sparkles, Check, ShieldCheck } from "lucide-react";
 import type { ProductDetail } from "@/types/catalog";
 
 const aboutTags = [
@@ -69,7 +69,7 @@ export function ProductMobileAbout({ product }: { product: ProductDetail }) {
             </span>
             <div className="min-w-0">
               <p className="text-sm font-bold text-ink-600">Author</p>
-              <p className="text-base font-medium text-ink-700">Little Ilmies</p>
+              <p className="text-base font-medium text-ink-700">{product.author ?? "Little Ilmies"}</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
@@ -83,6 +83,52 @@ export function ProductMobileAbout({ product }: { product: ProductDetail }) {
           </div>
         </div>
       </div>
+
+      <div className="grid gap-5 lg:grid-cols-3">
+        <HighlightList title="What's Included" items={product.whatsInside} />
+        <HighlightList title="Learning Objectives" items={product.learningBenefits} />
+        <div>
+          <h2 className="font-display text-xl font-bold text-ink-700">Suitable For</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {product.bestFor.map((item) => (
+              <span key={item} className="rounded-full bg-sage-50 px-3 py-1.5 text-xs font-semibold text-sage-700">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-ink-100 bg-cream-50 p-5 shadow-soft">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-sage-700" aria-hidden="true" />
+          <h2 className="font-display text-xl font-bold text-ink-700">Usage License</h2>
+        </div>
+        <p className="mt-3 text-sm font-semibold text-ink-600">{licenseLabel(product.usageLicense)}</p>
+        {product.licenseInfo && <p className="mt-2 text-sm leading-relaxed text-ink-500">{product.licenseInfo}</p>}
+      </div>
     </div>
   );
+}
+
+function HighlightList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div>
+      <h2 className="font-display text-xl font-bold text-ink-700">{title}</h2>
+      <ul className="mt-3 flex flex-col gap-2.5">
+        {items.map((item) => (
+          <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-ink-500">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-sage-600" aria-hidden="true" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function licenseLabel(license: ProductDetail["usageLicense"]) {
+  if (license === "PERSONAL_CLASSROOM") return "Personal + Classroom";
+  if (license === "COMMERCIAL_USE") return "Commercial Use";
+  return "Personal Use";
 }
