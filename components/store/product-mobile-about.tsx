@@ -1,4 +1,4 @@
-import { BookOpen, Download, Smartphone, Globe, User, ShoppingBag, BookMarked, Palette, Sparkles, Check, ShieldCheck } from "lucide-react";
+import { BookOpen, Download, Smartphone, BookMarked, Palette, Sparkles, Check, ShieldCheck } from "lucide-react";
 import type { ProductDetail } from "@/types/catalog";
 
 const aboutTags = [
@@ -51,36 +51,6 @@ export function ProductMobileAbout({ product }: { product: ProductDetail }) {
               {label}
             </span>
           ))}
-        </div>
-
-        <div className="mt-7 grid grid-cols-3 gap-4 border-t border-ink-100 pt-6">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-100 text-ink-400 shadow-clay-sm">
-              <Globe className="h-7 w-7" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-ink-600">Language</p>
-              <p className="text-base font-medium text-ink-700">{product.language}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-100 text-ink-400 shadow-clay-sm">
-              <User className="h-7 w-7" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-ink-600">Author</p>
-              <p className="text-base font-medium text-ink-700">{product.author ?? "Little Ilmies"}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-100 text-ink-400 shadow-clay-sm">
-              <ShoppingBag className="h-7 w-7" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-ink-600">Publisher</p>
-              <p className="text-base font-medium text-ink-700">Little Ilmies</p>
-            </div>
-          </div>
         </div>
       </div>
 
