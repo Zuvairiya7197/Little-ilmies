@@ -14,6 +14,12 @@ const attachedPreviewSchema = z.object({
   pathnames: z.array(z.string().min(1)).min(1).max(20),
 });
 const removePreviewSchema = z.object({ productId: z.string().min(1) });
+const updatePreviewSchema = z.object({
+  productId: z.string().min(1),
+  fromIndex: z.number().int().min(0).optional(),
+  toIndex: z.number().int().min(0).optional(),
+  removeIndex: z.number().int().min(0).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -102,6 +108,45 @@ export async function POST(request: NextRequest) {
       { error: error instanceof Error ? `Preview upload failed: ${error.message}` : "Preview upload failed." },
       { status: 500 }
     );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const denied = await requireAdminApi();
+    if (denied) return denied;
+
+    const parsed = updatePreviewSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid preview update" }, { status: 400 });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: parsed.data.productId },
+      select: { id: true, slug: true, previewImagePaths: true },
+    });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const nextPaths = [...product.previewImagePaths];
+    if (parsed.data.removeIndex != null) {
+      const [removed] = nextPaths.splice(parsed.data.removeIndex, 1);
+      if (removed) await deletePreviewPages([removed]);
+    } else if (parsed.data.fromIndex != null && parsed.data.toIndex != null) {
+      if (parsed.data.fromIndex >= nextPaths.length || parsed.data.toIndex >= nextPaths.length) {
+        return NextResponse.json({ error: "Preview page position is out of range" }, { status: 400 });
+      }
+      const [moved] = nextPaths.splice(parsed.data.fromIndex, 1);
+      nextPaths.splice(parsed.data.toIndex, 0, moved);
+    }
+
+    await prisma.product.update({ where: { id: product.id }, data: { previewImagePaths: nextPaths } });
+    revalidateCatalogPaths(product.slug);
+    return NextResponse.json({ previewImagePaths: productPreviewUrls(product.id, nextPaths) });
+  } catch (error) {
+    console.error("Preview update failed", error);
+    return NextResponse.json({ error: "Preview update failed." }, { status: 500 });
   }
 }
 

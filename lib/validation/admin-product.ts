@@ -4,7 +4,16 @@ const regionalPriceSchema = z.object({
   currencyCode: z.enum(["INR", "USD", "GBP", "AED"]),
   regularPrice: z.coerce.number().min(0, "Must be 0 or more"),
   salePrice: z.coerce.number().min(0).optional().or(z.literal("").transform(() => undefined)),
+  saleStartDate: z.string().optional().or(z.literal("").transform(() => undefined)),
+  saleEndDate: z.string().optional().or(z.literal("").transform(() => undefined)),
   isActive: z.boolean().default(true),
+}).superRefine((value, ctx) => {
+  if (value.salePrice != null && value.salePrice > value.regularPrice) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["salePrice"], message: "Sale price cannot exceed regular price" });
+  }
+  if (value.saleStartDate && value.saleEndDate && new Date(value.saleStartDate) > new Date(value.saleEndDate)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["saleEndDate"], message: "Sale end date must be after start date" });
+  }
 });
 
 const stringListSchema = z
@@ -17,6 +26,7 @@ export const productFormSchema = z.object({
   sku: z
     .string()
     .trim()
+    .max(40, "Keep SKU under 40 characters")
     .transform((value) => (value === "" ? undefined : value.toUpperCase()))
     .optional(),
   slug: z
@@ -34,6 +44,8 @@ export const productFormSchema = z.object({
   pageCount: z.coerce.number().int().min(1, "Must be at least 1 page"),
   isBestseller: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
+  displayOrder: z.coerce.number().int().min(0).optional().or(z.literal("").transform(() => undefined)),
   hasFreePreview: z.boolean().default(true),
   isHomepageSample: z.boolean().default(false),
   whatsIncluded: stringListSchema,
@@ -41,6 +53,8 @@ export const productFormSchema = z.object({
   suitableFor: stringListSchema,
   usageLicense: z.enum(["PERSONAL_USE", "PERSONAL_CLASSROOM", "COMMERCIAL_USE"]).default("PERSONAL_USE"),
   licenseInfo: z.string().trim().optional(),
+  baseCurrency: z.enum(["INR", "USD", "GBP", "AED"]).default("INR"),
+  productVersion: z.string().trim().max(20, "Keep version concise").optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
   seoTitle: z.string().trim().max(70, "Keep SEO titles close to 60 characters").optional(),
   seoDescription: z.string().trim().max(180, "Keep meta descriptions close to 160 characters").optional(),

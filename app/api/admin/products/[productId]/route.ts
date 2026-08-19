@@ -46,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   await prisma.$transaction([
     prisma.productCategory.deleteMany({ where: { productId } }),
+    prisma.productPrice.updateMany({ where: { productId }, data: { isDefault: false } }),
     prisma.product.update({
       where: { id: productId },
       data: {
@@ -61,6 +62,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         update: {
           regularPrice: Math.round(p.regularPrice * 100),
           salePrice: p.salePrice ? Math.round(p.salePrice * 100) : null,
+          saleStartDate: p.saleStartDate ? new Date(p.saleStartDate) : null,
+          saleEndDate: p.saleEndDate ? new Date(p.saleEndDate) : null,
+          isDefault: p.currencyCode === productData.baseCurrency,
           isActive: p.isActive,
         },
         create: {
@@ -69,7 +73,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           pricingRegion: p.currencyCode === "INR" ? "India" : "International",
           regularPrice: Math.round(p.regularPrice * 100),
           salePrice: p.salePrice ? Math.round(p.salePrice * 100) : undefined,
-          isDefault: p.currencyCode === "USD",
+          saleStartDate: p.saleStartDate ? new Date(p.saleStartDate) : undefined,
+          saleEndDate: p.saleEndDate ? new Date(p.saleEndDate) : undefined,
+          isDefault: p.currencyCode === productData.baseCurrency,
           isActive: p.isActive,
         },
       })

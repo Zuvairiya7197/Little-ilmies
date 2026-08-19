@@ -23,9 +23,17 @@ interface CurrentProductFiles {
   pdfFileName?: string;
   pdfFileSize?: number;
   previewPageCount?: number;
+  previewImages?: string[];
 }
 
 const CURRENCY_OPTIONS: CurrencyCode[] = ["INR", "USD", "GBP", "AED"];
+const AGE_OPTIONS = [
+  { value: "0-3", label: "0–3" },
+  { value: "3-6", label: "3–6" },
+  { value: "6-9", label: "6–9" },
+  { value: "9-12", label: "9–12" },
+  { value: "12+", label: "12+" },
+] as const;
 
 export function ProductForm({
   categories,
@@ -60,6 +68,7 @@ export function ProductForm({
       status: "PUBLISHED",
       hasFreePreview: true,
       author: "Zuvairiya Maryam",
+      baseCurrency: "INR",
       tags: [],
       whatsIncluded: [],
       learningObjectives: [],
@@ -191,9 +200,9 @@ export function ProductForm({
           <div className="grid grid-cols-2 gap-3">
             <Field label="Age Range" error={errors.ageRange?.message}>
               <select {...register("ageRange")} className="admin-input">
-                {["0-3", "3-6", "6-9", "9-12", "12+"].map((r) => (
-                  <option key={r} value={r}>
-                    {r}
+                {AGE_OPTIONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
                   </option>
                 ))}
               </select>
@@ -216,7 +225,7 @@ export function ProductForm({
                 ))}
               </select>
             </Field>
-            <Field label="Page Count" error={errors.pageCount?.message}>
+          <Field label="Page Count" error={errors.pageCount?.message}>
               <input type="number" {...register("pageCount")} className="admin-input" />
             </Field>
             <Field label="Status">
@@ -236,13 +245,6 @@ export function ProductForm({
           error={errors.tags?.message}
         />
 
-        <div className="mt-4 grid gap-3 rounded-2xl bg-cream-50 p-3 shadow-clay-pressed sm:grid-cols-2 lg:grid-cols-4">
-          <Checkbox label="Bestseller" {...register("isBestseller")} />
-          <Checkbox label="New Arrival" {...register("isNewArrival")} />
-          <Checkbox label="Has Free Preview" {...register("hasFreePreview")} />
-          <Checkbox label="Homepage sample" {...register("isHomepageSample")} />
-        </div>
-        <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
       </div>
 
       <div className="card-surface p-5">
@@ -294,6 +296,26 @@ export function ProductForm({
       </div>
 
       <div className="card-surface p-5">
+        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Store Settings</h2>
+        <div className="grid gap-3 rounded-2xl bg-cream-50 p-3 shadow-clay-pressed sm:grid-cols-2 lg:grid-cols-5">
+          <Checkbox label="Bestseller" {...register("isBestseller")} />
+          <Checkbox label="New Arrival" {...register("isNewArrival")} />
+          <Checkbox label="Featured" {...register("isFeatured")} />
+          <Checkbox label="Has Free Preview" {...register("hasFreePreview")} />
+          <Checkbox label="Homepage sample" {...register("isHomepageSample")} />
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Display Order" error={errors.displayOrder?.message} hint="Lower number appears first in curated sections">
+            <input type="number" min="0" {...register("displayOrder")} className="admin-input" />
+          </Field>
+          <Field label="Product Version" error={errors.productVersion?.message} hint="Optional, for future PDF updates">
+            <input {...register("productVersion")} className="admin-input" placeholder="1.0" />
+          </Field>
+        </div>
+        <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
+      </div>
+
+      <div className="card-surface p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink-700">Regional Prices</h2>
           <button
@@ -304,6 +326,15 @@ export function ProductForm({
             + Add currency
           </button>
         </div>
+        <Field label="Base Currency" error={errors.baseCurrency?.message} hint="Shown when a requested regional price is unavailable" className="mb-4 max-w-xs">
+          <select {...register("baseCurrency")} className="admin-input">
+            {CURRENCY_OPTIONS.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </Field>
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {priceFields.map((field, index) => (
             <div key={field.id} className="flex flex-wrap items-end gap-3 rounded-xl border border-ink-100 p-3">
@@ -332,6 +363,12 @@ export function ProductForm({
                   className="admin-input"
                 />
               </Field>
+              <Field label="Sale Start" className="w-40">
+                <input type="date" {...register(`prices.${index}.saleStartDate`)} className="admin-input" />
+              </Field>
+              <Field label="Sale End" className="w-40">
+                <input type="date" {...register(`prices.${index}.saleEndDate`)} className="admin-input" />
+              </Field>
               <Checkbox label="Active" {...register(`prices.${index}.isActive`)} />
               {priceFields.length > 1 && (
                 <button
@@ -355,7 +392,7 @@ export function ProductForm({
         {!priceFields.some((f) => f.currencyCode === "USD") && (
           <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-gold-50 px-3 py-2 text-xs text-gold-700">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            No USD price set — international customers will see the INR price as an emergency fallback.
+            No USD price set. Customers outside India need an active USD/international price before checkout.
           </p>
         )}
       </div>
@@ -417,13 +454,21 @@ export function ProductForm({
                 }
               >
                 {currentFiles?.previewPageCount ? (
-                  <button
-                    type="button"
-                    onClick={() => removeUploadedAsset("preview", productId, router.refresh, setSubmitError)}
-                    className="mt-2 text-xs font-semibold text-gold-700 hover:underline"
-                  >
-                    Remove preview
-                  </button>
+                  <div className="mt-2">
+                    <PreviewThumbs
+                      productId={productId}
+                      images={currentFiles.previewImages ?? []}
+                      refresh={router.refresh}
+                      setError={setSubmitError}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeUploadedAsset("preview", productId, router.refresh, setSubmitError)}
+                      className="mt-2 text-xs font-semibold text-gold-700 hover:underline"
+                    >
+                      Remove all
+                    </button>
+                  </div>
                 ) : null}
               </CurrentFileStatus>
             </div>
@@ -964,6 +1009,98 @@ async function removeUploadedAsset(
   if (!res.ok) {
     const data = await res.json().catch(() => null);
     setError(data?.error ?? "Could not remove uploaded file.");
+    return;
+  }
+  refresh();
+}
+
+function PreviewThumbs({
+  productId,
+  images,
+  refresh,
+  setError,
+}: {
+  productId: string;
+  images: string[];
+  refresh: () => void;
+  setError: (message: string | null) => void;
+}) {
+  if (images.length === 0) return null;
+
+  return (
+    <ol className="flex max-w-full gap-2 overflow-x-auto pb-1">
+      {images.map((src, index) => (
+        <li key={src} className="w-20 shrink-0 rounded-lg border border-ink-100 bg-cream-50 p-1">
+          <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
+            <Image src={src} alt="" fill sizes="80px" className="object-cover" />
+          </div>
+          <div className="mt-1 grid grid-cols-2 gap-1">
+            <button
+              type="button"
+              onClick={() => updatePreviewOrder(productId, index, index - 1, refresh, setError)}
+              disabled={index === 0}
+              className="rounded bg-cream-100 px-1 py-0.5 text-[10px] font-semibold text-ink-500 disabled:opacity-40"
+            >
+              Up
+            </button>
+            <button
+              type="button"
+              onClick={() => updatePreviewOrder(productId, index, index + 1, refresh, setError)}
+              disabled={index === images.length - 1}
+              className="rounded bg-cream-100 px-1 py-0.5 text-[10px] font-semibold text-ink-500 disabled:opacity-40"
+            >
+              Down
+            </button>
+            <button
+              type="button"
+              onClick={() => removePreviewPage(productId, index, refresh, setError)}
+              className="col-span-2 rounded bg-gold-50 px-1 py-0.5 text-[10px] font-semibold text-gold-700"
+            >
+              Remove
+            </button>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+async function updatePreviewOrder(
+  productId: string,
+  fromIndex: number,
+  toIndex: number,
+  refresh: () => void,
+  setError: (message: string | null) => void
+) {
+  setError(null);
+  const res = await fetch("/api/admin/products/upload-preview", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, fromIndex, toIndex }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    setError(data?.error ?? "Could not reorder preview pages.");
+    return;
+  }
+  refresh();
+}
+
+async function removePreviewPage(
+  productId: string,
+  index: number,
+  refresh: () => void,
+  setError: (message: string | null) => void
+) {
+  setError(null);
+  const res = await fetch("/api/admin/products/upload-preview", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, removeIndex: index }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    setError(data?.error ?? "Could not remove preview page.");
     return;
   }
   refresh();

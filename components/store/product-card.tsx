@@ -115,7 +115,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
               <span aria-hidden="true">·</span>
             </>
           )}
-          <span>Ages {product.ageRange}</span>
+          <span>Ages {product.ageRange.replace(/-/g, "–")}</span>
           <span aria-hidden="true">·</span>
           <span>{product.pageCount}pg</span>
         </div>
@@ -124,6 +124,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="font-display text-lg font-semibold text-ink-700">
               {formatPrice(displayPrice, resolvedPrice.currencyCode)}
+              {resolvedPrice.isFallback && <span className="ml-1 text-xs">{resolvedPrice.currencyCode}</span>}
             </span>
             {isOnSale && (
               <span className="text-sm text-ink-300 line-through">

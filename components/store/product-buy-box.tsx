@@ -76,6 +76,7 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
       <div className="flex items-baseline gap-3">
         <span className="font-display text-3xl font-semibold text-ink-700">
           {formatPrice(displayPrice, resolvedPrice.currencyCode)}
+          {resolvedPrice.isFallback && <span className="ml-1 text-base">{resolvedPrice.currencyCode}</span>}
         </span>
         {resolvedPrice.salePrice && (
           <span className="text-lg text-ink-300 line-through">
@@ -85,12 +86,12 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
       </div>
       <p className="mt-1 text-sm text-ink-400">Instant PDF download after purchase</p>
 
-      {resolvedPrice.isEmergencyFallback && (
+      {resolvedPrice.isFallback && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-gold-50 px-3 py-2 text-xs text-gold-700">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>
-            <strong>Admin:</strong> no international price is set for this product — showing the
-            INR price as a fallback. Add a USD price in the product editor.
+            Regional pricing is not available for your location, so checkout will use the clearly labelled
+            {` ${resolvedPrice.currencyCode}`} price shown here.
           </span>
         </p>
       )}

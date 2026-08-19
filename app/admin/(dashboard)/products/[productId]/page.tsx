@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { ProductForm } from "@/components/admin/product-form";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
-import { productCoverUrl } from "@/lib/catalog-assets";
+import { productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
 import type { CurrencyCode } from "@/types/pricing";
 
 export const metadata: Metadata = {
@@ -45,6 +45,7 @@ export default async function EditProductPage({ params }: PageProps) {
           pdfFileName: product.pdfFileName ?? undefined,
           pdfFileSize: product.pdfFileSize ?? undefined,
           previewPageCount: product.previewImagePaths.length,
+          previewImages: productPreviewUrls(product.id, product.previewImagePaths),
         }}
         defaultValues={{
           title: product.title,
@@ -61,6 +62,8 @@ export default async function EditProductPage({ params }: PageProps) {
           pageCount: product.pageCount,
           isBestseller: product.isBestseller,
           isNewArrival: product.isNewArrival,
+          isFeatured: product.isFeatured,
+          displayOrder: product.displayOrder ?? undefined,
           hasFreePreview: product.hasFreePreview,
           isHomepageSample: product.isHomepageSample,
           whatsIncluded: product.whatsIncluded,
@@ -68,6 +71,8 @@ export default async function EditProductPage({ params }: PageProps) {
           suitableFor: product.suitableFor,
           usageLicense: product.usageLicense,
           licenseInfo: product.licenseInfo ?? undefined,
+          baseCurrency: product.baseCurrency as CurrencyCode,
+          productVersion: product.productVersion ?? undefined,
           status: product.status,
           seoTitle: product.seoTitle ?? undefined,
           seoDescription: product.seoDescription ?? undefined,
@@ -76,6 +81,8 @@ export default async function EditProductPage({ params }: PageProps) {
             currencyCode: p.currencyCode as CurrencyCode,
             regularPrice: p.regularPrice / 100,
             salePrice: p.salePrice ? p.salePrice / 100 : undefined,
+            saleStartDate: p.saleStartDate ? p.saleStartDate.toISOString().slice(0, 10) : undefined,
+            saleEndDate: p.saleEndDate ? p.saleEndDate.toISOString().slice(0, 10) : undefined,
             isActive: p.isActive,
           })),
         }}

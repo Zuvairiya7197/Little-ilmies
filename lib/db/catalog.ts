@@ -41,6 +41,8 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
         currencyCode: p.currencyCode as CurrencyCode,
         regularPrice: p.regularPrice,
         salePrice: p.salePrice ?? undefined,
+        saleStartDate: p.saleStartDate?.toISOString(),
+        saleEndDate: p.saleEndDate?.toISOString(),
         isDefault: p.isDefault,
         isActive: p.isActive,
       })),
@@ -57,6 +59,8 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     reviewCount: product.reviewCount,
     isBestseller: product.isBestseller,
     isNewArrival: product.isNewArrival,
+    isFeatured: product.isFeatured,
+    displayOrder: product.displayOrder ?? undefined,
     hasFreePreview: product.hasFreePreview,
     previewImages:
       product.previewImagePaths.length > 0
@@ -65,6 +69,8 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     tags: product.tags,
     usageLicense: product.usageLicense,
     licenseInfo: product.licenseInfo ?? undefined,
+    baseCurrency: product.baseCurrency as CurrencyCode,
+    productVersion: product.productVersion ?? undefined,
     seoTitle: product.seoTitle ?? undefined,
     seoDescription: product.seoDescription ?? undefined,
     seoKeywords: product.seoKeywords,

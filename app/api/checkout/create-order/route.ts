@@ -48,7 +48,15 @@ export async function POST(request: NextRequest) {
   const orderItemsData: { productId: string; unitPrice: number; quantity: number }[] = [];
 
   for (const item of items) {
-    const resolved = await resolveProductPriceFromDb(item.productId, currency);
+    let resolved: Awaited<ReturnType<typeof resolveProductPriceFromDb>>;
+    try {
+      resolved = await resolveProductPriceFromDb(item.productId, currency);
+    } catch {
+      return NextResponse.json(
+        { error: `This product does not have an active ${currency} or international price configured yet.` },
+        { status: 422 }
+      );
+    }
     const unitPrice = resolved.salePrice ?? resolved.regularPrice;
     subtotal += unitPrice * item.quantity;
     orderItemsData.push({ productId: item.productId, unitPrice, quantity: item.quantity });

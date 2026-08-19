@@ -78,12 +78,12 @@ export function sortProducts(
       return sorted.sort((a, b) => b.rating - a.rating);
     case "featured":
     default:
-      return sorted;
+      return sorted.sort(compareFeatured);
   }
 }
 
 export function getFeaturedProducts(items: ProductSummary[], limit = 8) {
-  return items.slice(0, limit);
+  return [...items].sort(compareFeatured).slice(0, limit);
 }
 
 export function getBestsellers(items: ProductSummary[], limit = 8) {
@@ -104,3 +104,12 @@ export const sortLabels: Record<SortOption, string> = {
   "most-downloaded": "Most Downloaded",
   "highest-rated": "Highest Rated",
 };
+
+function compareFeatured(a: ProductSummary, b: ProductSummary) {
+  const featuredDelta = Number(b.isFeatured) - Number(a.isFeatured);
+  if (featuredDelta !== 0) return featuredDelta;
+  const orderA = a.displayOrder ?? Number.MAX_SAFE_INTEGER;
+  const orderB = b.displayOrder ?? Number.MAX_SAFE_INTEGER;
+  if (orderA !== orderB) return orderA - orderB;
+  return +new Date(b.publishedAt) - +new Date(a.publishedAt);
+}

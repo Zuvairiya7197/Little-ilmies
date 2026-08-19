@@ -7,7 +7,7 @@ export interface ResolvedPrice {
   salePrice?: number;
   /** True when we couldn't honor the requested currency and had to fall back. */
   isFallback: boolean;
-  /** True only in the last-resort case: no USD price exists either, so we show INR with a warning. */
+  /** True only when India has no INR price and we use another clearly-labelled currency. */
   isEmergencyFallback: boolean;
 }
 
@@ -18,8 +18,9 @@ export interface ResolvedPrice {
  * preference — for the actual checkout amount. The fallback order is the
  * same either way:
  *   1. Exact match for the given currency (if active).
- *   2. The product's default/international price (should be USD).
- *   3. INR, with `isEmergencyFallback: true` so the UI/admin can flag it.
+ *   2. USD/international fallback for non-India customers.
+ *   3. Another non-INR active price, clearly labelled.
+ *   4. INR only when the requested currency is INR.
  *
  * IMPORTANT: when called for checkout purposes, `requestedCurrency` must
  * come from server-side region verification (IP → billing country →
@@ -37,37 +38,54 @@ export function resolveProductPrice(
     return {
       currencyCode: exact.currencyCode,
       regularPrice: exact.regularPrice,
-      salePrice: exact.salePrice,
+      salePrice: activeSalePrice(exact),
       isFallback: false,
       isEmergencyFallback: false,
     };
   }
 
-  const international =
-    activePrices.find((p) => p.isDefault) ??
-    activePrices.find((p) => p.currencyCode === FALLBACK_CURRENCY);
+  const international = activePrices.find((p) => p.currencyCode === FALLBACK_CURRENCY);
   if (international) {
     return {
       currencyCode: international.currencyCode,
       regularPrice: international.regularPrice,
-      salePrice: international.salePrice,
+      salePrice: activeSalePrice(international),
       isFallback: true,
       isEmergencyFallback: false,
     };
   }
 
-  const inr = activePrices.find((p) => p.currencyCode === "INR");
+  const nonInrFallback = activePrices.find((p) => p.currencyCode !== "INR");
+  if (requestedCurrency !== "INR" && nonInrFallback) {
+    return {
+      currencyCode: nonInrFallback.currencyCode,
+      regularPrice: nonInrFallback.regularPrice,
+      salePrice: activeSalePrice(nonInrFallback),
+      isFallback: true,
+      isEmergencyFallback: false,
+    };
+  }
+
+  const inr = requestedCurrency === "INR" ? activePrices.find((p) => p.currencyCode === "INR") : undefined;
   if (inr) {
     return {
       currencyCode: inr.currencyCode,
       regularPrice: inr.regularPrice,
-      salePrice: inr.salePrice,
+      salePrice: activeSalePrice(inr),
       isFallback: true,
       isEmergencyFallback: true,
     };
   }
 
-  throw new Error("Product has no active regional prices configured (not even INR).");
+  throw new Error(`Product has no active ${requestedCurrency} or international price configured.`);
+}
+
+function activeSalePrice(price: ProductSummary["prices"][number]) {
+  if (price.salePrice == null) return undefined;
+  const now = Date.now();
+  if (price.saleStartDate && now < new Date(price.saleStartDate).getTime()) return undefined;
+  if (price.saleEndDate && now > new Date(price.saleEndDate).getTime()) return undefined;
+  return price.salePrice;
 }
 
 function findPrice(product: Pick<ProductSummary, "prices">, currency: CurrencyCode) {

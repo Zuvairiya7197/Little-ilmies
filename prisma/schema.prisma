@@ -143,6 +143,8 @@ model Product {
   downloadCount Int    @default(0)
   isBestseller Boolean @default(false)
   isNewArrival Boolean @default(false)
+  isFeatured Boolean @default(false)
+  displayOrder Int?
   hasFreePreview Boolean @default(true)
   /// At most one product should have this set — it's the book featured in
   /// the homepage "See before you buy" flip-through showcase. Enforced at
@@ -151,6 +153,8 @@ model Product {
   isHomepageSample Boolean @default(false)
   usageLicense UsageLicense @default(PERSONAL_USE)
   licenseInfo String?
+  baseCurrency String @default("INR")
+  productVersion String?
   seoTitle    String?
   seoDescription String?
   seoKeywords String[] @default([])
@@ -239,6 +243,8 @@ model ProductPrice {
   currencyCode  String // ISO 4217: INR, USD (GBP/AED reserved for later regions)
   regularPrice  Int // minor units
   salePrice     Int?
+  saleStartDate DateTime?
+  saleEndDate   DateTime?
   isDefault     Boolean  @default(false)
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())

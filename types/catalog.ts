@@ -40,11 +40,15 @@ export interface ProductSummary {
   reviewCount: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;
+  isFeatured?: boolean;
+  displayOrder?: number;
   hasFreePreview: boolean;
   previewImages?: string[];
   tags?: string[];
   usageLicense?: "PERSONAL_USE" | "PERSONAL_CLASSROOM" | "COMMERCIAL_USE";
   licenseInfo?: string;
+  baseCurrency?: import("@/types/pricing").CurrencyCode;
+  productVersion?: string;
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string[];

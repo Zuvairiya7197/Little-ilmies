@@ -26,6 +26,8 @@ export interface RegionalPrice {
   /** Minor units (paise / cents / pence / fils) */
   regularPrice: number;
   salePrice?: number;
+  saleStartDate?: string;
+  saleEndDate?: string;
   /** True for the currency shown when no country match and no override exists (should be USD per spec). */
   isDefault?: boolean;
   isActive?: boolean;
@@ -36,13 +38,31 @@ export interface RegionalPrice {
  * auto-detection/display only — never used for FX math, and never the
  * final authority on checkout price (the backend re-verifies region).
  *
- * Launch scope is deliberately two regions: India and everyone else
- * ("International"). GBP/AED exist in the pricing model for later use
- * but are not wired into auto-detection yet — adding a country here
- * later is how you'd turn on a third verified region.
+ * Countries using INR/GBP/AED resolve to their configured regional currency.
+ * Countries where USD is the official or store-supported selling currency
+ * resolve explicitly to USD. Everything else also falls back to USD as the
+ * international price.
  */
 export const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
   IN: "INR",
+  GB: "GBP",
+  AE: "AED",
+  US: "USD",
+  AS: "USD",
+  GU: "USD",
+  MP: "USD",
+  PR: "USD",
+  VI: "USD",
+  UM: "USD",
+  EC: "USD",
+  SV: "USD",
+  PA: "USD",
+  TL: "USD",
+  FM: "USD",
+  MH: "USD",
+  PW: "USD",
+  VG: "USD",
+  TC: "USD",
   // All other countries resolve to USD (the "international" price).
 };
 
