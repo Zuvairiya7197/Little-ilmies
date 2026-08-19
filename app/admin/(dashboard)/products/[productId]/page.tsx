@@ -71,6 +71,7 @@ export default async function EditProductPage({ params }: PageProps) {
           status: product.status,
           seoTitle: product.seoTitle ?? undefined,
           seoDescription: product.seoDescription ?? undefined,
+          seoKeywords: product.seoKeywords,
           prices: product.prices.map((p) => ({
             currencyCode: p.currencyCode as CurrencyCode,
             regularPrice: p.regularPrice / 100,

@@ -153,6 +153,7 @@ model Product {
   licenseInfo String?
   seoTitle    String?
   seoDescription String?
+  seoKeywords String[] @default([])
   ogImage     String?
   status      ProductStatus @default(DRAFT)
   publishedAt DateTime?

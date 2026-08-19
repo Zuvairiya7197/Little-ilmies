@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useId, cloneElement } from "react";
+import { useEffect, useState, useId, cloneElement } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -53,23 +53,38 @@ export function ProductForm({
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: defaultValues ?? {
       status: "PUBLISHED",
       hasFreePreview: true,
+      author: "Zuvairiya Maryam",
       tags: [],
       whatsIncluded: [],
       learningObjectives: [],
       suitableFor: [],
       usageLicense: "PERSONAL_USE",
+      seoKeywords: [],
       categoryIds: [],
       prices: [{ currencyCode: "INR", regularPrice: 0, isActive: true }],
     },
   });
   const title = watch("title");
   const hasFreePreview = watch("hasFreePreview");
+  const slug = watch("slug");
+  const seoTitle = watch("seoTitle") ?? "";
+  const seoDescription = watch("seoDescription") ?? "";
+
+  useEffect(() => {
+    if (productId || !title) return;
+    if (!dirtyFields.slug) {
+      setValue("slug", slugify(title), { shouldValidate: true });
+    }
+    if (!dirtyFields.seoTitle) {
+      setValue("seoTitle", title, { shouldValidate: true });
+    }
+  }, [dirtyFields.seoTitle, dirtyFields.slug, productId, setValue, title]);
 
   const { fields: priceFields, append: appendPrice, remove: removePrice } = useFieldArray({
     control,
@@ -469,6 +484,55 @@ export function ProductForm({
         </div>
       </div>
 
+      <div className="card-surface p-5">
+        <details open>
+          <summary className="cursor-pointer list-none font-display text-lg font-semibold text-ink-700">
+            SEO
+          </summary>
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Field
+              label="SEO Title"
+              error={errors.seoTitle?.message}
+              hint={`The title shown in search engine results. ${seoTitle.length}/60`}
+            >
+              <input {...register("seoTitle")} className="admin-input" />
+            </Field>
+            <div className="hidden lg:block" />
+            <Field
+              label="Meta Description"
+              error={errors.seoDescription?.message}
+              hint={`A short description used by search engines and social previews. ${seoDescription.length}/160`}
+              className="lg:col-span-2"
+            >
+              <textarea {...register("seoDescription")} rows={3} className="admin-input resize-none" />
+            </Field>
+            <ArrayField
+              className="lg:col-span-2"
+              label="SEO Keywords"
+              placeholder="Islamic printable"
+              helper="Add relevant search phrases people may use to find this product."
+              control={control}
+              name="seoKeywords"
+              error={errors.seoKeywords?.message}
+            />
+            <div className="rounded-2xl border border-ink-100 bg-cream-50 p-4 lg:col-span-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-ink-300">SEO Preview</p>
+              <p className="mt-2 line-clamp-1 text-sm font-semibold text-ink-700">
+                {seoTitle || title || "Product SEO title"}
+              </p>
+              <p className="mt-1 line-clamp-1 text-xs text-sage-700">
+                littleilmies.com/product/{slug || "product-slug"}
+              </p>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-400">
+                {seoDescription || "A short description used by search engines and social previews."}
+              </p>
+            </div>
+          </div>
+          {seoTitle.length > 60 && <p className="mt-3 text-xs text-gold-700">SEO title is longer than the recommended 60 characters.</p>}
+          {seoDescription.length > 160 && <p className="mt-1 text-xs text-gold-700">Meta description is longer than the recommended 160 characters.</p>}
+        </details>
+      </div>
+
       {submitError && (
         <p role="alert" className="flex items-start gap-2 rounded-xl bg-gold-50 px-3.5 py-2.5 text-sm text-gold-700">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -670,6 +734,7 @@ function Checkbox({
 function ArrayField({
   label,
   placeholder,
+  helper,
   control,
   name,
   error,
@@ -677,8 +742,9 @@ function ArrayField({
 }: {
   label: string;
   placeholder: string;
+  helper?: string;
   control: Parameters<typeof Controller<ProductFormValues>>[0]["control"];
-  name: "tags" | "whatsIncluded" | "learningObjectives" | "suitableFor";
+  name: "tags" | "whatsIncluded" | "learningObjectives" | "suitableFor" | "seoKeywords";
   error?: string;
   className?: string;
 }) {
@@ -705,7 +771,7 @@ function ArrayField({
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
+                  if (event.key === "Enter" || event.key === ",") {
                     event.preventDefault();
                     addDraft();
                   }
@@ -721,6 +787,7 @@ function ArrayField({
                 Add
               </button>
             </div>
+            {helper && <p className="mt-1 text-xs text-ink-300">{helper}</p>}
             {values.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {values.map((value) => (
@@ -859,6 +926,15 @@ function generateSku(title: string | undefined) {
     .slice(0, 3);
   const code = words.map((word) => word.replace(/[^a-zA-Z0-9]/g, "").slice(0, 4)).join("-").toUpperCase();
   return `LI-${code || "BOOK"}-001`;
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function formatBytes(bytes: number) {

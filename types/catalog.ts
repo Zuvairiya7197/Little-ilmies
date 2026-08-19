@@ -45,6 +45,9 @@ export interface ProductSummary {
   tags?: string[];
   usageLicense?: "PERSONAL_USE" | "PERSONAL_CLASSROOM" | "COMMERCIAL_USE";
   licenseInfo?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
   downloadCount: number;
   publishedAt: string; // ISO date
 }

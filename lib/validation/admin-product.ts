@@ -42,8 +42,9 @@ export const productFormSchema = z.object({
   usageLicense: z.enum(["PERSONAL_USE", "PERSONAL_CLASSROOM", "COMMERCIAL_USE"]).default("PERSONAL_USE"),
   licenseInfo: z.string().trim().optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
-  seoTitle: z.string().trim().optional(),
-  seoDescription: z.string().trim().optional(),
+  seoTitle: z.string().trim().max(70, "Keep SEO titles close to 60 characters").optional(),
+  seoDescription: z.string().trim().max(180, "Keep meta descriptions close to 160 characters").optional(),
+  seoKeywords: stringListSchema,
   prices: z.array(regionalPriceSchema).min(1, "Add at least an INR price"),
 });
 

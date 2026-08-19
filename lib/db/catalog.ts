@@ -65,6 +65,9 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     tags: product.tags,
     usageLicense: product.usageLicense,
     licenseInfo: product.licenseInfo ?? undefined,
+    seoTitle: product.seoTitle ?? undefined,
+    seoDescription: product.seoDescription ?? undefined,
+    seoKeywords: product.seoKeywords,
     downloadCount: product.downloadCount,
     publishedAt: (product.publishedAt ?? product.createdAt).toISOString(),
   };

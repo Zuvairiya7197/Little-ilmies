@@ -41,19 +41,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const product = await getPublishedProductDetailBySlug(slug);
   if (!product) return {};
+  const title = product.seoTitle || product.title;
+  const description = product.seoDescription || product.shortDescription;
 
   return {
-    title: product.title,
-    description: product.shortDescription,
+    title,
+    description,
     alternates: {
       canonical: `/product/${slug}`,
     },
     openGraph: {
-      title: product.title,
-      description: product.shortDescription,
+      title,
+      description,
       images: [{ url: product.coverImage }],
       type: "website",
     },
+    keywords: product.seoKeywords,
   };
 }
 
