@@ -39,9 +39,9 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
           </Link>
         </div>
 
-        <div className="mx-auto w-full max-w-2xl">
-          <div className="flex min-h-[31rem] items-center justify-center overflow-visible">
-            <div className="origin-center scale-[0.54] xs:scale-[0.66] sm:scale-[0.78] lg:scale-[0.82] xl:scale-90">
+        <div className="mx-auto flex w-full max-w-2xl flex-col items-center">
+          <div className="flex min-h-[31rem] w-full items-center justify-center overflow-hidden">
+            <div className="origin-center scale-[0.56] xs:scale-[0.68] sm:scale-[0.82] md:scale-90 lg:scale-100">
               <InteractiveBook
                 key={previewKey}
                 coverImage={product.coverImage}
@@ -50,11 +50,13 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
                 productSlug={product.slug}
                 pageCount={product.pageCount}
                 onClose={() => setPreviewKey((key) => key + 1)}
+                width={300}
+                height={410}
               />
             </div>
           </div>
 
-          <p className="mt-3 text-center text-xs font-medium text-ink-400">
+          <p className="mt-2 text-center text-xs font-medium text-ink-400">
             Click the book to flip through {product.previewImages.length} sample page{product.previewImages.length === 1 ? "" : "s"}.
             {" "}Full book is {product.pageCount} pages.
           </p>
