@@ -22,9 +22,9 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
   return (
     <section
       aria-labelledby="preview-heading"
-      className="bg-sage-50 py-8 xs:py-10 md:py-20"
+      className="bg-sage-50 py-5 xs:py-7 md:py-20"
     >
-      <div className="container-content grid grid-cols-1 items-center gap-4 xs:gap-6 md:grid-cols-[0.85fr_1.15fr] md:gap-14">
+      <div className="container-content grid grid-cols-1 items-center gap-0 xs:gap-2 md:grid-cols-[0.85fr_1.15fr] md:gap-14">
         <div>
           <p className="section-eyebrow">See before you buy</p>
           <h2 id="preview-heading" className="mt-2 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
@@ -34,13 +34,13 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
             Every book includes a free page-flip preview so you know exactly
             what you&apos;re bringing home — no surprises, just confidence.
           </p>
-          <Link href={buyHref} className="btn-accent mt-6">
+          <Link href={buyHref} className="btn-accent mt-4 md:mt-6">
             Buy Now to Download Full E-Book
           </Link>
         </div>
 
         <div className="mx-auto flex w-full max-w-2xl flex-col items-center">
-          <div className="flex h-[18.5rem] w-full items-center justify-center overflow-visible px-0 py-0 xs:h-[22rem] sm:h-[26rem] md:min-h-[31rem] md:px-8 md:py-8">
+          <div className="flex h-[13rem] w-full items-center justify-center overflow-visible px-0 py-0 xs:h-[16rem] sm:h-[22rem] md:min-h-[31rem] md:px-8 md:py-8">
             <div className="origin-center scale-[0.56] xs:scale-[0.68] sm:scale-[0.82] md:scale-90 lg:scale-100">
               <InteractiveBook
                 key={previewKey}
@@ -56,7 +56,7 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
             </div>
           </div>
 
-          <p className="mt-2 text-center text-xs font-medium text-ink-400">
+          <p className="mt-0 text-center text-xs font-medium text-ink-400 md:mt-2">
             Click the book to flip through {product.previewImages.length} sample page{product.previewImages.length === 1 ? "" : "s"}.
             {" "}Full book is {product.pageCount} pages.
           </p>
