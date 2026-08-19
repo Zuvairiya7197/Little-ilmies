@@ -13,13 +13,13 @@ export default function AdminUnauthorizedPage() {
       eyebrow="Admin only"
       title="You don't have access to this area."
       description="This dashboard is only available to Little Ilmies admins. Sign in with an admin account or contact the site owner."
-      icon={LockKeyhole}
+      image="/images/Admin unauthorized.png"
+      imageAlt="Admin access required illustration"
       actions={[
         { href: "/admin/login", label: "Admin Login", icon: LockKeyhole },
         { href: "/contact", label: "Contact Support", icon: Mail, variant: "secondary" },
         { href: "/", label: "Back to Store", icon: ArrowLeft, variant: "plain" },
       ]}
-      compact
     />
   );
 }
