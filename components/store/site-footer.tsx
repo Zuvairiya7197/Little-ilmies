@@ -291,23 +291,23 @@ export function SiteFooter() {
         </div>
 
         <div className="container-content relative z-10 mt-8">
-          <div className="grid grid-cols-4 gap-x-1 divide-x divide-ink-100 rounded-3xl bg-white p-4 shadow-clay-sm">
+          <div className="grid grid-cols-4 gap-x-1 divide-x divide-ink-100 rounded-3xl bg-white px-3 py-5 shadow-clay-sm">
             {trustBadges.map(
               ({ label, description, icon: Icon, bg, color }) => (
                 <div
                   key={label}
-                  className="flex flex-col items-center gap-2 px-1 text-center first:pl-0 last:pr-0"
+                  className="flex flex-col items-center gap-2.5 px-1 text-center first:pl-0 last:pr-0"
                 >
                   <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${bg} ${color}`}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${bg} ${color}`}
                   >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="text-xs font-bold leading-tight text-ink-700">
+                    <p className="text-[11px] font-bold leading-snug text-ink-700">
                       {label}
                     </p>
-                    <p className="mt-0.5 text-[11px] leading-tight text-ink-400">
+                    <p className="mt-1 text-[10px] leading-snug text-ink-400">
                       {description}
                     </p>
                   </div>

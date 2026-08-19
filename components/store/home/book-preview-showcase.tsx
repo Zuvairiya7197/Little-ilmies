@@ -22,9 +22,9 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
   return (
     <section
       aria-labelledby="preview-heading"
-      className="bg-sage-50 py-7 xs:py-9 md:py-20"
+      className="bg-sage-50 py-8 xs:py-10 md:py-20"
     >
-      <div className="container-content grid grid-cols-1 items-center gap-3 xs:gap-4 md:grid-cols-[0.85fr_1.15fr] md:gap-14">
+      <div className="container-content grid grid-cols-1 items-center gap-4 xs:gap-5 md:grid-cols-[0.85fr_1.15fr] md:gap-14">
         <div>
           <p className="section-eyebrow">See before you buy</p>
           <h2 id="preview-heading" className="mt-2 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
@@ -40,7 +40,7 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
         </div>
 
         <div className="mx-auto flex w-full max-w-2xl flex-col items-center">
-          <div className="flex h-[15rem] w-full items-center justify-center overflow-visible px-0 py-1 xs:h-[18rem] sm:h-[23rem] md:min-h-[31rem] md:px-8 md:py-8">
+          <div className="flex h-[16rem] w-full items-center justify-center overflow-visible px-0 py-1 xs:h-[19rem] sm:h-[24rem] md:min-h-[31rem] md:px-8 md:py-8">
             <div className="origin-center scale-[0.56] xs:scale-[0.68] sm:scale-[0.82] md:scale-90 lg:scale-100">
               <InteractiveBook
                 key={previewKey}
