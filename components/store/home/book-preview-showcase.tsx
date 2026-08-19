@@ -40,7 +40,7 @@ export function BookPreviewShowcase({ product }: { product: HomepageSampleProduc
         </div>
 
         <div className="mx-auto flex w-full max-w-2xl flex-col items-center">
-          <div className="flex min-h-[31rem] w-full items-center justify-center overflow-hidden">
+          <div className="flex min-h-[31rem] w-full items-center justify-center overflow-visible px-8 py-8">
             <div className="origin-center scale-[0.56] xs:scale-[0.68] sm:scale-[0.82] md:scale-90 lg:scale-100">
               <InteractiveBook
                 key={previewKey}

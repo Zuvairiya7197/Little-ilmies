@@ -30,7 +30,7 @@ export function BookPreviewCard({
     <div id="preview">
       {showCover && (
       <div className="group relative mx-auto hidden max-w-sm md:block">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-cream-200 shadow-lifted">
+        <div className="relative aspect-[4/3] overflow-hidden">
           <Image
             src={coverImage}
             alt={`${title} book cover`}
