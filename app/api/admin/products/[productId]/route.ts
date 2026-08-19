@@ -102,13 +102,22 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
   const orderItemCount = await prisma.orderItem.count({ where: { productId } });
   if (orderItemCount > 0) {
-    // Preserve order history integrity — unpublish instead of hard-deleting
-    // a product that's part of a real purchase record.
-    await prisma.product.update({ where: { id: productId }, data: { status: "DRAFT" } });
+    // Preserve order history integrity while removing the product from
+    // admin/store listings.
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        status: "DRAFT",
+        archivedAt: new Date(),
+        isHomepageSample: false,
+        sku: null,
+        slug: `${product.slug}-archived-${product.id.slice(-8)}`,
+      },
+    });
     revalidateCatalogPaths(product.slug);
     return NextResponse.json({
-      status: "unpublished",
-      message: "Product has past orders, so it was unpublished instead of deleted.",
+      status: "archived",
+      message: "Product has past orders, so it was archived instead of hard-deleted.",
     });
   }
 

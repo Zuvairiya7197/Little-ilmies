@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default async function AdminDownloadsPage() {
   const products = await prisma.product.findMany({
     orderBy: { downloadCount: "desc" },
-    where: { downloadCount: { gt: 0 } },
+    where: { archivedAt: null, downloadCount: { gt: 0 } },
   });
 
   const totalDownloads = products.reduce((sum, p) => sum + p.downloadCount, 0);

@@ -16,7 +16,7 @@ export default async function EditBundlePage({ params }: PageProps) {
   const { bundleId } = await params;
   const [bundle, products] = await Promise.all([
     prisma.bundle.findUnique({ where: { id: bundleId }, include: { products: true } }),
-    prisma.product.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } }),
+    prisma.product.findMany({ where: { archivedAt: null }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
   ]);
   if (!bundle) notFound();
 

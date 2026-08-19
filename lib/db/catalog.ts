@@ -81,7 +81,7 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
 
 export async function getPublishedProducts(): Promise<ProductSummary[]> {
   const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", archivedAt: null },
     orderBy: { publishedAt: "desc" },
     ...productWithRelations,
   });
@@ -90,7 +90,7 @@ export async function getPublishedProducts(): Promise<ProductSummary[]> {
 
 export async function getPublishedProductBySlug(slug: string): Promise<ProductSummary | null> {
   const product = await prisma.product.findFirst({
-    where: { slug, status: "PUBLISHED" },
+    where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
   });
   return product ? toProductSummary(product) : null;
@@ -104,6 +104,7 @@ export async function getRelatedProducts(
   const products = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
+      archivedAt: null,
       id: { not: product.id },
       categories: { some: { category: { slug: { in: categorySlugs } } } },
     },
@@ -116,7 +117,7 @@ export async function getRelatedProducts(
 
 export async function getPublishedProductDetailBySlug(slug: string): Promise<ProductDetail | null> {
   const product = await prisma.product.findFirst({
-    where: { slug, status: "PUBLISHED" },
+    where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
   });
   if (!product) return null;
@@ -139,7 +140,7 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
 
 export async function getRelatedProductsBySlug(slug: string, limit = 4): Promise<ProductSummary[]> {
   const product = await prisma.product.findFirst({
-    where: { slug, status: "PUBLISHED" },
+    where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
   });
   if (!product) return [];
@@ -148,7 +149,7 @@ export async function getRelatedProductsBySlug(slug: string, limit = 4): Promise
 
 export async function getAllPublishedProductSlugs(): Promise<string[]> {
   const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", archivedAt: null },
     select: { slug: true },
   });
   return products.map((p) => p.slug);
@@ -169,7 +170,7 @@ export async function getHomepageSampleProduct(): Promise<{
   previewImages: string[];
 } | null> {
   const product = await prisma.product.findFirst({
-    where: { status: "PUBLISHED", isHomepageSample: true },
+    where: { status: "PUBLISHED", archivedAt: null, isHomepageSample: true },
     select: { id: true, slug: true, title: true, coverImage: true, pageCount: true, previewImagePaths: true },
   });
 
@@ -186,7 +187,7 @@ export async function getHomepageSampleProduct(): Promise<{
 
 export async function getProductsByAgeRange(ageRange: AgeRange, limit = 8): Promise<ProductSummary[]> {
   const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED", ageRange },
+    where: { status: "PUBLISHED", archivedAt: null, ageRange },
     orderBy: { publishedAt: "desc" },
     take: limit,
     ...productWithRelations,
@@ -207,7 +208,7 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
     name: bundle.name,
     description: bundle.description ?? undefined,
     coverImage: bundle.coverImage ?? undefined,
-    products: bundle.products.map((bp) => toProductSummary(bp.product)),
+    products: bundle.products.filter((bp) => !bp.product.archivedAt).map((bp) => toProductSummary(bp.product)),
     prices: [
       ...(bundle.bundlePriceInr != null
         ? [{ currencyCode: "INR" as CurrencyCode, regularPrice: bundle.bundlePriceInr, isActive: true }]

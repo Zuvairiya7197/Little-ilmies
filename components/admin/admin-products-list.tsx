@@ -65,7 +65,7 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
 
       const parts = [
         data.deletedCount ? `${data.deletedCount} deleted` : null,
-        data.unpublishedCount ? `${data.unpublishedCount} unpublished` : null,
+        data.archivedCount ? `${data.archivedCount} archived` : null,
         data.missingCount ? `${data.missingCount} not found` : null,
       ].filter(Boolean);
 

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 export default async function NewBundlePage() {
   const products = await prisma.product.findMany({
+    where: { archivedAt: null },
     orderBy: { title: "asc" },
     select: { id: true, title: true },
   });

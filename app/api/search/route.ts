@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const products = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
+      archivedAt: null,
       OR: [
         { title: { contains: query, mode: "insensitive" } },
         { shortDescription: { contains: query, mode: "insensitive" } },

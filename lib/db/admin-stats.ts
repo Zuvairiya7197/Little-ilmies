@@ -4,7 +4,7 @@ export async function getRevenueSummary() {
   const [paidOrders, totalBuyers, totalProducts, pendingOrders] = await Promise.all([
     prisma.order.findMany({ where: { status: "PAID" }, select: { totalAmount: true, currencyCode: true } }),
     prisma.user.count({ where: { role: "BUYER" } }),
-    prisma.product.count({ where: { status: "PUBLISHED" } }),
+    prisma.product.count({ where: { status: "PUBLISHED", archivedAt: null } }),
     prisma.order.count({ where: { status: "PENDING" } }),
   ]);
 
@@ -34,6 +34,6 @@ export async function getMostDownloadedProducts(limit = 8) {
   return prisma.product.findMany({
     orderBy: { downloadCount: "desc" },
     take: limit,
-    where: { downloadCount: { gt: 0 } },
+    where: { archivedAt: null, downloadCount: { gt: 0 } },
   });
 }

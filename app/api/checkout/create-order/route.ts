@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   const { buyerName, buyerEmail, items } = parsed.data;
 
   const products = await prisma.product.findMany({
-    where: { id: { in: items.map((i) => i.productId) }, status: "PUBLISHED" },
+    where: { id: { in: items.map((i) => i.productId) }, status: "PUBLISHED", archivedAt: null },
   });
 
   const missing = items.filter((i) => !products.some((p) => p.id === i.productId));

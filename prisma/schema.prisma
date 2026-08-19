@@ -161,6 +161,7 @@ model Product {
   ogImage     String?
   status      ProductStatus @default(DRAFT)
   publishedAt DateTime?
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

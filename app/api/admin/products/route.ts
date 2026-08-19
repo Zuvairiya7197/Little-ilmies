@@ -88,10 +88,16 @@ export async function DELETE(request: NextRequest) {
   const productsWithOrders = products.filter((product) => product._count.orderItems > 0);
   const productsToDelete = products.filter((product) => product._count.orderItems === 0);
 
-  if (productsWithOrders.length > 0) {
-    await prisma.product.updateMany({
-      where: { id: { in: productsWithOrders.map((product) => product.id) } },
-      data: { status: "DRAFT" },
+  for (const product of productsWithOrders) {
+    await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        status: "DRAFT",
+        archivedAt: new Date(),
+        isHomepageSample: false,
+        sku: null,
+        slug: `${product.slug}-archived-${product.id.slice(-8)}`,
+      },
     });
   }
 
@@ -111,7 +117,7 @@ export async function DELETE(request: NextRequest) {
 
   return NextResponse.json({
     deletedCount: productsToDelete.length,
-    unpublishedCount: productsWithOrders.length,
+    archivedCount: productsWithOrders.length,
     missingCount: productIds.length - products.length,
   });
 }
