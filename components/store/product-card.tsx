@@ -12,15 +12,11 @@ import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useProductPrice } from "@/hooks/use-product-price";
 import { QuickViewModal } from "@/components/store/quick-view-modal";
 
-// Soft pastel backdrops the cover sits on, rotated per card position so a
-// row of covers reads as varied/colorful rather than uniform.
-const COVER_TINTS = [
-  "bg-gradient-to-b from-ink-100 to-blossom-100",
-  "bg-gradient-to-b from-blossom-100 to-sunny-100",
-  "bg-gradient-to-b from-ink-100 to-teal-50",
-  "bg-gradient-to-b from-sage-100 to-teal-50",
-  "bg-gradient-to-b from-sunny-100 to-lemon-100",
-  "bg-gradient-to-b from-blossom-100 to-ink-100",
+const COVER_BACKGROUNDS = [
+  "/images/product card backround 1.png",
+  "/images/product card backround 2.png",
+  "/images/product card backround3.png",
+  "/images/product card backround 4.png",
 ];
 
 export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummary; tintIndex?: number }) {
@@ -34,10 +30,19 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
   const resolvedPrice = useProductPrice(product);
   const displayPrice = resolvedPrice.salePrice ?? resolvedPrice.regularPrice;
   const isOnSale = Boolean(resolvedPrice.salePrice);
+  const backgroundIndex = stableBackgroundIndex(product.id || product.slug || product.title, tintIndex);
 
   return (
     <div className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
-      <div className={cn("relative overflow-hidden", COVER_TINTS[tintIndex % COVER_TINTS.length])}>
+      <div className="relative overflow-hidden bg-cream-100">
+        <Image
+          src={COVER_BACKGROUNDS[backgroundIndex]}
+          alt=""
+          fill
+          sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
+          className="object-cover object-center"
+          aria-hidden="true"
+        />
         <Link
           href={`/product/${product.slug}`}
           className="relative block aspect-[3/4]"
@@ -191,4 +196,12 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
       <QuickViewModal product={quickViewOpen ? product : null} onClose={() => setQuickViewOpen(false)} />
     </div>
   );
+}
+
+function stableBackgroundIndex(seed: string, offset: number) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return (hash + offset) % COVER_BACKGROUNDS.length;
 }
