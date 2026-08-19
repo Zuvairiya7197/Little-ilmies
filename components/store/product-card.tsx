@@ -12,13 +12,6 @@ import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useProductPrice } from "@/hooks/use-product-price";
 import { QuickViewModal } from "@/components/store/quick-view-modal";
 
-const COVER_BACKGROUNDS = [
-  "/images/product card backround 1.png",
-  "/images/product card backround 2.png",
-  "/images/product card backround3.png",
-  "/images/product card backround 4.png",
-];
-
 export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummary; tintIndex?: number }) {
   const addItem = useCartStore((s) => s.addItem);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
@@ -30,19 +23,11 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
   const resolvedPrice = useProductPrice(product);
   const displayPrice = resolvedPrice.salePrice ?? resolvedPrice.regularPrice;
   const isOnSale = Boolean(resolvedPrice.salePrice);
-  const backgroundIndex = stableBackgroundIndex(product.id || product.slug || product.title, tintIndex);
+  void tintIndex;
 
   return (
     <div className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
       <div className="relative overflow-hidden bg-cream-100">
-        <Image
-          src={COVER_BACKGROUNDS[backgroundIndex]}
-          alt=""
-          fill
-          sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
-          className="object-cover object-center"
-          aria-hidden="true"
-        />
         <Link
           href={`/product/${product.slug}`}
           className="relative block aspect-[3/4] p-6 xs:p-7"
@@ -196,12 +181,4 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
       <QuickViewModal product={quickViewOpen ? product : null} onClose={() => setQuickViewOpen(false)} />
     </div>
   );
-}
-
-function stableBackgroundIndex(seed: string, offset: number) {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return (hash + offset) % COVER_BACKGROUNDS.length;
 }
