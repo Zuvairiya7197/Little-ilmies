@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { InteractiveBook } from "@/components/book-preview/interactive-book";
 
@@ -28,6 +29,11 @@ export function BookPreviewModal({
   pageCount: number;
 }) {
   const [scale, setScale] = useState(1);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -57,7 +63,7 @@ export function BookPreviewModal({
     };
   }, [open]);
 
-  return (
+  const modal = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -97,4 +103,7 @@ export function BookPreviewModal({
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+  return createPortal(modal, document.body);
 }
