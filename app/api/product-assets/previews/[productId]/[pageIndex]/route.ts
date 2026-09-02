@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "no-store",
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch {

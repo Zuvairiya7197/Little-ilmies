@@ -77,7 +77,7 @@ export function InteractiveBook({
   const [currentPageIndex, setCurrentPageIndex] = useState(-1);
   const [isHovering, setIsHovering] = useState(false);
 
-  const previewPages = previewImages.length > 1 ? previewImages.slice(1) : previewImages;
+  const previewPages = previewImages;
   const previewCoverImage = safeImageSrc(previewImages[0], coverImage);
   const hasTurnedPage = currentPageIndex >= 0;
   const contentLeafCount = Math.ceil(previewPages.length / 2);
@@ -110,6 +110,21 @@ export function InteractiveBook({
     setCurrentPageIndex(-1);
     setIsHovering(false);
   }, [openOnMount, previewImages]);
+
+  useEffect(() => {
+    const preloadLinks = previewImages.slice(0, 4).map((src) => {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = src;
+      document.head.appendChild(link);
+      return link;
+    });
+
+    return () => {
+      preloadLinks.forEach((link) => link.remove());
+    };
+  }, [previewImages]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -206,7 +221,7 @@ export function InteractiveBook({
               >
                 <button
                   type="button"
-                  aria-label={`Sample page ${index * 2 + 2}, go to next page`}
+                  aria-label={`Sample page ${index * 2 + 1}, go to next page`}
                   className="backface-hidden relative h-full w-full cursor-pointer overflow-hidden bg-cream-50 transition-colors hover:brightness-95"
                   style={{ transform: "translateZ(0.5px)" }}
                   onClick={(e) => {
@@ -217,19 +232,19 @@ export function InteractiveBook({
                   <BookPageImage
                     src={rightImage}
                     fallbackSrc={previewCoverImage}
-                    alt={`Sample page ${index * 2 + 2} of ${bookTitle}`}
+                    alt={`Sample page ${index * 2 + 1} of ${bookTitle}`}
                     sizes="520px"
                     className="object-cover"
                   />
                   <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
-                    Sample Page {index * 2 + 2}
+                    Sample Page {index * 2 + 1}
                   </span>
                 </button>
 
                 {leftImage ? (
                   <button
                     type="button"
-                    aria-label={`Sample page ${index * 2 + 3}, go to previous page`}
+                    aria-label={`Sample page ${index * 2 + 2}, go to previous page`}
                     className="backface-hidden rotate-y-180 absolute inset-0 h-full w-full cursor-pointer overflow-hidden border-r border-ink-100 bg-cream-50 transition-colors hover:brightness-95"
                     style={{ transform: "rotateY(180deg) translateZ(0.5px)" }}
                     onClick={(e) => {
@@ -240,12 +255,12 @@ export function InteractiveBook({
                     <BookPageImage
                       src={safeImageSrc(leftImage, previewCoverImage)}
                       fallbackSrc={previewCoverImage}
-                      alt={`Sample page ${index * 2 + 3} of ${bookTitle}`}
+                      alt={`Sample page ${index * 2 + 2} of ${bookTitle}`}
                       sizes="520px"
                       className="object-cover"
                     />
                     <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
-                      Sample Page {index * 2 + 3}
+                      Sample Page {index * 2 + 2}
                     </span>
                   </button>
                 ) : (
