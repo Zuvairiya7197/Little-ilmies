@@ -40,6 +40,7 @@ export function InteractiveBook({
   const [isHovering, setIsHovering] = useState(false);
 
   const previewCoverImage = previewImages[0] ?? coverImage;
+  const hasTurnedPage = currentPageIndex >= 0;
   const contentLeafCount = Math.ceil(previewImages.length / 2);
   const totalLeaves = contentLeafCount + 1; // + the locked page
 
@@ -89,21 +90,9 @@ export function InteractiveBook({
         className="preserve-3d relative"
         style={{ width, height }}
         initial={{ x: 0 }}
-        animate={{ x: isOpen ? width / 2 : 0 }}
+        animate={{ x: hasTurnedPage ? width / 2 : 0 }}
         transition={{ duration: BOOK_OPEN_DURATION, ease: EASING }}
       >
-        {/* Left page — permanent spread surface revealed once the cover swings open */}
-        {isOpen && (
-          <div
-            className="absolute inset-y-0 right-full flex w-full flex-col items-center justify-center rounded-l-md border border-ink-100 bg-cream-50 p-8 text-center shadow-xl"
-            style={{ transform: "translateZ(0px)" }}
-          >
-            <h2 className="font-display text-xl font-semibold tracking-wide text-ink-700">{bookTitle}</h2>
-            <span className="mt-3 h-px w-8 bg-ink-200" aria-hidden="true" />
-            <p className="mt-3 text-xs uppercase tracking-widest text-ink-300">Sample Preview</p>
-          </div>
-        )}
-
         {/* Front cover */}
         <motion.div
           className="absolute inset-0 h-full w-full origin-left"
