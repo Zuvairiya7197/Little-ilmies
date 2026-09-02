@@ -125,7 +125,10 @@ export function InteractiveBook({
           </div>
 
           <div
-            className="backface-hidden rotate-y-180 absolute inset-0 flex h-full w-full cursor-pointer flex-col items-center justify-center border-r border-ink-100 bg-cream-50 p-8 text-center shadow-xl transition-colors hover:bg-cream-100"
+            className={cn(
+              "backface-hidden rotate-y-180 absolute inset-0 flex h-full w-full cursor-pointer flex-col items-center justify-center border-r border-ink-100 bg-cream-50 p-8 text-center shadow-xl transition-colors hover:bg-cream-100",
+              !hasTurnedPage && "pointer-events-none opacity-0",
+            )}
             style={{ transform: "rotateY(180deg) translateZ(0.5px)" }}
             onClick={(e) => {
               e.stopPropagation();
