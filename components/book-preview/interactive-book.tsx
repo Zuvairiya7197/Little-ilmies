@@ -78,8 +78,7 @@ export function InteractiveBook({
   const [isHovering, setIsHovering] = useState(false);
 
   const previewPages = previewImages.length > 1 ? previewImages.slice(1) : previewImages;
-  const fallbackCoverImage = safeImageSrc(previewImages[0], coverImage);
-  const previewCoverImage = safeImageSrc(coverImage, fallbackCoverImage);
+  const previewCoverImage = safeImageSrc(previewImages[0], coverImage);
   const hasTurnedPage = currentPageIndex >= 0;
   const contentLeafCount = Math.ceil(previewPages.length / 2);
   const totalLeaves = contentLeafCount + 1; // + the locked page
@@ -163,7 +162,7 @@ export function InteractiveBook({
           >
             <BookPageImage
               src={previewCoverImage}
-              fallbackSrc={fallbackCoverImage}
+              fallbackSrc={previewCoverImage}
               alt={`${bookTitle} preview cover`}
               sizes="(max-width: 480px) 90vw, 520px"
               className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -191,7 +190,7 @@ export function InteractiveBook({
         {/* Page stack — turned leaves rest flat to the left, showing their back */}
         <div className="preserve-3d absolute inset-0 z-0 h-full w-full">
           {Array.from({ length: contentLeafCount }).map((_, index) => {
-            const rightImage = safeImageSrc(previewPages[index * 2], fallbackCoverImage);
+            const rightImage = safeImageSrc(previewPages[index * 2], previewCoverImage);
             const leftImage = previewPages[index * 2 + 1];
             const isFlipped = index <= currentPageIndex;
             return (
@@ -217,7 +216,7 @@ export function InteractiveBook({
                 >
                   <BookPageImage
                     src={rightImage}
-                    fallbackSrc={fallbackCoverImage}
+                    fallbackSrc={previewCoverImage}
                     alt={`Sample page ${index * 2 + 2} of ${bookTitle}`}
                     sizes="520px"
                     className="object-cover"
@@ -239,8 +238,8 @@ export function InteractiveBook({
                     }}
                   >
                     <BookPageImage
-                      src={safeImageSrc(leftImage, fallbackCoverImage)}
-                      fallbackSrc={fallbackCoverImage}
+                      src={safeImageSrc(leftImage, previewCoverImage)}
+                      fallbackSrc={previewCoverImage}
                       alt={`Sample page ${index * 2 + 3} of ${bookTitle}`}
                       sizes="520px"
                       className="object-cover"
