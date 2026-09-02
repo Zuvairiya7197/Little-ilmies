@@ -10,6 +10,44 @@ import { cn } from "@/lib/utils/cn";
 const BOOK_OPEN_DURATION = 1.1;
 const EASING: [number, number, number, number] = [0.25, 0, 0, 1];
 
+function safeImageSrc(src: string | undefined, fallback: string) {
+  return src && src.trim().length > 0 ? src : fallback;
+}
+
+function BookPageImage({
+  src,
+  fallbackSrc,
+  alt,
+  sizes,
+  className,
+}: {
+  src: string;
+  fallbackSrc: string;
+  alt: string;
+  sizes: string;
+  className?: string;
+}) {
+  const [imageSrc, setImageSrc] = useState(safeImageSrc(src, fallbackSrc));
+
+  useEffect(() => {
+    setImageSrc(safeImageSrc(src, fallbackSrc));
+  }, [src, fallbackSrc]);
+
+  return (
+    <Image
+      src={imageSrc}
+      alt={alt}
+      fill
+      unoptimized
+      sizes={sizes}
+      className={className}
+      onError={() => {
+        if (imageSrc !== fallbackSrc) setImageSrc(fallbackSrc);
+      }}
+    />
+  );
+}
+
 export function InteractiveBook({
   coverImage,
   bookTitle,
@@ -39,14 +77,23 @@ export function InteractiveBook({
   const [currentPageIndex, setCurrentPageIndex] = useState(-1);
   const [isHovering, setIsHovering] = useState(false);
 
-  const previewCoverImage = previewImages[0] ?? coverImage;
+  const previewPages = previewImages.length > 1 ? previewImages.slice(1) : previewImages;
+  const fallbackCoverImage = safeImageSrc(previewImages[0], coverImage);
+  const previewCoverImage = safeImageSrc(coverImage, fallbackCoverImage);
   const hasTurnedPage = currentPageIndex >= 0;
-  const contentLeafCount = Math.ceil(previewImages.length / 2);
+  const contentLeafCount = Math.ceil(previewPages.length / 2);
   const totalLeaves = contentLeafCount + 1; // + the locked page
 
-  const handleOpenBook = () => setIsOpen(true);
+  const handleOpenBook = () => {
+    setIsOpen(true);
+    setCurrentPageIndex(-1);
+  };
 
   const nextPage = () => {
+    if (!isOpen) {
+      setIsOpen(true);
+      return;
+    }
     if (currentPageIndex < totalLeaves - 1) setCurrentPageIndex((prev) => prev + 1);
   };
 
@@ -114,10 +161,10 @@ export function InteractiveBook({
             className="backface-hidden group absolute inset-0 h-full w-full cursor-pointer overflow-hidden rounded-l-sm rounded-r-md shadow-2xl"
             style={{ transform: "translateZ(0.5px)" }}
           >
-            <Image
+            <BookPageImage
               src={previewCoverImage}
+              fallbackSrc={fallbackCoverImage}
               alt={`${bookTitle} preview cover`}
-              fill
               sizes="(max-width: 480px) 90vw, 520px"
               className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
@@ -144,8 +191,8 @@ export function InteractiveBook({
         {/* Page stack — turned leaves rest flat to the left, showing their back */}
         <div className="preserve-3d absolute inset-0 z-0 h-full w-full">
           {Array.from({ length: contentLeafCount }).map((_, index) => {
-            const rightImage = previewImages[index * 2];
-            const leftImage = previewImages[index * 2 + 1];
+            const rightImage = safeImageSrc(previewPages[index * 2], fallbackCoverImage);
+            const leftImage = previewPages[index * 2 + 1];
             const isFlipped = index <= currentPageIndex;
             return (
               <motion.div
@@ -160,7 +207,7 @@ export function InteractiveBook({
               >
                 <button
                   type="button"
-                  aria-label={`Sample page ${index * 2 + 1}, go to next page`}
+                  aria-label={`Sample page ${index * 2 + 2}, go to next page`}
                   className="backface-hidden relative h-full w-full cursor-pointer overflow-hidden bg-cream-50 transition-colors hover:brightness-95"
                   style={{ transform: "translateZ(0.5px)" }}
                   onClick={(e) => {
@@ -168,22 +215,22 @@ export function InteractiveBook({
                     nextPage();
                   }}
                 >
-                  <Image
+                  <BookPageImage
                     src={rightImage}
-                    alt={`Sample page ${index * 2 + 1} of ${bookTitle}`}
-                    fill
+                    fallbackSrc={fallbackCoverImage}
+                    alt={`Sample page ${index * 2 + 2} of ${bookTitle}`}
                     sizes="520px"
                     className="object-cover"
                   />
                   <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
-                    Sample Page {index * 2 + 1}
+                    Sample Page {index * 2 + 2}
                   </span>
                 </button>
 
                 {leftImage ? (
                   <button
                     type="button"
-                    aria-label={`Sample page ${index * 2 + 2}, go to previous page`}
+                    aria-label={`Sample page ${index * 2 + 3}, go to previous page`}
                     className="backface-hidden rotate-y-180 absolute inset-0 h-full w-full cursor-pointer overflow-hidden border-r border-ink-100 bg-cream-50 transition-colors hover:brightness-95"
                     style={{ transform: "rotateY(180deg) translateZ(0.5px)" }}
                     onClick={(e) => {
@@ -191,15 +238,15 @@ export function InteractiveBook({
                       prevPage();
                     }}
                   >
-                    <Image
-                      src={leftImage}
-                      alt={`Sample page ${index * 2 + 2} of ${bookTitle}`}
-                      fill
+                    <BookPageImage
+                      src={safeImageSrc(leftImage, fallbackCoverImage)}
+                      fallbackSrc={fallbackCoverImage}
+                      alt={`Sample page ${index * 2 + 3} of ${bookTitle}`}
                       sizes="520px"
                       className="object-cover"
                     />
                     <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ink-700/70 px-2.5 py-1 text-[11px] font-medium text-cream-50">
-                      Sample Page {index * 2 + 2}
+                      Sample Page {index * 2 + 3}
                     </span>
                   </button>
                 ) : (
