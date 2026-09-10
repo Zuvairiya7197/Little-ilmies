@@ -102,7 +102,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
                       <div
                         key={book.id}
                         className={cn(
-                          "absolute h-[42%] w-[24%] overflow-hidden rounded-xl bg-white shadow-[0_16px_40px_rgba(75,31,124,0.16)] ring-1 ring-white/80",
+                          "absolute h-[42%] w-[24%] drop-shadow-[0_16px_24px_rgba(75,31,124,0.18)]",
                           positions[index] ?? ""
                         )}
                       >
@@ -111,7 +111,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
                           alt=""
                           fill
                           sizes="(min-width: 1024px) 120px, 25vw"
-                          className="object-contain p-1.5"
+                          className="object-contain"
                         />
                       </div>
                     );
