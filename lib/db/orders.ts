@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import type { CurrencyCode } from "@/types/pricing";
-import type { OrderRecord, DownloadRecord } from "@/types/account";
+import type { OrderRecord, DownloadRecord, OrderSummaryItem } from "@/types/account";
+import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 
 /**
  * Purchase history and downloads must only ever be looked up by verified
@@ -27,13 +28,30 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
     currencyCode: order.currencyCode as CurrencyCode,
     totalAmount: order.totalAmount,
     status: order.status,
-    items: order.items.map((item) => ({
-      productId: item.productId,
-      slug: item.product.slug,
-      title: item.product.title,
-      coverImage: item.product.coverImage,
-      unitPrice: item.unitPrice,
-    })),
+    items: order.items.flatMap((item): OrderSummaryItem[] => {
+      if (item.itemType === "CUSTOM_BUNDLE") {
+        const snapshot = parseCustomBundleSnapshot(item.bundleSnapshot);
+        if (!snapshot) return [];
+        return [{
+          type: "CUSTOM_BUNDLE" as const,
+          bundleId: snapshot.bundleId,
+          slug: "",
+          title: `${snapshot.bundleName} (${snapshot.quantity} books)`,
+          coverImage: snapshot.selectedBooks[0]?.coverImage ?? "/images/explore-bundles.png",
+          unitPrice: item.unitPrice,
+          selectedBooks: snapshot.selectedBooks.map((book) => ({ id: book.id, title: book.title })),
+        }];
+      }
+      if (!item.product) return [];
+      return [{
+        type: "PRODUCT" as const,
+        productId: item.productId ?? undefined,
+        slug: item.product.slug,
+        title: item.product.title,
+        coverImage: item.product.coverImage,
+        unitPrice: item.unitPrice,
+      }];
+    }),
   }));
 }
 

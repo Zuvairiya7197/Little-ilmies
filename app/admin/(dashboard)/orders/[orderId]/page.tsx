@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
+import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 
 export const metadata: Metadata = {
   title: "Order Details",
@@ -62,20 +63,30 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           <div className="card-surface p-5">
             <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Items</h2>
             <ul className="flex flex-col divide-y divide-ink-100">
-              {order.items.map((item) => (
+              {order.items.map((item) => {
+                const snapshot = item.itemType === "CUSTOM_BUNDLE" ? parseCustomBundleSnapshot(item.bundleSnapshot) : null;
+                const title = snapshot ? `${snapshot.bundleName} (${snapshot.quantity} books)` : item.product?.title ?? "Unavailable item";
+                const coverImage = snapshot?.selectedBooks[0]?.coverImage ?? item.product?.coverImage ?? "/images/explore-bundles.png";
+                return (
                 <li key={item.id} className="flex items-center gap-3 py-3">
                   <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-md bg-cream-200">
-                    <Image src={item.product.coverImage} alt="" fill sizes="48px" className="object-cover" />
+                    <Image src={coverImage} alt="" fill sizes="48px" className="object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-ink-600">{item.product.title}</p>
+                    <p className="truncate text-sm font-semibold text-ink-600">{title}</p>
                     <p className="text-xs text-ink-300">Qty {item.quantity}</p>
+                    {snapshot && (
+                      <p className="mt-1 line-clamp-2 text-xs text-ink-300">
+                        {snapshot.selectedBooks.map((book) => book.title).join(", ")}
+                      </p>
+                    )}
                   </div>
                   <span className="shrink-0 text-sm font-semibold text-ink-600">
                     {formatPrice(item.unitPrice, currency)}
                   </span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
             <div className="mt-4 flex flex-col gap-1.5 border-t border-ink-100 pt-4 text-sm">
               <div className="flex justify-between text-ink-400">

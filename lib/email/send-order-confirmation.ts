@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { formatPrice } from "@/lib/utils/format";
 import { sendMail } from "@/lib/email/send-mail";
 import type { CurrencyCode } from "@/types/pricing";
+import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 
 export async function sendOrderConfirmationEmail(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -13,14 +14,28 @@ export async function sendOrderConfirmationEmail(orderId: string) {
   const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
   const currency = order.currencyCode as CurrencyCode;
 
-  const itemLines = order.items
-    .map((item) => `- ${item.product.title} — ${formatPrice(item.unitPrice, currency)}`)
+  const displayItems = order.items.flatMap((item) => {
+    if (item.itemType === "CUSTOM_BUNDLE") {
+      const snapshot = parseCustomBundleSnapshot(item.bundleSnapshot);
+      if (!snapshot) return [];
+      return [{
+        title: `${snapshot.bundleName} (${snapshot.quantity} books)`,
+        detail: snapshot.selectedBooks.map((book) => book.title).join(", "),
+        unitPrice: item.unitPrice,
+      }];
+    }
+    if (!item.product) return [];
+    return [{ title: item.product.title, detail: "", unitPrice: item.unitPrice }];
+  });
+
+  const itemLines = displayItems
+    .map((item) => `- ${item.title}${item.detail ? `: ${item.detail}` : ""} — ${formatPrice(item.unitPrice, currency)}`)
     .join("\n");
 
-  const itemRows = order.items
+  const itemRows = displayItems
     .map(
       (item) =>
-        `<tr><td style="padding:8px 0;">${item.product.title}</td><td style="padding:8px 0;text-align:right;">${formatPrice(item.unitPrice, currency)}</td></tr>`
+        `<tr><td style="padding:8px 0;">${item.title}${item.detail ? `<br><span style="color:#777;font-size:12px;">${item.detail}</span>` : ""}</td><td style="padding:8px 0;text-align:right;">${formatPrice(item.unitPrice, currency)}</td></tr>`
     )
     .join("");
 

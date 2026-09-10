@@ -31,17 +31,25 @@ export function OrderCard({ order }: { order: OrderRecord }) {
       </div>
 
       <ul className="mt-4 flex flex-col gap-3 border-t border-ink-100 pt-4">
-        {order.items.map((item) => (
-          <li key={item.productId} className="flex items-center gap-3">
+        {order.items.map((item, index) => (
+          <li key={item.productId ?? item.bundleId ?? index} className="flex items-center gap-3">
             <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-md bg-cream-200">
               <Image src={item.coverImage} alt="" fill sizes="44px" className="object-contain object-center p-1" />
             </div>
-            <Link
-              href={`/product/${item.slug}`}
-              className="min-w-0 flex-1 text-sm font-medium text-ink-600 hover:text-sage-700"
-            >
-              {item.title}
-            </Link>
+            <div className="min-w-0 flex-1">
+              {item.type === "CUSTOM_BUNDLE" ? (
+                <p className="text-sm font-medium text-ink-600">{item.title}</p>
+              ) : (
+                <Link href={`/product/${item.slug}`} className="text-sm font-medium text-ink-600 hover:text-sage-700">
+                  {item.title}
+                </Link>
+              )}
+              {item.selectedBooks && (
+                <p className="mt-1 line-clamp-2 text-xs text-ink-300">
+                  {item.selectedBooks.map((book) => book.title).join(", ")}
+                </p>
+              )}
+            </div>
             <span className="shrink-0 text-sm text-ink-400">
               {formatPrice(item.unitPrice, order.currencyCode)}
             </span>

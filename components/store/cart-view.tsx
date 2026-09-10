@@ -107,19 +107,19 @@ export function CartView() {
             <ul className="mt-5 space-y-3">
               {lineItems.map((item) => (
                 <li
-                  key={item.productId}
+                  key={item.cartItemId}
                   className="rounded-3xl border border-lilac-100 bg-white/92 p-4 shadow-[0_18px_55px_rgba(75,31,124,0.08)] sm:p-5"
                 >
                   <div className="grid gap-4 xl:grid-cols-[142px_minmax(0,1fr)_138px_108px_64px] xl:items-center">
                     <Link
-                      href={`/product/${item.slug}`}
+                      href={item.type === "CUSTOM_BUNDLE" ? `/bundle/${item.slug}?edit=${item.cartItemId}` : `/product/${item.slug}`}
                       className="relative h-32 w-full overflow-hidden rounded-2xl bg-gradient-to-br from-lilac-50 via-white to-blossom-50 sm:w-36 xl:h-36"
                     >
                       <Image src={item.coverImage} alt="" fill sizes="144px" className="object-contain p-2.5" />
                     </Link>
 
                     <div className="min-w-0">
-                      <Link href={`/product/${item.slug}`}>
+                      <Link href={item.type === "CUSTOM_BUNDLE" ? `/bundle/${item.slug}?edit=${item.cartItemId}` : `/product/${item.slug}`}>
                         <h2 className="max-w-xl font-display text-lg font-bold leading-tight text-ink-900 sm:text-xl">
                           {item.title}
                         </h2>
@@ -128,33 +128,47 @@ export function CartView() {
                         <span className="font-display text-xl font-bold text-violet-700">
                           {formatPrice(item.unitPrice, item.currencyCode)}
                         </span>
-                        <span className="text-sm font-medium text-ink-300">each</span>
+                        {item.type === "PRODUCT" && <span className="text-sm font-medium text-ink-300">each</span>}
                       </div>
+                      {item.type === "CUSTOM_BUNDLE" && item.selectedBooks && (
+                        <p className="mt-2 line-clamp-2 text-xs font-medium text-ink-400">
+                          {item.bundleSize} books: {item.selectedBooks.map((book) => book.title).join(", ")}
+                        </p>
+                      )}
                       <span className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-lilac-100 px-3 py-1.5 text-xs font-semibold text-violet-800">
                         <Tag className="h-4 w-4" aria-hidden="true" />
                         Digital Download
                       </span>
                     </div>
 
-                    <div className="flex h-10 w-full max-w-34 items-center justify-between rounded-2xl border border-lilac-200 bg-white px-3 text-base font-semibold text-ink-500 shadow-sm">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(item.productId, item.quantity - 1)}
-                        aria-label="Decrease quantity"
-                        className="grid h-8 w-8 place-items-center rounded-full text-violet-800 transition hover:bg-lilac-50"
+                    {item.type === "CUSTOM_BUNDLE" ? (
+                      <Link
+                        href={`/bundle/${item.slug}?edit=${item.cartItemId}`}
+                        className="flex h-10 items-center justify-center rounded-2xl border border-lilac-200 bg-white px-4 text-sm font-bold text-violet-800 shadow-sm"
                       >
-                        <Minus className="h-4 w-4" aria-hidden="true" />
-                      </button>
-                      <span>{item.quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(item.productId, item.quantity + 1)}
-                        aria-label="Increase quantity"
-                        className="grid h-8 w-8 place-items-center rounded-full text-violet-800 transition hover:bg-lilac-50"
-                      >
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                      </button>
-                    </div>
+                        Edit Bundle
+                      </Link>
+                    ) : (
+                      <div className="flex h-10 w-full max-w-34 items-center justify-between rounded-2xl border border-lilac-200 bg-white px-3 text-base font-semibold text-ink-500 shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(item.cartItemId, item.quantity - 1)}
+                          aria-label="Decrease quantity"
+                          className="grid h-8 w-8 place-items-center rounded-full text-violet-800 transition hover:bg-lilac-50"
+                        >
+                          <Minus className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(item.cartItemId, item.quantity + 1)}
+                          aria-label="Increase quantity"
+                          className="grid h-8 w-8 place-items-center rounded-full text-violet-800 transition hover:bg-lilac-50"
+                        >
+                          <Plus className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    )}
 
                     <div className="font-display text-xl font-bold text-ink-900">
                       {formatPrice(item.lineTotal, item.currencyCode)}
@@ -163,7 +177,7 @@ export function CartView() {
                     <div className="flex items-center gap-3 xl:flex-col">
                       <button
                         type="button"
-                        onClick={() => removeItem(item.productId)}
+                        onClick={() => removeItem(item.cartItemId)}
                         aria-label="Remove item"
                         className="grid h-10 w-10 place-items-center rounded-full bg-lilac-50 text-violet-800 transition hover:bg-blossom-50 hover:text-blossom-600"
                       >
@@ -171,7 +185,7 @@ export function CartView() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => removeItem(item.productId)}
+                        onClick={() => removeItem(item.cartItemId)}
                         className="text-sm font-semibold text-violet-800 hover:text-blossom-600"
                       >
                         Remove

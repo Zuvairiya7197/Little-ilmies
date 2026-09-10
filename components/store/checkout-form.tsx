@@ -118,7 +118,16 @@ export function CheckoutForm({
         body: JSON.stringify({
           buyerName: values.fullName,
           buyerEmail: values.email,
-          items: lineItems.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+          items: lineItems.map((item) =>
+            item.type === "CUSTOM_BUNDLE"
+              ? {
+                  type: "CUSTOM_BUNDLE",
+                  bundleId: item.bundleId,
+                  quantity: item.bundleSize,
+                  selectedProductIds: item.selectedBooks?.map((book) => book.id) ?? [],
+                }
+              : { type: "PRODUCT", productId: item.productId, quantity: item.quantity }
+          ),
         }),
       });
 
@@ -256,13 +265,16 @@ export function CheckoutForm({
 
             <ul className="mt-3 flex flex-col divide-y divide-ink-100">
               {lineItems.map((item) => (
-                <li key={item.productId} className="flex items-center gap-3 py-3">
+                <li key={item.cartItemId} className="flex items-center gap-3 py-3">
                   <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-lg bg-cream-200">
                     <Image src={item.coverImage} alt="" fill sizes="44px" className="object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-1 text-sm font-semibold text-ink-700">{item.title}</p>
-                    <p className="mt-0.5 text-sm text-ink-400">{formatPrice(item.unitPrice, item.currencyCode)}</p>
+                    <p className="mt-0.5 text-sm text-ink-400">
+                      {item.type === "CUSTOM_BUNDLE" && item.bundleSize ? `${item.bundleSize} books - ` : ""}
+                      {formatPrice(item.unitPrice, item.currencyCode)}
+                    </p>
                   </div>
                   <span className="shrink-0 rounded-full bg-cream-100 px-3 py-1.5 text-xs font-semibold text-ink-500">
                     Qty: {item.quantity}

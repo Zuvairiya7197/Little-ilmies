@@ -8,7 +8,10 @@ import { getProductBySlug } from "@/data/products";
 import type { CurrencyCode } from "@/types/pricing";
 
 export interface CartLineItem {
+  cartItemId: string;
+  type: "PRODUCT" | "CUSTOM_BUNDLE";
   productId: string;
+  bundleId?: string;
   slug: string;
   title: string;
   coverImage: string;
@@ -23,6 +26,8 @@ export interface CartLineItem {
   pageCount: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;
+  selectedBooks?: { id: string; slug: string; title: string; coverImage: string }[];
+  bundleSize?: number;
 }
 
 /**
@@ -36,7 +41,41 @@ export function useCartLineItems() {
   const currency = useCurrencyStore((s) => s.currency);
 
   return useMemo<CartLineItem[]>(() => {
-    return items.flatMap((item) => {
+    return items.flatMap((item): CartLineItem[] => {
+      const cartItemId = item.cartItemId ?? item.productId;
+      if (item.type === "CUSTOM_BUNDLE" && item.bundleSize && item.bundlePrices) {
+        const exactPrice = item.bundlePrices.find(
+          (price) => price.quantity === item.bundleSize && price.currencyCode === currency && price.enabled
+        );
+        const fallbackPrice =
+          exactPrice ??
+          item.bundlePrices.find((price) => price.quantity === item.bundleSize && price.currencyCode === "USD" && price.enabled);
+        if (!fallbackPrice) return [];
+
+        return [
+          {
+            cartItemId,
+            type: "CUSTOM_BUNDLE",
+            productId: item.productId,
+            bundleId: item.bundleId,
+            slug: item.slug,
+            title: item.title,
+            coverImage: item.coverImage,
+            quantity: 1,
+            unitPrice: fallbackPrice.price,
+            regularUnitPrice: fallbackPrice.price,
+            lineTotal: fallbackPrice.price,
+            currencyCode: fallbackPrice.currencyCode as CurrencyCode,
+            isFallbackPrice: fallbackPrice.currencyCode !== currency,
+            isOnSale: false,
+            ageRange: item.ageRange ?? "",
+            pageCount: item.pageCount ?? 0,
+            selectedBooks: item.selectedBooks,
+            bundleSize: item.bundleSize,
+          },
+        ];
+      }
+
       const product = getProductBySlug(item.slug);
       const productSnapshot =
         item.prices && item.ageRange && item.pageCount
@@ -57,6 +96,8 @@ export function useCartLineItems() {
       return [
         {
           productId: item.productId,
+          cartItemId,
+          type: "PRODUCT",
           slug: item.slug,
           title: item.title,
           coverImage: item.coverImage,

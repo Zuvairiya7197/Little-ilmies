@@ -173,6 +173,7 @@ model Product {
   downloads   Download[]
   reviews     Review[]
   bundles     BundleProduct[]
+  customBundleSelections CustomBundleSelection[]
 
   @@map("products")
 }
@@ -209,6 +210,7 @@ model Bundle {
   name        String
   description String?
   coverImage  String?
+  type        BundleType @default(FIXED)
   bundlePriceInr Int?
   bundlePriceUsd Int?
   isActive    Boolean  @default(true)
@@ -216,8 +218,16 @@ model Bundle {
   updatedAt   DateTime @updatedAt
 
   products BundleProduct[]
+  customPrices CustomBundlePrice[]
+  customSelections CustomBundleSelection[]
+  orderItems OrderItem[]
 
   @@map("bundles")
+}
+
+enum BundleType {
+  FIXED
+  CUSTOM
 }
 
 model BundleProduct {
@@ -229,6 +239,23 @@ model BundleProduct {
 
   @@id([bundleId, productId])
   @@map("bundle_products")
+}
+
+model CustomBundlePrice {
+  id           String   @id @default(cuid())
+  bundleId     String
+  quantity     Int
+  currencyCode String
+  price        Int
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bundle Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  @@unique([bundleId, quantity, currencyCode])
+  @@index([bundleId, quantity])
+  @@map("custom_bundle_prices")
 }
 
 /// Manually curated regional price per product — NOT a live FX conversion.
@@ -358,16 +385,44 @@ enum OrderStatus {
 model OrderItem {
   id           String @id @default(cuid())
   orderId      String
-  productId    String
+  productId    String?
+  bundleId     String?
   /// Snapshot of price actually charged, in currencyCode above — never
   /// re-derived from the live ProductPrice after purchase.
   unitPrice    Int
   quantity     Int    @default(1)
+  itemType      OrderItemType @default(PRODUCT)
+  /// Historical custom bundle snapshot, including selected product IDs and
+  /// selected book metadata at purchase time.
+  bundleSnapshot Json?
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+  bundle  Bundle?  @relation(fields: [bundleId], references: [id])
+  customSelections CustomBundleSelection[]
 
   @@map("order_items")
+}
+
+enum OrderItemType {
+  PRODUCT
+  CUSTOM_BUNDLE
+}
+
+model CustomBundleSelection {
+  id          String @id @default(cuid())
+  orderItemId String
+  bundleId    String
+  productId   String
+
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  bundle    Bundle    @relation(fields: [bundleId], references: [id])
+  product   Product   @relation(fields: [productId], references: [id])
+
+  @@unique([orderItemId, productId])
+  @@index([bundleId])
+  @@index([productId])
+  @@map("custom_bundle_selections")
 }
 
 model Payment {

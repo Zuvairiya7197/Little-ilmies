@@ -3,7 +3,10 @@ import { persist } from "zustand/middleware";
 import type { ProductSummary } from "@/types/catalog";
 
 export interface CartItem {
+  cartItemId?: string;
+  type?: "PRODUCT" | "CUSTOM_BUNDLE";
   productId: string;
+  bundleId?: string;
   slug: string;
   title: string;
   coverImage: string;
@@ -12,6 +15,10 @@ export interface CartItem {
   pageCount?: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;
+  selectedProductIds?: string[];
+  selectedBooks?: { id: string; slug: string; title: string; coverImage: string }[];
+  bundleSize?: number;
+  bundlePrices?: { quantity: number; currencyCode: string; price: number; enabled: boolean }[];
   quantity: number;
 }
 
@@ -21,8 +28,8 @@ interface CartState {
   openCart: () => void;
   closeCart: () => void;
   addItem: (item: Omit<CartItem, "quantity">) => void;
-  removeItem: (productId: string) => void;
-  setQuantity: (productId: string, quantity: number) => void;
+  removeItem: (cartItemId: string) => void;
+  setQuantity: (cartItemId: string, quantity: number) => void;
   clear: () => void;
 }
 
@@ -34,25 +41,26 @@ export const useCartStore = create<CartState>()(
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       addItem: (item) => {
-        const existing = get().items.find((i) => i.productId === item.productId);
+        const itemWithId = { ...item, cartItemId: item.cartItemId ?? item.productId };
+        const existing = get().items.find((i) => (i.cartItemId ?? i.productId) === itemWithId.cartItemId);
         if (existing) {
           set({
-            items: get().items.map((i) => (i.productId === item.productId ? { ...i, ...item } : i)),
+            items: get().items.map((i) => ((i.cartItemId ?? i.productId) === itemWithId.cartItemId ? { ...i, ...itemWithId } : i)),
             isOpen: true,
           });
           return;
         }
-        set({ items: [...get().items, { ...item, quantity: 1 }], isOpen: true });
+        set({ items: [...get().items, { ...itemWithId, quantity: 1 }], isOpen: true });
       },
-      removeItem: (productId) =>
-        set({ items: get().items.filter((i) => i.productId !== productId) }),
-      setQuantity: (productId, quantity) => {
+      removeItem: (cartItemId) =>
+        set({ items: get().items.filter((i) => (i.cartItemId ?? i.productId) !== cartItemId) }),
+      setQuantity: (cartItemId, quantity) => {
         if (quantity < 1) {
-          set({ items: get().items.filter((i) => i.productId !== productId) });
+          set({ items: get().items.filter((i) => (i.cartItemId ?? i.productId) !== cartItemId) });
           return;
         }
         set({
-          items: get().items.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
+          items: get().items.map((i) => ((i.cartItemId ?? i.productId) === cartItemId ? { ...i, quantity } : i)),
         });
       },
       clear: () => set({ items: [] }),

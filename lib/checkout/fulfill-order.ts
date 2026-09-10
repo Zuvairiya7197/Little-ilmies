@@ -21,7 +21,7 @@ export async function fulfillOrder({
 }) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true },
+    include: { items: { include: { customSelections: true } } },
   });
   if (!order) return;
 
@@ -38,13 +38,22 @@ export async function fulfillOrder({
       },
     }),
     prisma.order.update({ where: { id: order.id }, data: { status: "PAID" } }),
-    ...order.items.map((item) =>
-      prisma.download.upsert({
-        where: { orderId_productId: { orderId: order.id, productId: item.productId } },
-        update: {},
-        create: { orderId: order.id, productId: item.productId },
-      })
-    ),
+    ...order.items.flatMap((item) => {
+      const productIds =
+        item.itemType === "CUSTOM_BUNDLE"
+          ? item.customSelections.map((selection) => selection.productId)
+          : item.productId
+            ? [item.productId]
+            : [];
+
+      return productIds.map((productId) =>
+        prisma.download.upsert({
+          where: { orderId_productId: { orderId: order.id, productId } },
+          update: {},
+          create: { orderId: order.id, productId },
+        })
+      );
+    }),
   ]);
 
   await sendOrderConfirmationEmail(order.id).catch((err) => {

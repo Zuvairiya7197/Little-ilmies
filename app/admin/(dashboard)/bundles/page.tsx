@@ -36,9 +36,14 @@ export default async function AdminBundlesPage() {
                   <p className="font-semibold text-ink-600">{bundle.name}</p>
                   <p className="text-xs text-ink-300">/{bundle.slug}</p>
                 </div>
-                <span className="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-bold text-sage-700">
-                  {bundle._count.products} product{bundle._count.products !== 1 ? "s" : ""}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-lilac-50 px-2.5 py-1 text-xs font-bold text-violet-800">
+                    {bundle.type === "CUSTOM" ? "Custom" : "Fixed"}
+                  </span>
+                  <span className="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-bold text-sage-700">
+                    {bundle._count.products} product{bundle._count.products !== 1 ? "s" : ""}
+                  </span>
+                </div>
               </Link>
             </li>
           ))}

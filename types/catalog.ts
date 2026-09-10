@@ -81,9 +81,11 @@ export interface BundleSummary {
   name: string;
   description?: string;
   coverImage?: string;
+  type?: "FIXED" | "CUSTOM";
   products: ProductSummary[];
   /** Manually curated regional bundle prices, same shape/philosophy as ProductSummary.prices. */
   prices: RegionalPrice[];
+  customPrices?: { quantity: number; currencyCode: import("@/types/pricing").CurrencyCode; price: number; enabled: boolean }[];
 }
 
 export type SortOption =

@@ -199,7 +199,7 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
   const bundles = await prisma.bundle.findMany({
     where: { isActive: true },
     orderBy: { createdAt: "desc" },
-    include: { products: { include: { product: productWithRelations } } },
+    include: { products: { include: { product: productWithRelations } }, customPrices: true },
   });
 
   return bundles.map((bundle) => ({
@@ -208,6 +208,7 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
     name: bundle.name,
     description: bundle.description ?? undefined,
     coverImage: bundle.coverImage ?? undefined,
+    type: bundle.type,
     products: bundle.products.filter((bp) => !bp.product.archivedAt).map((bp) => toProductSummary(bp.product)),
     prices: [
       ...(bundle.bundlePriceInr != null
@@ -224,7 +225,18 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
           ]
         : []),
     ],
+    customPrices: bundle.customPrices.map((price) => ({
+      quantity: price.quantity,
+      currencyCode: price.currencyCode as CurrencyCode,
+      price: price.price,
+      enabled: price.enabled,
+    })),
   }));
+}
+
+export async function getActiveCustomBundleBySlug(slug: string): Promise<BundleSummary | null> {
+  const bundles = await getActiveBundles();
+  return bundles.find((bundle) => bundle.slug === slug && bundle.type === "CUSTOM") ?? null;
 }
 
 export async function getAllCategories(): Promise<Category[]> {

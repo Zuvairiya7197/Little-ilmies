@@ -5,6 +5,8 @@ import { createOrderRequestSchema } from "@/lib/validation/checkout";
 import { resolveProductPriceFromDb } from "@/lib/pricing/resolve-price-db";
 import { resolveVerifiedCurrency } from "@/lib/pricing/verify-region";
 import { createRazorpayOrder, getRazorpayClient } from "@/lib/payments/razorpay";
+import { validateCustomBundleSelection } from "@/lib/bundles/custom-bundle";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Creates an Order (status PENDING) with a server-computed total, then a
@@ -30,11 +32,12 @@ export async function POST(request: NextRequest) {
   }
   const { buyerName, buyerEmail, items } = parsed.data;
 
+  const productItems = items.filter((item) => item.type !== "CUSTOM_BUNDLE");
   const products = await prisma.product.findMany({
-    where: { id: { in: items.map((i) => i.productId) }, status: "PUBLISHED", archivedAt: null },
+    where: { id: { in: productItems.map((i) => i.productId) }, status: "PUBLISHED", archivedAt: null },
   });
 
-  const missing = items.filter((i) => !products.some((p) => p.id === i.productId));
+  const missing = productItems.filter((i) => !products.some((p) => p.id === i.productId));
   if (missing.length > 0) {
     return NextResponse.json(
       { error: "One or more products are unavailable", productIds: missing.map((m) => m.productId) },
@@ -45,9 +48,54 @@ export async function POST(request: NextRequest) {
   const currency = resolveVerifiedCurrency(request);
 
   let subtotal = 0;
-  const orderItemsData: { productId: string; unitPrice: number; quantity: number }[] = [];
+  const orderItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = [];
 
   for (const item of items) {
+    if (item.type === "CUSTOM_BUNDLE") {
+      let customBundle;
+      try {
+        customBundle = await validateCustomBundleSelection({
+          bundleId: item.bundleId,
+          quantity: item.quantity,
+          selectedProductIds: item.selectedProductIds,
+          currency,
+        });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Invalid custom bundle" },
+          { status: 422 }
+        );
+      }
+
+      subtotal += customBundle.unitPrice;
+      orderItemsData.push({
+        bundle: { connect: { id: customBundle.bundleId } },
+        itemType: "CUSTOM_BUNDLE",
+        unitPrice: customBundle.unitPrice,
+        quantity: 1,
+        bundleSnapshot: {
+          bundleId: customBundle.bundleId,
+          bundleName: customBundle.bundleName,
+          quantity: customBundle.quantity,
+          currencyCode: currency,
+          finalPrice: customBundle.unitPrice,
+          selectedBooks: customBundle.selectedProducts.map((product) => ({
+            id: product.id,
+            slug: product.slug,
+            title: product.title,
+            coverImage: product.coverImage,
+          })),
+        },
+        customSelections: {
+          create: customBundle.selectedProducts.map((product) => ({
+            bundle: { connect: { id: customBundle.bundleId } },
+            product: { connect: { id: product.id } },
+          })),
+        },
+      });
+      continue;
+    }
+
     let resolved: Awaited<ReturnType<typeof resolveProductPriceFromDb>>;
     try {
       resolved = await resolveProductPriceFromDb(item.productId, currency);
@@ -59,7 +107,12 @@ export async function POST(request: NextRequest) {
     }
     const unitPrice = resolved.salePrice ?? resolved.regularPrice;
     subtotal += unitPrice * item.quantity;
-    orderItemsData.push({ productId: item.productId, unitPrice, quantity: item.quantity });
+    orderItemsData.push({
+      product: { connect: { id: item.productId } },
+      itemType: "PRODUCT",
+      unitPrice,
+      quantity: item.quantity,
+    });
   }
 
   // Digital goods only — no shipping/tax logic beyond a flat 0 for now,

@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2, Search } from "lucide-react";
 import { bundleFormSchema, type BundleFormValues } from "@/lib/validation/admin-bundle";
+import { CURRENCIES } from "@/types/pricing";
+
+const starterQuantities = Array.from({ length: 9 }, (_, index) => index + 2);
+const currencyCodes = Object.keys(CURRENCIES) as (keyof typeof CURRENCIES)[];
+
+function defaultSizePrices() {
+  return starterQuantities.map((quantity) => ({
+    quantity,
+    enabled: quantity <= 4,
+    prices: Object.fromEntries(currencyCodes.map((currency) => [currency, undefined])),
+  }));
+}
 
 export function BundleForm({
   bundleId,
@@ -19,6 +31,7 @@ export function BundleForm({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   const {
     register,
@@ -27,8 +40,24 @@ export function BundleForm({
     formState: { errors },
   } = useForm<BundleFormValues>({
     resolver: zodResolver(bundleFormSchema),
-    defaultValues: { productIds: [], ...defaultValues },
+    defaultValues: {
+      type: "FIXED",
+      isActive: true,
+      productIds: [],
+      ...defaultValues,
+      sizePrices: defaultSizePrices().map((row) => {
+        const saved = defaultValues?.sizePrices?.find((size) => size.quantity === row.quantity);
+        return saved ? { ...row, ...saved, prices: { ...row.prices, ...saved.prices } } : row;
+      }),
+    },
   });
+
+  const bundleType = useWatch({ control, name: "type" });
+  const filteredProducts = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return products;
+    return products.filter((product) => product.title.toLowerCase().includes(normalized));
+  }, [products, query]);
 
   async function onSubmit(values: BundleFormValues) {
     setIsSubmitting(true);
@@ -53,67 +82,86 @@ export function BundleForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="card-surface flex flex-col gap-4 p-5" noValidate>
-      <div>
-        <label htmlFor="bundle-name" className="mb-1.5 block text-sm font-semibold text-ink-600">
-          Name
-        </label>
-        <input id="bundle-name" {...register("name")} className="admin-input" />
-        {errors.name && <p className="mt-1 text-xs text-gold-700">{errors.name.message}</p>}
+    <form onSubmit={handleSubmit(onSubmit)} className="card-surface flex flex-col gap-5 p-5" noValidate>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label htmlFor="bundle-name" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            Name
+          </label>
+          <input id="bundle-name" {...register("name")} className="admin-input" />
+          {errors.name && <p className="mt-1 text-xs text-gold-700">{errors.name.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="bundle-slug" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            Slug
+          </label>
+          <input id="bundle-slug" {...register("slug")} className="admin-input" />
+          {errors.slug && <p className="mt-1 text-xs text-gold-700">{errors.slug.message}</p>}
+        </div>
       </div>
-      <div>
-        <label htmlFor="bundle-slug" className="mb-1.5 block text-sm font-semibold text-ink-600">
-          Slug
-        </label>
-        <input id="bundle-slug" {...register("slug")} className="admin-input" />
-        {errors.slug && <p className="mt-1 text-xs text-gold-700">{errors.slug.message}</p>}
-      </div>
+
       <div>
         <label htmlFor="bundle-description" className="mb-1.5 block text-sm font-semibold text-ink-600">
           Description
         </label>
-        <textarea
-          id="bundle-description"
-          {...register("description")}
-          rows={3}
-          className="admin-input resize-none"
-        />
+        <textarea id="bundle-description" {...register("description")} rows={3} className="admin-input resize-none" />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label htmlFor="bundle-price-inr" className="mb-1.5 block text-sm font-semibold text-ink-600">
-            Bundle price — INR
+          <label htmlFor="bundle-type" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            Bundle type
           </label>
-          <input
-            id="bundle-price-inr"
-            type="number"
-            {...register("bundlePriceInr")}
-            className="admin-input"
-          />
+          <select id="bundle-type" {...register("type")} className="admin-input">
+            <option value="FIXED">Fixed bundle</option>
+            <option value="CUSTOM">Custom bundle</option>
+          </select>
         </div>
-        <div>
-          <label htmlFor="bundle-price-usd" className="mb-1.5 block text-sm font-semibold text-ink-600">
-            Bundle price — USD
-          </label>
-          <input
-            id="bundle-price-usd"
-            type="number"
-            {...register("bundlePriceUsd")}
-            className="admin-input"
-          />
-        </div>
+        <label className="flex items-end gap-2.5 pb-2 text-sm font-semibold text-ink-600">
+          <input type="checkbox" {...register("isActive")} className="h-4 w-4 accent-ink-500" />
+          Active
+        </label>
       </div>
+
+      {bundleType === "FIXED" && (
+        <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
+          <div>
+            <label htmlFor="bundle-price-inr" className="mb-1.5 block text-sm font-semibold text-ink-600">
+              Bundle price INR
+            </label>
+            <input id="bundle-price-inr" type="number" step="0.01" {...register("bundlePriceInr")} className="admin-input" />
+          </div>
+          <div>
+            <label htmlFor="bundle-price-usd" className="mb-1.5 block text-sm font-semibold text-ink-600">
+              Bundle price USD
+            </label>
+            <input id="bundle-price-usd" type="number" step="0.01" {...register("bundlePriceUsd")} className="admin-input" />
+          </div>
+        </div>
+      )}
 
       <div>
-        <p className="mb-1.5 block text-sm font-semibold text-ink-600">Products in this bundle</p>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <p className="block text-sm font-semibold text-ink-600">
+            {bundleType === "CUSTOM" ? "Eligible books" : "Products in this bundle"}
+          </p>
+          <label className="relative w-full max-w-xs">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="admin-input pl-9"
+              placeholder="Search books"
+            />
+          </label>
+        </div>
         <Controller
           name="productIds"
           control={control}
           render={({ field }) => (
             <div className="max-h-72 overflow-y-auto rounded-xl bg-cream-100 p-3 shadow-clay-pressed">
               <ul className="flex flex-col gap-1">
-                {products.map((product) => {
+                {filteredProducts.map((product) => {
                   const checked = field.value.includes(product.id);
                   return (
                     <li key={product.id}>
@@ -141,6 +189,49 @@ export function BundleForm({
         />
         {errors.productIds && <p className="mt-1 text-xs text-gold-700">{errors.productIds.message}</p>}
       </div>
+
+      {bundleType === "CUSTOM" && (
+        <div>
+          <p className="mb-2 text-sm font-semibold text-ink-600">Bundle sizes & pricing</p>
+          <div className="overflow-x-auto rounded-xl bg-cream-100 shadow-clay-pressed">
+            <table className="min-w-[720px] w-full text-sm">
+              <thead className="text-left text-xs font-bold uppercase text-ink-400">
+                <tr>
+                  <th className="px-3 py-2">Enabled</th>
+                  <th className="px-3 py-2">Quantity</th>
+                  {currencyCodes.map((currency) => (
+                    <th key={currency} className="px-3 py-2">{currency}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-cream-200">
+                {starterQuantities.map((quantity, index) => (
+                  <tr key={quantity}>
+                    <td className="px-3 py-2">
+                      <input type="checkbox" {...register(`sizePrices.${index}.enabled`)} className="h-4 w-4 accent-ink-500" />
+                    </td>
+                    <td className="px-3 py-2">
+                      <input type="number" {...register(`sizePrices.${index}.quantity`)} className="admin-input h-9 w-24" />
+                    </td>
+                    {currencyCodes.map((currency) => (
+                      <td key={currency} className="px-3 py-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          {...register(`sizePrices.${index}.prices.${currency}`)}
+                          className="admin-input h-9 w-28"
+                          aria-label={`${quantity} book ${currency} price`}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {errors.sizePrices && <p className="mt-1 text-xs text-gold-700">Check enabled quantities and prices.</p>}
+        </div>
+      )}
 
       {submitError && (
         <p role="alert" className="flex items-start gap-2 rounded-xl bg-gold-50 px-3.5 py-2.5 text-sm text-gold-700">

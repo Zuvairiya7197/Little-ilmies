@@ -32,7 +32,7 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
 
   return (
     <Link
-      href={`/shop?bundle=${bundle.slug}`}
+      href={bundle.type === "CUSTOM" ? `/bundle/${bundle.slug}` : `/shop?bundle=${bundle.slug}`}
       className="group flex flex-col overflow-hidden rounded-3xl bg-cream-50 shadow-clay transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
     >
       <div className="relative h-44 overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-sage-50 px-5 pt-6">

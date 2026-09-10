@@ -12,17 +12,25 @@ export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
  * only product identity + quantity — never a price or currency. The
  * backend resolves both itself from ProductPrice + verified region.
  */
+const productCheckoutItemSchema = z.object({
+  type: z.literal("PRODUCT").default("PRODUCT"),
+  productId: z.string().min(1),
+  quantity: z.number().int().min(1).max(10),
+});
+
+const customBundleCheckoutItemSchema = z.object({
+  type: z.literal("CUSTOM_BUNDLE"),
+  bundleId: z.string().min(1),
+  quantity: z.number().int().min(1).max(100),
+  selectedProductIds: z.array(z.string().min(1)).min(1).max(100),
+});
+
+export const checkoutItemSchema = z.union([customBundleCheckoutItemSchema, productCheckoutItemSchema]);
+
 export const createOrderRequestSchema = z.object({
   buyerName: z.string().trim().min(2),
   buyerEmail: z.string().trim().email(),
-  items: z
-    .array(
-      z.object({
-        productId: z.string().min(1),
-        quantity: z.number().int().min(1).max(10),
-      })
-    )
-    .min(1),
+  items: z.array(checkoutItemSchema).min(1),
   couponCode: z.string().trim().optional(),
 });
 

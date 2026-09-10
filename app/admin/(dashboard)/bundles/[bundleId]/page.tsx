@@ -15,7 +15,7 @@ interface PageProps {
 export default async function EditBundlePage({ params }: PageProps) {
   const { bundleId } = await params;
   const [bundle, products] = await Promise.all([
-    prisma.bundle.findUnique({ where: { id: bundleId }, include: { products: true } }),
+    prisma.bundle.findUnique({ where: { id: bundleId }, include: { products: true, customPrices: true } }),
     prisma.product.findMany({ where: { archivedAt: null }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
   ]);
   if (!bundle) notFound();
@@ -32,9 +32,21 @@ export default async function EditBundlePage({ params }: PageProps) {
           name: bundle.name,
           slug: bundle.slug,
           description: bundle.description ?? undefined,
+          type: bundle.type,
+          isActive: bundle.isActive,
           bundlePriceInr: bundle.bundlePriceInr != null ? bundle.bundlePriceInr / 100 : undefined,
           bundlePriceUsd: bundle.bundlePriceUsd != null ? bundle.bundlePriceUsd / 100 : undefined,
           productIds: bundle.products.map((p) => p.productId),
+          sizePrices: Array.from(new Set(bundle.customPrices.map((price) => price.quantity)))
+            .sort((a, b) => a - b)
+            .map((quantity) => {
+              const rows = bundle.customPrices.filter((price) => price.quantity === quantity);
+              return {
+                quantity,
+                enabled: rows.some((row) => row.enabled),
+                prices: Object.fromEntries(rows.map((row) => [row.currencyCode, row.price / 100])),
+              };
+            }),
         }}
       />
     </div>

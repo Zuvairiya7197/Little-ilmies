@@ -3,11 +3,14 @@ import type { CurrencyCode } from "@/types/pricing";
 export type OrderStatus = "PAID" | "PENDING" | "FAILED" | "REFUNDED";
 
 export interface OrderSummaryItem {
-  productId: string;
+  productId?: string;
+  bundleId?: string;
+  type?: "PRODUCT" | "CUSTOM_BUNDLE";
   slug: string;
   title: string;
   coverImage: string;
   unitPrice: number;
+  selectedBooks?: { id: string; title: string }[];
 }
 
 export interface OrderRecord {
