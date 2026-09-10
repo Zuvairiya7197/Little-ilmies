@@ -41,6 +41,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
   const [selectedIds, setSelectedIds] = useState<string[]>(editingItem?.selectedProductIds ?? []);
   const selectedSize = enabledSizes.find((size) => size.quantity === selectedQuantity);
   const isComplete = Boolean(selectedQuantity && selectedIds.length === selectedQuantity);
+  const heroBooks = bundle.products.slice(0, 8);
 
   function toggleBook(productId: string) {
     setSelectedIds((current) => {
@@ -82,14 +83,50 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
     <div className="container-content py-6 lg:py-10">
       <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
         <div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-cream-100 shadow-clay-sm">
-            <Image
-              src={bundle.coverImage ?? "/images/explore-bundles.png"}
-              alt=""
-              fill
-              sizes="(min-width: 1024px) 42vw, 100vw"
-              className="object-contain p-6"
-            />
+          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-gradient-to-br from-cream-50 via-lilac-50 to-blossom-50 shadow-clay-sm">
+            {heroBooks.length > 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center p-5 sm:p-8">
+                <div className="relative h-full w-full max-w-[34rem]">
+                  {heroBooks.map((book, index) => {
+                    const positions = [
+                      "left-[7%] top-[18%] rotate-[-12deg]",
+                      "left-[20%] top-[10%] rotate-[-5deg]",
+                      "left-[34%] top-[15%] rotate-[4deg]",
+                      "left-[48%] top-[9%] rotate-[10deg]",
+                      "left-[62%] top-[19%] rotate-[15deg]",
+                      "left-[17%] top-[43%] rotate-[8deg]",
+                      "left-[38%] top-[39%] rotate-[-7deg]",
+                      "left-[58%] top-[45%] rotate-[5deg]",
+                    ];
+                    return (
+                      <div
+                        key={book.id}
+                        className={cn(
+                          "absolute h-[42%] w-[24%] overflow-hidden rounded-xl bg-white shadow-[0_16px_40px_rgba(75,31,124,0.16)] ring-1 ring-white/80",
+                          positions[index] ?? ""
+                        )}
+                      >
+                        <Image
+                          src={book.coverImage}
+                          alt=""
+                          fill
+                          sizes="(min-width: 1024px) 120px, 25vw"
+                          className="object-contain p-1.5"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <Image
+                src={bundle.coverImage ?? "/images/explore-bundles.png"}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                className="object-contain p-6"
+              />
+            )}
           </div>
           <h1 className="mt-5 font-display text-3xl font-bold text-ink-900">{bundle.name}</h1>
           {bundle.description && <p className="mt-2 text-base leading-7 text-ink-500">{bundle.description}</p>}
