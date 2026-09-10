@@ -202,36 +202,62 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
     include: { products: { include: { product: productWithRelations } }, customPrices: true },
   });
 
-  return bundles.map((bundle) => ({
-    id: bundle.id,
-    slug: bundle.slug,
-    name: bundle.name,
-    description: bundle.description ?? undefined,
-    coverImage: bundle.coverImage ?? undefined,
-    type: bundle.type,
-    products: bundle.products.filter((bp) => !bp.product.archivedAt).map((bp) => toProductSummary(bp.product)),
-    prices: [
-      ...(bundle.bundlePriceInr != null
-        ? [{ currencyCode: "INR" as CurrencyCode, regularPrice: bundle.bundlePriceInr, isActive: true }]
-        : []),
-      ...(bundle.bundlePriceUsd != null
-        ? [
-            {
-              currencyCode: "USD" as CurrencyCode,
-              regularPrice: bundle.bundlePriceUsd,
-              isDefault: true,
-              isActive: true,
-            },
-          ]
-        : []),
-    ],
-    customPrices: bundle.customPrices.map((price) => ({
+  return bundles.map((bundle) => {
+    const customPrices = bundle.customPrices.map((price) => ({
       quantity: price.quantity,
       currencyCode: price.currencyCode as CurrencyCode,
       price: price.price,
       enabled: price.enabled,
-    })),
-  }));
+    }));
+    const prices =
+      bundle.type === "CUSTOM"
+        ? Object.values(
+            customPrices
+              .filter((price) => price.enabled)
+              .reduce<Record<string, { currencyCode: CurrencyCode; regularPrice: number; isDefault?: boolean; isActive: boolean }>>(
+                (acc, price) => {
+                  const current = acc[price.currencyCode];
+                  if (!current || price.price < current.regularPrice) {
+                    acc[price.currencyCode] = {
+                      currencyCode: price.currencyCode,
+                      regularPrice: price.price,
+                      isDefault: price.currencyCode === "USD",
+                      isActive: true,
+                    };
+                  }
+                  return acc;
+                },
+                {}
+              )
+          )
+        : [
+            ...(bundle.bundlePriceInr != null
+              ? [{ currencyCode: "INR" as CurrencyCode, regularPrice: bundle.bundlePriceInr, isActive: true }]
+              : []),
+            ...(bundle.bundlePriceUsd != null
+              ? [
+                  {
+                    currencyCode: "USD" as CurrencyCode,
+                    regularPrice: bundle.bundlePriceUsd,
+                    isDefault: true,
+                    isActive: true,
+                  },
+                ]
+              : []),
+          ];
+
+    return {
+      id: bundle.id,
+      slug: bundle.slug,
+      name: bundle.name,
+      description: bundle.description ?? undefined,
+      coverImage: bundle.coverImage ?? undefined,
+      type: bundle.type,
+      products: bundle.products.filter((bp) => !bp.product.archivedAt).map((bp) => toProductSummary(bp.product)),
+      prices,
+      customPrices,
+    };
+  });
 }
 
 export async function getActiveCustomBundleBySlug(slug: string): Promise<BundleSummary | null> {
