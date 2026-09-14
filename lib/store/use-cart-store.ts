@@ -18,7 +18,7 @@ export interface CartItem {
   selectedProductIds?: string[];
   selectedBooks?: { id: string; slug: string; title: string; coverImage: string }[];
   bundleSize?: number;
-  bundlePrices?: { quantity: number; currencyCode: string; price: number; enabled: boolean }[];
+  bundlePrices?: { quantity: number; currencyCode: string; price: number; compareAtPrice?: number; enabled: boolean }[];
   quantity: number;
 }
 

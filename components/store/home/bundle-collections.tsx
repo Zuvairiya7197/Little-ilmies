@@ -25,21 +25,40 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
     bundle.type === "CUSTOM"
       ? (bundle.customPrices ?? [])
           .filter((price) => price.enabled && price.currencyCode === bundlePrice.currencyCode)
-          .map((price) => price.price)
-          .sort((a, b) => a - b)
+          .map((price) => ({ price: price.price, compareAtPrice: price.compareAtPrice }))
+          .sort((a, b) => a.price - b.price)
       : [];
-  const customMinPrice = customPricesForCurrency[0];
-  const customMaxPrice = customPricesForCurrency[customPricesForCurrency.length - 1];
+  const customMinPrice = customPricesForCurrency[0]?.price;
+  const customMaxPrice = customPricesForCurrency[customPricesForCurrency.length - 1]?.price;
+  const customCompareAtPrices = customPricesForCurrency
+    .map((price) => price.compareAtPrice)
+    .filter((price): price is number => price != null && price > 0)
+    .sort((a, b) => a - b);
+  const customMinCompareAtPrice = customCompareAtPrices[0];
+  const customMaxCompareAtPrice = customCompareAtPrices[customCompareAtPrices.length - 1];
   const displayPrice =
     bundle.type === "CUSTOM" && customMinPrice != null && customMaxPrice != null && customMinPrice !== customMaxPrice
       ? `${formatPrice(customMinPrice, bundlePrice.currencyCode)} - ${formatPrice(customMaxPrice, bundlePrice.currencyCode)}`
       : formatPrice(bundlePrice.regularPrice, bundlePrice.currencyCode);
+  const displayCompareAtPrice =
+    bundle.type === "CUSTOM" &&
+    customMinCompareAtPrice != null &&
+    customMaxCompareAtPrice != null &&
+    customMaxCompareAtPrice > (customMaxPrice ?? 0)
+      ? customMinCompareAtPrice === customMaxCompareAtPrice
+        ? formatPrice(customMinCompareAtPrice, bundlePrice.currencyCode)
+        : `${formatPrice(customMinCompareAtPrice, bundlePrice.currencyCode)} - ${formatPrice(customMaxCompareAtPrice, bundlePrice.currencyCode)}`
+      : null;
   const regularTotal = bundle.products.reduce((sum, product) => {
     const resolved = resolveProductPrice(product, bundlePrice.currencyCode);
     return sum + resolved.regularPrice;
   }, 0);
-  const savings = Math.max(0, regularTotal - bundlePrice.regularPrice);
-  const savingsPercent = regularTotal > 0 ? Math.round((savings / regularTotal) * 100) : 0;
+  const savings =
+    displayCompareAtPrice && customMinCompareAtPrice != null && customMinPrice != null
+      ? Math.max(0, customMinCompareAtPrice - customMinPrice)
+      : Math.max(0, regularTotal - bundlePrice.regularPrice);
+  const savingsBase = displayCompareAtPrice && customMinCompareAtPrice != null ? customMinCompareAtPrice : regularTotal;
+  const savingsPercent = savingsBase > 0 ? Math.round((savings / savingsBase) * 100) : 0;
   const covers = bundle.products.slice(0, 3);
   const Icon = BUNDLE_ICONS[bundle.slug] ?? Gift;
 
@@ -106,7 +125,11 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
             <span className="font-display text-lg font-semibold text-ink-700">
               {displayPrice}
             </span>
-            {savings > 0 && (
+            {displayCompareAtPrice ? (
+              <span className="text-sm text-ink-300 line-through">
+                {displayCompareAtPrice}
+              </span>
+            ) : savings > 0 && (
               <span className="text-sm text-ink-300 line-through">
                 {formatPrice(regularTotal, bundlePrice.currencyCode)}
               </span>

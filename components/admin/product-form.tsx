@@ -814,9 +814,18 @@ function ArrayField({
       render={({ field }) => {
         const values = field.value ?? [];
         const addDraft = () => {
-          const next = draft.trim();
-          if (!next || values.includes(next)) return;
-          field.onChange([...values, next]);
+          const entries = draft
+            .split(",")
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+          const nextValues = [...values];
+          for (const entry of entries) {
+            if (!nextValues.includes(entry)) {
+              nextValues.push(entry);
+            }
+          }
+          if (nextValues.length === values.length) return;
+          field.onChange(nextValues);
           setDraft("");
         };
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
+import { DeleteAdminResourceButton } from "@/components/admin/delete-admin-resource-button";
 
 export const metadata: Metadata = {
   title: "Bundles",
@@ -27,15 +28,16 @@ export default async function AdminBundlesPage() {
       <div className="card-surface overflow-hidden">
         <ul className="divide-y divide-ink-100">
           {bundles.map((bundle) => (
-            <li key={bundle.id}>
+            <li key={bundle.id} className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-cream-100">
               <Link
                 href={`/admin/bundles/${bundle.id}`}
-                className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-cream-100"
+                className="min-w-0 flex-1"
               >
                 <div>
                   <p className="font-semibold text-ink-600">{bundle.name}</p>
                   <p className="text-xs text-ink-300">/{bundle.slug}</p>
                 </div>
+              </Link>
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-lilac-50 px-2.5 py-1 text-xs font-bold text-violet-800">
                     {bundle.type === "CUSTOM" ? "Custom" : "Fixed"}
@@ -43,8 +45,8 @@ export default async function AdminBundlesPage() {
                   <span className="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-bold text-sage-700">
                     {bundle._count.products} product{bundle._count.products !== 1 ? "s" : ""}
                   </span>
+                  <DeleteAdminResourceButton endpoint={`/api/admin/bundles/${bundle.id}`} label="bundle" />
                 </div>
-              </Link>
             </li>
           ))}
           {bundles.length === 0 && (

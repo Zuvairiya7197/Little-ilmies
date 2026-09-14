@@ -207,6 +207,7 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
       quantity: price.quantity,
       currencyCode: price.currencyCode as CurrencyCode,
       price: price.price,
+      compareAtPrice: price.compareAtPrice ?? undefined,
       enabled: price.enabled,
     }));
     const prices =

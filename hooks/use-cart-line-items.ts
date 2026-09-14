@@ -63,7 +63,7 @@ export function useCartLineItems() {
             coverImage: item.coverImage,
             quantity: 1,
             unitPrice: fallbackPrice.price,
-            regularUnitPrice: fallbackPrice.price,
+            regularUnitPrice: fallbackPrice.compareAtPrice ?? fallbackPrice.price,
             lineTotal: fallbackPrice.price,
             currencyCode: fallbackPrice.currencyCode as CurrencyCode,
             isFallbackPrice: fallbackPrice.currencyCode !== currency,

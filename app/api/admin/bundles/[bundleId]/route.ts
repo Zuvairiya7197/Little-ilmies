@@ -58,6 +58,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
                     quantity: size.quantity,
                     currencyCode,
                     price: toMinorUnits(size.prices[currencyCode]) ?? 0,
+                    compareAtPrice: toMinorUnits(size.compareAtPrices[currencyCode]),
                     enabled: size.enabled,
                   }))
                 ),

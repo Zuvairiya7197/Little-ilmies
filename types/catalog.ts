@@ -85,7 +85,13 @@ export interface BundleSummary {
   products: ProductSummary[];
   /** Manually curated regional bundle prices, same shape/philosophy as ProductSummary.prices. */
   prices: RegionalPrice[];
-  customPrices?: { quantity: number; currencyCode: import("@/types/pricing").CurrencyCode; price: number; enabled: boolean }[];
+  customPrices?: {
+    quantity: number;
+    currencyCode: import("@/types/pricing").CurrencyCode;
+    price: number;
+    compareAtPrice?: number;
+    enabled: boolean;
+  }[];
 }
 
 export type SortOption =

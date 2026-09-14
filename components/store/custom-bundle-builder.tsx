@@ -149,8 +149,15 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
                 )}
               >
                 <span className="block font-display text-lg font-bold text-ink-900">{size.quantity} Books</span>
-                <span className="mt-1 block text-sm font-semibold text-violet-800">
-                  {formatPrice(size.price.price, size.price.currencyCode)}
+                <span className="mt-1 flex flex-wrap items-baseline gap-2 text-sm">
+                  <span className="font-semibold text-violet-800">
+                    {formatPrice(size.price.price, size.price.currencyCode)}
+                  </span>
+                  {size.price.compareAtPrice != null && size.price.compareAtPrice > size.price.price && (
+                    <span className="text-xs font-medium text-ink-300 line-through">
+                      {formatPrice(size.price.compareAtPrice, size.price.currencyCode)}
+                    </span>
+                  )}
                 </span>
               </button>
             ))}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
+import { DeleteAdminResourceButton } from "@/components/admin/delete-admin-resource-button";
 
 export const metadata: Metadata = {
   title: "Categories",
@@ -27,19 +28,22 @@ export default async function AdminCategoriesPage() {
       <div className="card-surface overflow-hidden">
         <ul className="divide-y divide-ink-100">
           {categories.map((category) => (
-            <li key={category.id}>
+            <li key={category.id} className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-cream-100">
               <Link
                 href={`/admin/categories/${category.id}`}
-                className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-cream-100"
+                className="min-w-0 flex-1"
               >
                 <div>
                   <p className="font-semibold text-ink-600">{category.name}</p>
                   <p className="text-xs text-ink-300">/{category.slug}</p>
                 </div>
+              </Link>
+              <div className="flex items-center gap-2">
                 <span className="rounded-full bg-sage-50 px-2.5 py-1 text-xs font-bold text-sage-700">
                   {category._count.products} product{category._count.products !== 1 ? "s" : ""}
                 </span>
-              </Link>
+                <DeleteAdminResourceButton endpoint={`/api/admin/categories/${category.id}`} label="category" />
+              </div>
             </li>
           ))}
           {categories.length === 0 && (

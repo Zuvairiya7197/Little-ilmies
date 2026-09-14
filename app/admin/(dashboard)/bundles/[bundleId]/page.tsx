@@ -45,6 +45,11 @@ export default async function EditBundlePage({ params }: PageProps) {
                 quantity,
                 enabled: rows.some((row) => row.enabled),
                 prices: Object.fromEntries(rows.map((row) => [row.currencyCode, row.price / 100])),
+                compareAtPrices: Object.fromEntries(
+                  rows
+                    .filter((row) => row.compareAtPrice != null)
+                    .map((row) => [row.currencyCode, row.compareAtPrice! / 100])
+                ),
               };
             }),
         }}
