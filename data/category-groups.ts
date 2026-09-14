@@ -11,20 +11,20 @@ export const categoryGroups: CategoryGroup[] = [
     name: "Islamic E-Books",
     description:
       "Authentic stories of the Prophets, the Ummah's great women, du'as, and Islamic manners — retold for young hearts.",
-    categorySlugs: ["islamic-studies", "quran-and-arabic", "character-building"],
+    categorySlugs: ["islamic-studies", "quran-and-arabic", "good-manners"],
   },
   {
     slug: "educational-books",
     name: "Educational E-Books",
     description:
       "Preschool foundations, language learning, and early literacy — designed for home, madrasa, or homeschooling.",
-    categorySlugs: ["early-learning", "languages", "mathematics", "science-and-stem"],
+    categorySlugs: ["early-learning", "languages", "mathematics", "science", "stem"],
   },
   {
     slug: "gifts-games",
     name: "Gifts & Games",
     description: "Printable planners, calendars, and gifting favourites the whole family will love.",
-    categorySlugs: ["creative-learning", "printables", "games-and-activities", "seasonal-collections"],
+    categorySlugs: ["activities-and-printables", "worksheets", "coloring-books", "games", "puzzles"],
   },
 ];
 

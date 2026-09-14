@@ -697,7 +697,6 @@ function buildCategoryGroups(categories: CategoryOption[]): CategoryOptionGroup[
   const bySlug = new Map(categories.map((category) => [category.slug, category]));
   const used = new Set<string>();
   const groups: CategoryOptionGroup[] = booksMenuSections
-    .filter((section) => section.title !== "Shop by Age")
     .map((section) => {
       const sectionSlugs = [slugFromHref(section.href), ...section.links.map((link) => slugFromHref(link.href))].filter(
         (slug): slug is string => Boolean(slug)

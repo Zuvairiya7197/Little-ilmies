@@ -21,6 +21,19 @@ const SAVE_TINTS = ["bg-ink-600", "bg-blossom-500", "bg-ink-600", "bg-blossom-50
 export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: number }) {
   const currency = useCurrencyStore((s) => s.currency);
   const bundlePrice = resolveProductPrice(bundle, currency);
+  const customPricesForCurrency =
+    bundle.type === "CUSTOM"
+      ? (bundle.customPrices ?? [])
+          .filter((price) => price.enabled && price.currencyCode === bundlePrice.currencyCode)
+          .map((price) => price.price)
+          .sort((a, b) => a - b)
+      : [];
+  const customMinPrice = customPricesForCurrency[0];
+  const customMaxPrice = customPricesForCurrency[customPricesForCurrency.length - 1];
+  const displayPrice =
+    bundle.type === "CUSTOM" && customMinPrice != null && customMaxPrice != null && customMinPrice !== customMaxPrice
+      ? `${formatPrice(customMinPrice, bundlePrice.currencyCode)} - ${formatPrice(customMaxPrice, bundlePrice.currencyCode)}`
+      : formatPrice(bundlePrice.regularPrice, bundlePrice.currencyCode);
   const regularTotal = bundle.products.reduce((sum, product) => {
     const resolved = resolveProductPrice(product, bundlePrice.currencyCode);
     return sum + resolved.regularPrice;
@@ -91,7 +104,7 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
         <div className="mt-4 flex items-center justify-between gap-2">
           <div className="flex items-baseline gap-2">
             <span className="font-display text-lg font-semibold text-ink-700">
-              {formatPrice(bundlePrice.regularPrice, bundlePrice.currencyCode)}
+              {displayPrice}
             </span>
             {savings > 0 && (
               <span className="text-sm text-ink-300 line-through">

@@ -1,6 +1,6 @@
 export const shopNavLinks = [
   { label: "Bundles", href: "/shop?bundle=all" },
-  { label: "Printables", href: "/shop/printables" },
+  { label: "Printables", href: "/shop/activities-and-printables" },
   { label: "Best Sellers", href: "/shop?sort=bestselling" },
   { label: "New Arrivals", href: "/shop?sort=newest" },
   { label: "Sale", href: "/shop?sale=true" },
@@ -11,7 +11,7 @@ export const quickCategoryLinks = [
   { label: "Stories of the Prophets", href: "/shop/stories-of-the-prophets" },
   { label: "Duas", href: "/shop/duas-and-adhkar" },
   { label: "Qur'an & Arabic", href: "/shop/quran-and-arabic" },
-  { label: "Printables", href: "/shop/printables" },
+  { label: "Printables", href: "/shop/activities-and-printables" },
   { label: "Best Sellers", href: "/shop?sort=bestselling" },
   { label: "New", href: "/shop?sort=newest" },
   { label: "Sale", href: "/shop?sale=true" },
@@ -52,7 +52,7 @@ export const booksMenuSections = [
   },
   {
     title: "Educational",
-    href: "/shop/educational-books",
+    href: "/shop/educational",
     links: [
       { label: "Early Learning", href: "/shop/early-learning" },
       { label: "English", href: "/shop/english" },
@@ -65,7 +65,7 @@ export const booksMenuSections = [
   },
   {
     title: "Activities & Printables",
-    href: "/shop/printables",
+    href: "/shop/activities-and-printables",
     links: [
       { label: "Worksheets", href: "/shop/worksheets" },
       { label: "Coloring Books", href: "/shop/coloring-books" },
@@ -79,13 +79,13 @@ export const booksMenuSections = [
   },
   {
     title: "Shop by Age",
-    href: "/shop",
+    href: "/shop/shop-by-age",
     links: [
-      { label: "0-3 Years", href: "/shop?age=0-3" },
-      { label: "3-6 Years", href: "/shop?age=3-6" },
-      { label: "6-9 Years", href: "/shop?age=6-9" },
-      { label: "9-12 Years", href: "/shop?age=9-12" },
-      { label: "12+ Years", href: "/shop?age=12%2B" },
+      { label: "0-3 Years", href: "/shop/0-3-years" },
+      { label: "3-6 Years", href: "/shop/3-6-years" },
+      { label: "6-9 Years", href: "/shop/6-9-years" },
+      { label: "9-12 Years", href: "/shop/9-12-years" },
+      { label: "12+ Years", href: "/shop/12-plus-years" },
     ],
   },
 ] as const;

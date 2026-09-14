@@ -27,7 +27,17 @@ import { cn } from "@/lib/utils/cn";
 import { formatPrice } from "@/lib/utils/format";
 import type { BundleSummary, Category, ProductSummary } from "@/types/catalog";
 
-const ACTIVITY_CATEGORY_SLUGS = ["creative-learning", "printables", "games-and-activities"];
+const ACTIVITY_CATEGORY_SLUGS = [
+  "activities-and-printables",
+  "worksheets",
+  "coloring-books",
+  "flashcards",
+  "crafts",
+  "posters",
+  "activity-books",
+  "games",
+  "puzzles",
+];
 
 const typeFilters = ["All", "Books", "Activities", "Bundles"] as const;
 type TypeFilter = (typeof typeFilters)[number];
