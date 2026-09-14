@@ -7,6 +7,9 @@ export const bundleSizePriceSchema = z.object({
   quantity: z.coerce.number().int().positive("Quantity must be greater than 0"),
   enabled: z.coerce.boolean(),
   prices: z.record(z.enum(supportedCurrencies), z.coerce.number().min(0, "Prices cannot be negative").optional()),
+  compareAtPrices: z
+    .record(z.enum(supportedCurrencies), z.coerce.number().min(0, "Compare-at prices cannot be negative").optional())
+    .default({}),
 });
 
 export const bundleFormSchema = z.object({
@@ -53,6 +56,14 @@ export const bundleFormSchema = z.object({
           code: "custom",
           path: ["sizePrices", index, "prices", currency],
           message: `${currency} price is required`,
+        });
+      }
+      const compareAtPrice = size.compareAtPrices[currency];
+      if (compareAtPrice != null && price != null && compareAtPrice < price) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["sizePrices", index, "compareAtPrices", currency],
+          message: `${currency} compare-at price must be greater than or equal to the selling price`,
         });
       }
     }

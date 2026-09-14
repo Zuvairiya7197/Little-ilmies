@@ -16,6 +16,7 @@ function defaultSizePrices() {
     quantity,
     enabled: quantity <= 4,
     prices: Object.fromEntries(currencyCodes.map((currency) => [currency, undefined])),
+    compareAtPrices: Object.fromEntries(currencyCodes.map((currency) => [currency, undefined])),
   }));
 }
 
@@ -47,7 +48,14 @@ export function BundleForm({
       ...defaultValues,
       sizePrices: defaultSizePrices().map((row) => {
         const saved = defaultValues?.sizePrices?.find((size) => size.quantity === row.quantity);
-        return saved ? { ...row, ...saved, prices: { ...row.prices, ...saved.prices } } : row;
+        return saved
+          ? {
+              ...row,
+              ...saved,
+              prices: { ...row.prices, ...saved.prices },
+              compareAtPrices: { ...row.compareAtPrices, ...saved.compareAtPrices },
+            }
+          : row;
       }),
     },
   });
@@ -215,13 +223,24 @@ export function BundleForm({
                     </td>
                     {currencyCodes.map((currency) => (
                       <td key={currency} className="px-3 py-2">
-                        <input
-                          type="number"
-                          step="0.01"
-                          {...register(`sizePrices.${index}.prices.${currency}`)}
-                          className="admin-input h-9 w-28"
-                          aria-label={`${quantity} book ${currency} price`}
-                        />
+                        <div className="grid w-36 gap-1">
+                          <input
+                            type="number"
+                            step="0.01"
+                            {...register(`sizePrices.${index}.prices.${currency}`)}
+                            className="admin-input h-9"
+                            placeholder="Sale"
+                            aria-label={`${quantity} book ${currency} selling price`}
+                          />
+                          <input
+                            type="number"
+                            step="0.01"
+                            {...register(`sizePrices.${index}.compareAtPrices.${currency}`)}
+                            className="admin-input h-9"
+                            placeholder="Regular"
+                            aria-label={`${quantity} book ${currency} regular price`}
+                          />
+                        </div>
                       </td>
                     ))}
                   </tr>

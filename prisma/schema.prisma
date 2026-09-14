@@ -247,6 +247,7 @@ model CustomBundlePrice {
   quantity     Int
   currencyCode String
   price        Int
+  compareAtPrice Int?
   enabled      Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

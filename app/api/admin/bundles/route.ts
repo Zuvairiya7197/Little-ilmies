@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
                   quantity: size.quantity,
                   currencyCode,
                   price: toMinorUnits(size.prices[currencyCode]) ?? 0,
+                  compareAtPrice: toMinorUnits(size.compareAtPrices[currencyCode]),
                   enabled: size.enabled,
                 }))
               ),
