@@ -5,6 +5,7 @@ import { useShopFilters } from "@/hooks/use-shop-filters";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { formatPrice } from "@/lib/utils/format";
 import { getCategoryIcon } from "@/lib/category-icons";
+import { booksMenuSections } from "@/lib/store-navigation";
 import type { CurrencyCode } from "@/types/pricing";
 import type { AgeRange, Category, Language, ProductFormat } from "@/types/catalog";
 import { cn } from "@/lib/utils/cn";
@@ -53,6 +54,7 @@ export function FilterPanel({
   } = useShopFilters();
   const currency = useCurrencyStore((s) => s.currency);
   const priceBuckets = getPriceBuckets(currency);
+  const categoryGroups = buildFilterCategoryGroups(categories);
 
   const isPriceBucketActive = (min?: number, max?: number) =>
     filters.minPrice === min && filters.maxPrice === max;
@@ -75,18 +77,27 @@ export function FilterPanel({
       )}
 
       <FilterGroup title="Category">
-        <div className="flex flex-col gap-1">
-          {categories.map((cat) => (
-            <FilterCheckbox
-              key={cat.slug}
-              label={cat.name}
-              icon={getCategoryIcon(cat.slug)}
-              checked={isArrayValueActive("category", cat.slug)}
-              onChange={() => {
-                toggleArrayValue("category", cat.slug);
-                onApply?.();
-              }}
-            />
+        <div className="flex flex-col gap-4">
+          {categoryGroups.map((group) => (
+            <div key={group.title}>
+              <p className="mb-1.5 px-1 text-[11px] font-black uppercase tracking-[0.18em] text-ink-300">
+                {group.title}
+              </p>
+              <div className="flex flex-col gap-1">
+                {group.categories.map((cat) => (
+                  <FilterCheckbox
+                    key={cat.slug}
+                    label={cat.name}
+                    icon={getCategoryIcon(cat.slug)}
+                    checked={isArrayValueActive("category", cat.slug)}
+                    onChange={() => {
+                      toggleArrayValue("category", cat.slug);
+                      onApply?.();
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </FilterGroup>
@@ -197,6 +208,35 @@ export function FilterPanel({
       </FilterGroup>
     </div>
   );
+}
+
+function buildFilterCategoryGroups(categories: Category[]): { title: string; categories: Category[] }[] {
+  const bySlug = new Map(categories.map((category) => [category.slug, category]));
+  const used = new Set<string>();
+  const groups: { title: string; categories: Category[] }[] = booksMenuSections
+    .map((section) => {
+      const categorySlugs = section.links
+        .map((link) => slugFromHref(link.href))
+        .filter((slug): slug is string => Boolean(slug));
+      const groupCategories = categorySlugs
+        .map((slug) => bySlug.get(slug))
+        .filter((category): category is Category => Boolean(category));
+      groupCategories.forEach((category) => used.add(category.id));
+      return { title: section.title, categories: groupCategories };
+    })
+    .filter((group) => group.categories.length > 0);
+
+  const otherCategories = categories.filter((category) => !used.has(category.id));
+  if (otherCategories.length > 0) {
+    groups.push({ title: "Other", categories: otherCategories });
+  }
+
+  return groups;
+}
+
+function slugFromHref(href: string) {
+  const match = href.match(/^\/shop\/([^?/#]+)/);
+  return match?.[1];
 }
 
 function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
