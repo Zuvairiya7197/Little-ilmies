@@ -2,6 +2,14 @@ import type { ProductFilters, ProductSummary, SortOption } from "@/types/catalog
 import type { CurrencyCode } from "@/types/pricing";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 
+const AGE_CATEGORY_TO_RANGE = {
+  "0-3-years": "0-3",
+  "3-6-years": "3-6",
+  "6-9-years": "6-9",
+  "9-12-years": "9-12",
+  "12-plus-years": "12+",
+} as const;
+
 export function filterProducts(
   items: ProductSummary[],
   filters: ProductFilters,
@@ -13,11 +21,12 @@ export function filterProducts(
 
     const productCategorySlugs = p.categorySlugs?.length ? p.categorySlugs : [p.category.slug];
 
-    if (
-      filters.categorySlugs?.length &&
-      !filters.categorySlugs.some((slug) => productCategorySlugs.includes(slug))
-    ) {
-      return false;
+    if (filters.categorySlugs?.length) {
+      const matchesCategory = filters.categorySlugs.some((slug) => {
+        const ageRange = AGE_CATEGORY_TO_RANGE[slug as keyof typeof AGE_CATEGORY_TO_RANGE];
+        return ageRange ? p.ageRange === ageRange : productCategorySlugs.includes(slug);
+      });
+      if (!matchesCategory) return false;
     }
     if (filters.ageRanges?.length && !filters.ageRanges.includes(p.ageRange)) {
       return false;

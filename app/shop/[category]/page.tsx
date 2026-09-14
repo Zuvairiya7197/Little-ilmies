@@ -16,6 +16,14 @@ interface PageProps {
 
 export const revalidate = 60;
 
+const AGE_CATEGORY_TO_RANGE = {
+  "0-3-years": "0-3",
+  "3-6-years": "3-6",
+  "6-9-years": "6-9",
+  "9-12-years": "9-12",
+  "12-plus-years": "12+",
+} as const;
+
 const resolveCategory = cache(async (slug: string) => {
   const group = getCategoryGroupBySlug(slug);
   const [products, categories] = await Promise.all([getPublishedProducts(), getAllCategories()]);
@@ -33,10 +41,11 @@ const resolveCategory = cache(async (slug: string) => {
 
   const category = categories.find((c) => c.slug === slug);
   if (category) {
+    const ageRange = AGE_CATEGORY_TO_RANGE[slug as keyof typeof AGE_CATEGORY_TO_RANGE];
     return {
       title: category.name,
       description: category.description ?? `Browse ${category.name} e-books.`,
-      matchedProducts: products.filter((p) => productHasCategory(p, slug)),
+      matchedProducts: ageRange ? products.filter((p) => p.ageRange === ageRange) : products.filter((p) => productHasCategory(p, slug)),
       categories,
     };
   }
