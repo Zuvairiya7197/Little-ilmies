@@ -72,27 +72,29 @@ export default async function PurchaseHistoryPage() {
   return (
     <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-44 pt-14 xl:pb-6 xl:pt-4">
       <div className="container-content relative">
-        <div className={`relative min-h-0 text-center xl:text-left ${orders.length > 0 ? "xl:min-h-28" : ""}`}>
-          <h1 className="font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:text-4xl">
-            Purchase History <span className="text-blossom-400">♥</span>
-          </h1>
-          <p className="mt-4 flex flex-col items-center gap-1 text-sm font-medium leading-snug text-ink-400 xl:mt-2 xl:flex-row xl:flex-wrap xl:items-center xl:gap-2 xl:text-base">
-            {orders.length === 0 ? "Signed in as" : "Orders linked to"}{" "}
-            <span className="font-bold text-ink-600">{session.user.email}</span>
-            {orders.length === 0 && (
-              <span className="relative ml-2 hidden w-24 xl:inline-block" aria-hidden="true">
-              <span className="absolute left-0 top-1 h-px w-20 border-t border-dashed border-ink-200" />
-              <Image src="/images/star.png" alt="" width={26} height={26} className="absolute right-0 -top-3 h-6 w-6 object-contain" />
-            </span>
-            )}
-          </p>
+        <div className={`relative min-h-0 text-center xl:text-left ${orders.length > 0 ? "xl:min-h-40" : ""}`}>
+          <div className="xl:flex xl:flex-wrap xl:items-baseline xl:gap-4">
+            <h1 className="font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:text-4xl">
+              Purchase History <span className="text-blossom-400">♥</span>
+            </h1>
+            <p className="mt-4 flex flex-col items-center gap-1 text-sm font-medium leading-snug text-ink-400 xl:mt-0 xl:flex-row xl:flex-wrap xl:items-center xl:gap-2 xl:text-base">
+              {orders.length === 0 ? "Signed in as" : "Orders linked to"}{" "}
+              <span className="font-bold text-ink-600">{session.user.email}</span>
+              {orders.length === 0 && (
+                <span className="relative ml-2 hidden w-24 xl:inline-block" aria-hidden="true">
+                <span className="absolute left-0 top-1 h-px w-20 border-t border-dashed border-ink-200" />
+                <Image src="/images/star.png" alt="" width={26} height={26} className="absolute right-0 -top-3 h-6 w-6 object-contain" />
+              </span>
+              )}
+            </p>
+          </div>
           {orders.length > 0 && (
-            <div className="pointer-events-none absolute right-0 top-[-2.5rem] hidden h-28 w-72 xl:block">
+            <div className="pointer-events-none absolute right-0 top-[-1.5rem] hidden h-40 w-96 xl:block">
               <Image
                 src="/images/purchase history.png"
                 alt=""
                 fill
-                sizes="288px"
+                sizes="384px"
                 className="object-contain object-right"
                 aria-hidden="true"
                 priority
