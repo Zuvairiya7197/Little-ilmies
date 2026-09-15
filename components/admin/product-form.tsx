@@ -438,6 +438,12 @@ export function ProductForm({
                   >
                     Remove all rental pages
                   </button>
+                  <UseRentalPagesAsPreview
+                    productId={productId}
+                    images={currentFiles.rentalPageImages ?? []}
+                    refresh={router.refresh}
+                    setError={setSubmitError}
+                  />
                 </div>
               ) : null}
             </div>
@@ -1237,6 +1243,126 @@ function RentalPageThumbs({
         </li>
       ))}
     </ol>
+  );
+}
+
+const MAX_PREVIEW_FROM_RENTAL = 8;
+
+function UseRentalPagesAsPreview({
+  productId,
+  images,
+  refresh,
+  setError,
+}: {
+  productId: string;
+  images: string[];
+  refresh: () => void;
+  setError: (message: string | null) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function toggle(index: number) {
+    setSelected((current) =>
+      current.includes(index)
+        ? current.filter((i) => i !== index)
+        : current.length >= MAX_PREVIEW_FROM_RENTAL
+          ? current
+          : [...current, index].sort((a, b) => a - b)
+    );
+  }
+
+  async function submit() {
+    if (selected.length === 0) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/products/copy-rental-pages-to-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, rentalPageIndexes: selected }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Could not use rental pages as preview.");
+        return;
+      }
+      setIsOpen(false);
+      setSelected([]);
+      refresh();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (!isOpen) {
+    return (
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className="mt-2 ml-3 text-xs font-semibold text-sage-700 hover:underline"
+      >
+        Use these pages as free preview
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-sage-200 bg-sage-50 p-3">
+      <p className="text-xs font-semibold text-ink-600">
+        Pick up to {MAX_PREVIEW_FROM_RENTAL} pages to publish as the public &quot;See before you buy&quot;
+        preview. This replaces any existing preview pages — no re-upload needed.
+      </p>
+      <ol className="mt-2 flex max-w-full flex-wrap gap-2">
+        {images.map((src, index) => {
+          const isSelected = selected.includes(index);
+          return (
+            <li key={src}>
+              <button
+                type="button"
+                onClick={() => toggle(index)}
+                aria-pressed={isSelected}
+                className={`relative w-16 shrink-0 overflow-hidden rounded-lg border-2 p-1 ${
+                  isSelected ? "border-sage-600 bg-cream-50" : "border-transparent bg-cream-50"
+                }`}
+              >
+                <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
+                  <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+                </div>
+                <p className="mt-1 text-center text-[10px] font-semibold text-ink-400">Page {index + 1}</p>
+                {isSelected && (
+                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-sage-600 text-cream-50">
+                    <Check className="h-2.5 w-2.5" aria-hidden="true" />
+                  </span>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={submit}
+          disabled={selected.length === 0 || isSubmitting}
+          className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
+        >
+          {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : null}
+          Use {selected.length || ""} page{selected.length === 1 ? "" : "s"} as preview
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(false);
+            setSelected([]);
+          }}
+          className="text-xs font-semibold text-ink-400 hover:underline"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
 
