@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { FALLBACK_CURRENCY, type CurrencyCode } from "@/types/pricing";
 import { calculateBookSalePrice } from "@/lib/pricing/automatic-pricing";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export interface ResolvedDbPrice {
   currencyCode: CurrencyCode;
@@ -21,6 +22,7 @@ export async function resolveProductPriceFromDb(
   productId: string,
   requestedCurrency: CurrencyCode
 ): Promise<ResolvedDbPrice> {
+  const settings = await getPricingSettings();
   const prices = await prisma.productPrice.findMany({
     where: { productId, isActive: true },
   });
@@ -30,7 +32,7 @@ export async function resolveProductPriceFromDb(
     return {
       currencyCode: exact.currencyCode as CurrencyCode,
       regularPrice: exact.regularPrice,
-      salePrice: activeSalePrice(exact),
+      salePrice: activeSalePrice(exact, settings.bookSaleDiscountPercentage),
       isFallback: false,
       isEmergencyFallback: false,
     };
@@ -41,7 +43,7 @@ export async function resolveProductPriceFromDb(
     return {
       currencyCode: international.currencyCode as CurrencyCode,
       regularPrice: international.regularPrice,
-      salePrice: activeSalePrice(international),
+      salePrice: activeSalePrice(international, settings.bookSaleDiscountPercentage),
       isFallback: true,
       isEmergencyFallback: false,
     };
@@ -52,7 +54,7 @@ export async function resolveProductPriceFromDb(
     return {
       currencyCode: nonInrFallback.currencyCode as CurrencyCode,
       regularPrice: nonInrFallback.regularPrice,
-      salePrice: activeSalePrice(nonInrFallback),
+      salePrice: activeSalePrice(nonInrFallback, settings.bookSaleDiscountPercentage),
       isFallback: true,
       isEmergencyFallback: false,
     };
@@ -63,7 +65,7 @@ export async function resolveProductPriceFromDb(
     return {
       currencyCode: inr.currencyCode as CurrencyCode,
       regularPrice: inr.regularPrice,
-      salePrice: activeSalePrice(inr),
+      salePrice: activeSalePrice(inr, settings.bookSaleDiscountPercentage),
       isFallback: true,
       isEmergencyFallback: true,
     };
@@ -72,9 +74,12 @@ export async function resolveProductPriceFromDb(
   throw new Error(`Product ${productId} has no active ${requestedCurrency} or international price configured.`);
 }
 
-function activeSalePrice(price: { regularPrice: number; currencyCode: string; saleStartDate: Date | null; saleEndDate: Date | null }) {
+function activeSalePrice(
+  price: { regularPrice: number; currencyCode: string; saleStartDate: Date | null; saleEndDate: Date | null },
+  discountPercentage: number
+) {
   const now = Date.now();
   if (price.saleStartDate && now < price.saleStartDate.getTime()) return null;
   if (price.saleEndDate && now > price.saleEndDate.getTime()) return null;
-  return calculateBookSalePrice(price.regularPrice);
+  return calculateBookSalePrice(price.regularPrice, discountPercentage);
 }

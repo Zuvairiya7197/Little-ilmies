@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { CurrencyCode } from "@/types/pricing";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export type CustomBundleValidationResult = {
   bundleId: string;
@@ -89,7 +90,7 @@ export async function validateCustomBundleSelection({
       currency
     ).regularPrice
   );
-  const price = calculateCustomBundlePrice(regularPrices);
+  const price = calculateCustomBundlePrice(regularPrices, settings.customBundleDiscountPercentage);
 
   return {
     bundleId: bundle.id,
@@ -113,3 +114,4 @@ export async function validateCustomBundleSelection({
     })),
   };
 }
+  const settings = await getPricingSettings();

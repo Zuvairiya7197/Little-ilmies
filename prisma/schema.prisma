@@ -146,6 +146,7 @@ model Product {
   isFeatured Boolean @default(false)
   displayOrder Int?
   hasFreePreview Boolean @default(true)
+  rentAndReadEnabled Boolean @default(true)
   /// At most one product should have this set — it's the book featured in
   /// the homepage "See before you buy" flip-through showcase. Enforced at
   /// the application layer (unsetting any previous sample before setting a
@@ -531,4 +532,13 @@ model Review {
   user    User?   @relation(fields: [userId], references: [id])
 
   @@map("reviews")
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
 }

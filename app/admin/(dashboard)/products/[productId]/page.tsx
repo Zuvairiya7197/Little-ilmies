@@ -5,6 +5,7 @@ import { ProductForm } from "@/components/admin/product-form";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
 import type { CurrencyCode } from "@/types/pricing";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export const metadata: Metadata = {
   title: "Edit Product",
@@ -18,12 +19,13 @@ interface PageProps {
 export default async function EditProductPage({ params }: PageProps) {
   const { productId } = await params;
 
-  const [product, categories] = await Promise.all([
+  const [product, categories, pricingSettings] = await Promise.all([
     prisma.product.findFirst({
       where: { id: productId, archivedAt: null },
       include: { categories: true, prices: true },
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
+    getPricingSettings(),
   ]);
 
   if (!product) notFound();
@@ -39,6 +41,7 @@ export default async function EditProductPage({ params }: PageProps) {
       <ProductForm
         categories={categories}
         productId={product.id}
+        bookSaleDiscountPercentage={pricingSettings.bookSaleDiscountPercentage}
         currentFiles={{
           coverImage: productCoverUrl(product.id, product.coverImage),
           hasPdf: Boolean(product.privatePdfPath),
@@ -65,6 +68,7 @@ export default async function EditProductPage({ params }: PageProps) {
           isFeatured: product.isFeatured,
           displayOrder: product.displayOrder ?? undefined,
           hasFreePreview: product.hasFreePreview,
+          rentAndReadEnabled: product.rentAndReadEnabled,
           isHomepageSample: product.isHomepageSample,
           whatsIncluded: product.whatsIncluded,
           learningObjectives: product.learningObjectives,

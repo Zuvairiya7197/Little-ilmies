@@ -1,5 +1,10 @@
-export const BOOK_SALE_DISCOUNT_PERCENTAGE = 20;
-export const CUSTOM_BUNDLE_DISCOUNT_PERCENTAGE = 15;
+import {
+  DEFAULT_BOOK_SALE_DISCOUNT_PERCENTAGE,
+  DEFAULT_CUSTOM_BUNDLE_DISCOUNT_PERCENTAGE,
+} from "@/lib/settings/pricing-settings";
+
+export const BOOK_SALE_DISCOUNT_PERCENTAGE = DEFAULT_BOOK_SALE_DISCOUNT_PERCENTAGE;
+export const CUSTOM_BUNDLE_DISCOUNT_PERCENTAGE = DEFAULT_CUSTOM_BUNDLE_DISCOUNT_PERCENTAGE;
 
 export function calculateSalePrice(
   regularPrice: number,
@@ -8,15 +13,21 @@ export function calculateSalePrice(
   return Math.round((regularPrice * (100 - discountPercentage)) / 100);
 }
 
-export function calculateBookSalePrice(regularPrice: number) {
-  return calculateSalePrice(regularPrice, BOOK_SALE_DISCOUNT_PERCENTAGE);
+export function calculateBookSalePrice(
+  regularPrice: number,
+  discountPercentage = BOOK_SALE_DISCOUNT_PERCENTAGE
+) {
+  return calculateSalePrice(regularPrice, discountPercentage);
 }
 
-export function calculateCustomBundlePrice(regularPrices: number[]) {
+export function calculateCustomBundlePrice(
+  regularPrices: number[],
+  discountPercentage = CUSTOM_BUNDLE_DISCOUNT_PERCENTAGE
+) {
   const regularPrice = regularPrices.reduce((sum, price) => sum + price, 0);
   const salePrice = calculateSalePrice(
     regularPrice,
-    CUSTOM_BUNDLE_DISCOUNT_PERCENTAGE
+    discountPercentage
   );
 
   return {

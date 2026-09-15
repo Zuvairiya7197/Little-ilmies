@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,9 +10,11 @@ import { booksMenuSections, shopNavLinks } from "@/lib/store-navigation";
 export function MobileMenu({
   open,
   onClose,
+  showRentAndRead = false,
 }: {
   open: boolean;
   onClose: () => void;
+  showRentAndRead?: boolean;
 }) {
   const { data: session, status } = useSession();
   const [openSections, setOpenSections] = useState<string[]>(["Islamic Studies"]);
@@ -134,15 +136,28 @@ export function MobileMenu({
                 </li>
 
                 {shopNavLinks.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className="tap-target flex items-center rounded-xl px-3 py-3 text-base font-medium text-ink-500 transition-colors hover:bg-sage-50 hover:text-ink-700"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
+                  <Fragment key={item.href}>
+                    <li>
+                      <Link
+                        href={item.href}
+                        onClick={onClose}
+                        className="tap-target flex items-center rounded-xl px-3 py-3 text-base font-medium text-ink-500 transition-colors hover:bg-sage-50 hover:text-ink-700"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                    {showRentAndRead && item.label === "Bundles" && (
+                      <li>
+                        <Link
+                          href="/rent-and-read"
+                          onClick={onClose}
+                          className="tap-target flex items-center rounded-xl px-3 py-3 text-base font-medium text-ink-500 transition-colors hover:bg-sage-50 hover:text-ink-700"
+                        >
+                          Rent & Read
+                        </Link>
+                      </li>
+                    )}
+                  </Fragment>
                 ))}
               </ul>
             </nav>

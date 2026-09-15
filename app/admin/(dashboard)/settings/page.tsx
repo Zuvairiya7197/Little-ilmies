@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getAdminSession } from "@/lib/auth/get-admin-session";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
+import { PricingSettingsForm } from "@/components/admin/pricing-settings-form";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -8,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSettingsPage() {
-  const session = await getAdminSession();
+  const [session, pricingSettings] = await Promise.all([getAdminSession(), getPricingSettings()]);
 
   return (
     <div>
@@ -18,6 +20,10 @@ export default async function AdminSettingsPage() {
       <p className="mb-6 text-sm text-ink-400">
         Signed in as {session?.user?.email}
       </p>
+
+      <div className="mb-8">
+        <PricingSettingsForm settings={pricingSettings} />
+      </div>
 
       <div className="max-w-md">
         <h2 className="mb-3 font-display text-base font-semibold text-ink-600">

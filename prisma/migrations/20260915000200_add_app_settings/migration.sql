@@ -1,0 +1,14 @@
+CREATE TABLE "app_settings" (
+    "key" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "app_settings_pkey" PRIMARY KEY ("key")
+);
+
+INSERT INTO "app_settings" ("key", "value", "updatedAt")
+VALUES
+  ('BOOK_SALE_DISCOUNT_PERCENTAGE', '20', CURRENT_TIMESTAMP),
+  ('CUSTOM_BUNDLE_DISCOUNT_PERCENTAGE', '15', CURRENT_TIMESTAMP)
+ON CONFLICT ("key") DO NOTHING;

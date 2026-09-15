@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Menu, ArrowLeft, Heart, ShoppingBag, User } from "lucide-react";
@@ -20,7 +20,7 @@ import { useSearchStore } from "@/lib/store/use-search-store";
 import { cn } from "@/lib/utils/cn";
 import { shopNavLinks } from "@/lib/store-navigation";
 
-export function SiteHeader() {
+export function SiteHeader({ showRentAndRead = false }: { showRentAndRead?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const isProductPage = pathname.startsWith("/product/");
@@ -88,14 +88,29 @@ export function SiteHeader() {
                 <BooksMegaMenu />
               </li>
               {shopNavLinks.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="tap-target flex items-center rounded-full px-3.5 py-2 text-sm font-semibold text-ink-600 transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
+                <Fragment key={item.href}>
+                  <li>
+                    <Link
+                      href={item.href}
+                      className="tap-target flex items-center rounded-full px-3.5 py-2 text-sm font-semibold text-ink-600 transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                  {showRentAndRead && item.label === "Bundles" && (
+                    <li>
+                    <Link
+                      href="/rent-and-read"
+                      className={cn(
+                        "tap-target flex items-center rounded-full px-3.5 py-2 text-sm font-semibold transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm",
+                        pathname === "/rent-and-read" ? "bg-sage-50 text-sage-700 shadow-clay-sm" : "text-ink-600"
+                      )}
+                    >
+                      Rent & Read
+                    </Link>
+                    </li>
+                  )}
+                </Fragment>
               ))}
             </ul>
           </nav>
@@ -139,7 +154,7 @@ export function SiteHeader() {
 
       <SearchOverlay open={searchOpen} onClose={closeSearch} />
       <CartDrawer />
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} showRentAndRead={showRentAndRead} />
     </header>
   );
 }

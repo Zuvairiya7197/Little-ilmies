@@ -98,7 +98,7 @@ export function ProductBuyBox({
           />
           {isWishlisted ? "Saved" : "Add to Wishlist"}
         </button>
-        {rentalEligible && (
+        {rentalEligible && product.rentAndReadEnabled !== false && (
           <button
             type="button"
             onClick={rentNow}
@@ -123,7 +123,7 @@ export function ProductBuyBox({
       </div>
       <p className="mt-1 text-sm text-ink-400">Instant PDF download after purchase</p>
 
-      {rentalEligible && (
+      {rentalEligible && product.rentAndReadEnabled !== false && (
         <div className="mt-5 rounded-2xl border border-sage-200 bg-sage-50 p-4">
           <div className="flex items-start justify-between gap-4">
             <div>

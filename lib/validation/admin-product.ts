@@ -49,6 +49,7 @@ export const productFormSchema = z.object({
   isFeatured: z.boolean().default(false),
   displayOrder: z.coerce.number().int().min(0).optional().or(z.literal("").transform(() => undefined)),
   hasFreePreview: z.boolean().default(true),
+  rentAndReadEnabled: z.boolean().default(true),
   isHomepageSample: z.boolean().default(false),
   whatsIncluded: stringListSchema,
   learningObjectives: stringListSchema,

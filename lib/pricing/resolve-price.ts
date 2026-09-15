@@ -82,6 +82,7 @@ export function resolveProductPrice(
 }
 
 function activeSalePrice(price: ProductSummary["prices"][number]) {
+  if (price.salePrice != null) return price.salePrice;
   const now = Date.now();
   if (price.saleStartDate && now < new Date(price.saleStartDate).getTime()) return undefined;
   if (price.saleEndDate && now > new Date(price.saleEndDate).getTime()) return undefined;

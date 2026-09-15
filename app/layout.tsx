@@ -7,6 +7,7 @@ import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
+import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
 
 const baloo = Baloo_2({
   subsets: ["latin"],
@@ -68,9 +69,10 @@ export const viewport: Viewport = {
   themeColor: "#F0F5FA",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const showRentAndRead = await isRentalEligibleFromHeaders();
   return (
     <html lang="en" className={`${baloo.variable} ${nunito.variable}`}>
       <body className="flex min-h-screen flex-col bg-cream font-sans text-ink-500">
@@ -83,7 +85,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         <AuthSessionProvider>
-          <SiteHeader />
+          <SiteHeader showRentAndRead={showRentAndRead} />
           <main id="main-content" className="flex-1">
             {children}
           </main>

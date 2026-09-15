@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db/prisma";
 import { ProductForm } from "@/components/admin/product-form";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export const metadata: Metadata = {
   title: "Add Product",
@@ -8,14 +9,17 @@ export const metadata: Metadata = {
 };
 
 export default async function NewProductPage() {
-  const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
+  const [categories, pricingSettings] = await Promise.all([
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    getPricingSettings(),
+  ]);
 
   return (
     <div>
       <h1 className="mb-6 font-display text-2xl font-semibold text-ink-700 xs:text-3xl">
         Add Product
       </h1>
-      <ProductForm categories={categories} />
+      <ProductForm categories={categories} bookSaleDiscountPercentage={pricingSettings.bookSaleDiscountPercentage} />
     </div>
   );
 }

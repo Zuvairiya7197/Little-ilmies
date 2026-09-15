@@ -42,11 +42,13 @@ export function ProductForm({
   productId,
   defaultValues,
   currentFiles,
+  bookSaleDiscountPercentage = BOOK_SALE_DISCOUNT_PERCENTAGE,
 }: {
   categories: CategoryOption[];
   productId?: string;
   defaultValues?: Partial<ProductFormValues>;
   currentFiles?: CurrentProductFiles;
+  bookSaleDiscountPercentage?: number;
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +71,7 @@ export function ProductForm({
     defaultValues: defaultValues ?? {
       status: "PUBLISHED",
       hasFreePreview: true,
+      rentAndReadEnabled: true,
       author: "Zuvairiya Maryam",
       ageRange: "" as ProductFormValues["ageRange"],
       language: "English",
@@ -314,6 +317,7 @@ export function ProductForm({
           <Checkbox label="New Arrival" {...register("isNewArrival")} />
           <Checkbox label="Featured" {...register("isFeatured")} />
           <Checkbox label="Has Free Preview" {...register("hasFreePreview")} />
+          <Checkbox label="Rent & Read" {...register("rentAndReadEnabled")} />
           <Checkbox label="Homepage sample" {...register("isHomepageSample")} />
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -367,11 +371,12 @@ export function ProductForm({
                   className="admin-input"
                 />
               </Field>
-              <Field label="Sale Price" className="w-40" hint={`Automatically calculated at ${BOOK_SALE_DISCOUNT_PERCENTAGE}% off`}>
+              <Field label="Sale Price" className="w-40" hint={`Automatically calculated at ${bookSaleDiscountPercentage}% off`}>
                 <div className="rounded-xl bg-cream-100 px-3 py-2 text-sm font-semibold text-ink-600 shadow-clay-pressed">
                   {formatPrice(
                     calculateBookSalePrice(
-                      Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100)
+                      Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100),
+                      bookSaleDiscountPercentage
                     ),
                     watchedPrices?.[index]?.currencyCode ?? "INR"
                   )}

@@ -43,6 +43,7 @@ export interface ProductSummary {
   isFeatured?: boolean;
   displayOrder?: number;
   hasFreePreview: boolean;
+  rentAndReadEnabled?: boolean;
   previewImages?: string[];
   tags?: string[];
   usageLicense?: "PERSONAL_USE" | "PERSONAL_CLASSROOM" | "COMMERCIAL_USE";
@@ -92,6 +93,7 @@ export interface BundleSummary {
     compareAtPrice?: number;
     enabled: boolean;
   }[];
+  customBundleDiscountPercentage?: number;
 }
 
 export type SortOption =

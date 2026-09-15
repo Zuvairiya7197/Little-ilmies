@@ -12,6 +12,8 @@ import type { CurrencyCode } from "@/types/pricing";
 import { Prisma } from "@prisma/client";
 import { defaultExtra, detailExtras } from "@/data/product-details";
 import { productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
+import { calculateBookSalePrice, calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
+import { getPricingSettings, type PricingSettings } from "@/lib/settings/pricing-settings";
 
 const productWithRelations = Prisma.validator<Prisma.ProductDefaultArgs>()({
   include: { prices: true, categories: { include: { category: true } } },
@@ -19,7 +21,10 @@ const productWithRelations = Prisma.validator<Prisma.ProductDefaultArgs>()({
 
 type ProductWithRelations = Prisma.ProductGetPayload<typeof productWithRelations>;
 
-function toProductSummary(product: ProductWithRelations): ProductSummary {
+function toProductSummary(
+  product: ProductWithRelations,
+  settings: PricingSettings
+): ProductSummary {
   const primaryCategory = product.categories[0]?.category;
   const categories = product.categories.map(({ category }) => ({
     slug: category.slug,
@@ -40,7 +45,7 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
       .map((p) => ({
         currencyCode: p.currencyCode as CurrencyCode,
         regularPrice: p.regularPrice,
-        salePrice: p.salePrice ?? undefined,
+        salePrice: calculateBookSalePrice(p.regularPrice, settings.bookSaleDiscountPercentage),
         saleStartDate: p.saleStartDate?.toISOString(),
         saleEndDate: p.saleEndDate?.toISOString(),
         isDefault: p.isDefault,
@@ -62,6 +67,7 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
     isFeatured: product.isFeatured,
     displayOrder: product.displayOrder ?? undefined,
     hasFreePreview: product.hasFreePreview,
+    rentAndReadEnabled: product.rentAndReadEnabled,
     previewImages:
       product.previewImagePaths.length > 0
         ? productPreviewUrls(product.id, product.previewImagePaths)
@@ -79,27 +85,47 @@ function toProductSummary(product: ProductWithRelations): ProductSummary {
   };
 }
 
+export async function getRentAndReadProducts(limit?: number): Promise<ProductSummary[]> {
+  const settings = await getPricingSettings();
+  const products = await prisma.product.findMany({
+    where: {
+      status: "PUBLISHED",
+      archivedAt: null,
+      rentAndReadEnabled: true,
+      privatePdfPath: { not: null },
+    },
+    orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }],
+    take: limit,
+    ...productWithRelations,
+  });
+
+  return products.map((product) => toProductSummary(product, settings));
+}
+
 export async function getPublishedProducts(): Promise<ProductSummary[]> {
+  const settings = await getPricingSettings();
   const products = await prisma.product.findMany({
     where: { status: "PUBLISHED", archivedAt: null },
     orderBy: { publishedAt: "desc" },
     ...productWithRelations,
   });
-  return products.map(toProductSummary);
+  return products.map((product) => toProductSummary(product, settings));
 }
 
 export async function getPublishedProductBySlug(slug: string): Promise<ProductSummary | null> {
+  const settings = await getPricingSettings();
   const product = await prisma.product.findFirst({
     where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
   });
-  return product ? toProductSummary(product) : null;
+  return product ? toProductSummary(product, settings) : null;
 }
 
 export async function getRelatedProducts(
   product: Pick<ProductSummary, "id" | "category" | "categorySlugs">,
   limit = 4
 ): Promise<ProductSummary[]> {
+  const settings = await getPricingSettings();
   const categorySlugs = product.categorySlugs?.length ? product.categorySlugs : [product.category.slug];
   const products = await prisma.product.findMany({
     where: {
@@ -112,17 +138,18 @@ export async function getRelatedProducts(
     orderBy: { publishedAt: "desc" },
     ...productWithRelations,
   });
-  return products.map(toProductSummary);
+  return products.map((p) => toProductSummary(p, settings));
 }
 
 export async function getPublishedProductDetailBySlug(slug: string): Promise<ProductDetail | null> {
+  const settings = await getPricingSettings();
   const product = await prisma.product.findFirst({
     where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
   });
   if (!product) return null;
 
-  const summary = toProductSummary(product);
+  const summary = toProductSummary(product, settings);
   const extra = detailExtras[slug] ?? defaultExtra(product.title);
   const related = await getRelatedProducts(summary, 4);
 
@@ -139,12 +166,13 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
 }
 
 export async function getRelatedProductsBySlug(slug: string, limit = 4): Promise<ProductSummary[]> {
+  const settings = await getPricingSettings();
   const product = await prisma.product.findFirst({
     where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
   });
   if (!product) return [];
-  return getRelatedProducts(toProductSummary(product), limit);
+  return getRelatedProducts(toProductSummary(product, settings), limit);
 }
 
 export async function getAllPublishedProductSlugs(): Promise<string[]> {
@@ -186,16 +214,18 @@ export async function getHomepageSampleProduct(): Promise<{
 }
 
 export async function getProductsByAgeRange(ageRange: AgeRange, limit = 8): Promise<ProductSummary[]> {
+  const settings = await getPricingSettings();
   const products = await prisma.product.findMany({
     where: { status: "PUBLISHED", archivedAt: null, ageRange },
     orderBy: { publishedAt: "desc" },
     take: limit,
     ...productWithRelations,
   });
-  return products.map(toProductSummary);
+  return products.map((product) => toProductSummary(product, settings));
 }
 
 export async function getActiveBundles(): Promise<BundleSummary[]> {
+  const settings = await getPricingSettings();
   const bundles = await prisma.bundle.findMany({
     where: { isActive: true },
     orderBy: { createdAt: "desc" },
@@ -203,13 +233,29 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
   });
 
   return bundles.map((bundle) => {
-    const customPrices = bundle.customPrices.map((price) => ({
-      quantity: price.quantity,
-      currencyCode: price.currencyCode as CurrencyCode,
-      price: price.price,
-      compareAtPrice: price.compareAtPrice ?? undefined,
-      enabled: price.enabled,
-    }));
+    const products = bundle.products
+      .filter((bp) => !bp.product.archivedAt)
+      .map((bp) => toProductSummary(bp.product, settings));
+    const customPrices = bundle.customPrices.map((price) => {
+      const currencyCode = price.currencyCode as CurrencyCode;
+      const regularPrices = products.flatMap((product) => {
+        const productPrice = product.prices.find((p) => p.currencyCode === currencyCode && p.isActive !== false);
+        return productPrice ? [productPrice.regularPrice] : [];
+      });
+      const sizedPrices = regularPrices.slice(0, price.quantity);
+      const computed =
+        sizedPrices.length === price.quantity
+          ? calculateCustomBundlePrice(sizedPrices, settings.customBundleDiscountPercentage)
+          : { salePrice: price.price, regularPrice: price.compareAtPrice ?? price.price };
+
+      return {
+        quantity: price.quantity,
+        currencyCode,
+        price: computed.salePrice,
+        compareAtPrice: computed.regularPrice,
+        enabled: price.enabled,
+      };
+    });
     const prices =
       bundle.type === "CUSTOM"
         ? Object.values(
@@ -254,9 +300,10 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
       description: bundle.description ?? undefined,
       coverImage: bundle.coverImage ?? undefined,
       type: bundle.type,
-      products: bundle.products.filter((bp) => !bp.product.archivedAt).map((bp) => toProductSummary(bp.product)),
+      products,
       prices,
       customPrices,
+      customBundleDiscountPercentage: settings.customBundleDiscountPercentage,
     };
   });
 }

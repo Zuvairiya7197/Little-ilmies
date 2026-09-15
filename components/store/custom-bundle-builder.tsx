@@ -47,7 +47,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
   );
   const selectedPricing =
     selectedRegularPrices.length > 0
-      ? calculateCustomBundlePrice(selectedRegularPrices)
+      ? calculateCustomBundlePrice(selectedRegularPrices, bundle.customBundleDiscountPercentage)
       : null;
   const heroBooks = bundle.products.slice(0, 8);
 
@@ -81,6 +81,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
       title: bundle.name,
       coverImage: bundle.coverImage ?? selectedBooks[0]?.coverImage ?? "/images/explore-bundles.png",
       bundleSize: selectedSize.quantity,
+      customBundleDiscountPercentage: bundle.customBundleDiscountPercentage,
       selectedProductIds: selectedIds,
       selectedBooks,
       bundlePrices: bundle.customPrices,
