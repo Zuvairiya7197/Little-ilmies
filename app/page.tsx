@@ -13,7 +13,11 @@ import { BookPreviewShowcase } from "@/components/store/home/book-preview-showca
 import { WhyParentsChoose } from "@/components/store/home/why-parents-choose";
 import { ExploreMore } from "@/components/store/home/explore-more";
 import { ParentCta } from "@/components/store/home/parent-cta";
-import { getActiveBundles, getHomepageSampleProduct, getPublishedProducts } from "@/lib/db/catalog";
+import {
+  getActiveBundles,
+  getHomepageSampleProduct,
+  getPublishedProducts,
+} from "@/lib/db/catalog";
 import { Reveal } from "@/components/ui/reveal";
 import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
 
@@ -29,12 +33,14 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, bundles, homepageSample, rentalEligible] = await Promise.all([
-    getPublishedProducts(),
-    getActiveBundles(),
-    getHomepageSampleProduct(),
-    isRentalEligibleFromHeaders(),
-  ]);
+  const [products, bundles, homepageSample, rentalEligible] = await Promise.all(
+    [
+      getPublishedProducts(),
+      getActiveBundles(),
+      getHomepageSampleProduct(),
+      isRentalEligibleFromHeaders(),
+    ],
+  );
 
   return (
     <>
