@@ -1418,8 +1418,7 @@ async function uploadPdfToBlob(
       onUploadProgress: ({ percentage }) => onProgress(percentage),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown Blob upload error";
-    throw new Error(`Could not upload PDF to Vercel Blob: ${message}`);
+    throw new Error(`Could not upload PDF to Vercel Blob: ${blobUploadErrorMessage(error)}`);
   }
 }
 
@@ -1459,9 +1458,24 @@ async function uploadRentalPagesToBlob(
     }
     return pathnames;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown Blob upload error";
-    throw new Error(`Could not upload rental pages to Vercel Blob: ${message}`);
+    throw new Error(`Could not upload rental pages to Vercel Blob: ${blobUploadErrorMessage(error)}`);
   }
+}
+
+/**
+ * The Blob client SDK collapses almost any server-side failure from
+ * handleUploadUrl into this exact generic string, discarding whatever
+ * real error our own route returned — most commonly because
+ * BLOB_READ_WRITE_TOKEN isn't set on this deployment (no Blob store
+ * connected in the Vercel project). Surface that likely cause here since
+ * the SDK won't tell us which failure actually happened.
+ */
+function blobUploadErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : "Unknown Blob upload error";
+  if (message.includes("Failed to retrieve the presigned URL") || message.includes("Failed to retrieve the client token")) {
+    return `${message} — this usually means no Blob store is connected to this Vercel project (Storage → Connect a Blob store), or BLOB_READ_WRITE_TOKEN is missing/invalid. Check the server logs for the exact cause.`;
+  }
+  return message;
 }
 
 function rentalPathname(productId: string, filename: string, index: number) {

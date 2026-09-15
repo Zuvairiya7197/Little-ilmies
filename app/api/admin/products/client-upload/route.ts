@@ -19,6 +19,28 @@ export async function POST(request: NextRequest) {
     const denied = await requireAdminApi();
     if (denied) return denied;
 
+    // issueSignedToken() below requires BLOB_READ_WRITE_TOKEN to actually
+    // issue a token — without it this route always fails, and the Blob
+    // client SDK collapses any non-2xx response here into the generic
+    // "Failed to retrieve the presigned URL", hiding the real cause from
+    // the admin's screen. Check explicitly and log loudly so this is
+    // diagnosable from Vercel's function logs instead of guessed at.
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error(
+        "Client upload failed: BLOB_READ_WRITE_TOKEN is not set. " +
+          "This Vercel project needs a Blob store connected (Vercel dashboard " +
+          "→ Project → Storage → Connect a Blob store), which sets this env " +
+          "var automatically. File uploads cannot work until that's done."
+      );
+      return NextResponse.json(
+        {
+          error:
+            "File storage isn't configured for this deployment yet (missing Blob store). Contact the site administrator.",
+        },
+        { status: 503 }
+      );
+    }
+
     const response = await handleUploadPresigned({
       request,
       body,
