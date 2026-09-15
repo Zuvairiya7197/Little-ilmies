@@ -173,8 +173,8 @@ export function BundleForm({
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="w-48">
           <label
             htmlFor="bundle-type"
             className="mb-1.5 block text-sm font-semibold text-ink-600"
@@ -190,7 +190,41 @@ export function BundleForm({
             <option value="CUSTOM">Custom bundle</option>
           </select>
         </div>
-        <label className="flex items-end gap-2.5 pb-2 text-sm font-semibold text-ink-600">
+        {bundleType === "FIXED" && (
+          <>
+            <div className="w-36">
+              <label
+                htmlFor="bundle-price-inr"
+                className="mb-1.5 block text-sm font-semibold text-ink-600"
+              >
+                Price INR
+              </label>
+              <input
+                id="bundle-price-inr"
+                type="number"
+                step="0.01"
+                {...register("bundlePriceInr")}
+                className="admin-input"
+              />
+            </div>
+            <div className="w-36">
+              <label
+                htmlFor="bundle-price-usd"
+                className="mb-1.5 block text-sm font-semibold text-ink-600"
+              >
+                Price USD
+              </label>
+              <input
+                id="bundle-price-usd"
+                type="number"
+                step="0.01"
+                {...register("bundlePriceUsd")}
+                className="admin-input"
+              />
+            </div>
+          </>
+        )}
+        <label className="flex items-center gap-2.5 pb-2.5 text-sm font-semibold text-ink-600">
           <input
             type="checkbox"
             {...register("isActive")}
@@ -199,41 +233,6 @@ export function BundleForm({
           Active
         </label>
       </div>
-
-      {bundleType === "FIXED" && (
-        <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
-          <div>
-            <label
-              htmlFor="bundle-price-inr"
-              className="mb-1.5 block text-sm font-semibold text-ink-600"
-            >
-              Bundle price INR
-            </label>
-            <input
-              id="bundle-price-inr"
-              type="number"
-              step="0.01"
-              {...register("bundlePriceInr")}
-              className="admin-input"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="bundle-price-usd"
-              className="mb-1.5 block text-sm font-semibold text-ink-600"
-            >
-              Bundle price USD
-            </label>
-            <input
-              id="bundle-price-usd"
-              type="number"
-              step="0.01"
-              {...register("bundlePriceUsd")}
-              className="admin-input"
-            />
-          </div>
-        </div>
-      )}
 
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-3">

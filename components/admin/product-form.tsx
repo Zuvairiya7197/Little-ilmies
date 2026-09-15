@@ -213,56 +213,54 @@ export function ProductForm({
 
       <div className="card-surface p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Catalog Details</h2>
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.75fr)]">
-          <div>
-            <p className="mb-2 text-sm font-semibold text-ink-600">Categories</p>
-            <Controller
-              control={control}
-              name="categoryIds"
-              render={({ field }) => <CategoryDropdown categories={categories} value={field.value ?? []} onChange={field.onChange} />}
-            />
-            {errors.categoryIds && <p className="mt-2 text-xs text-gold-700">{errors.categoryIds.message}</p>}
-          </div>
+        <div>
+          <p className="mb-2 text-sm font-semibold text-ink-600">Categories</p>
+          <Controller
+            control={control}
+            name="categoryIds"
+            render={({ field }) => <CategoryDropdown categories={categories} value={field.value ?? []} onChange={field.onChange} />}
+          />
+          {errors.categoryIds && <p className="mt-2 text-xs text-gold-700">{errors.categoryIds.message}</p>}
+        </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Age Range" error={errors.ageRange?.message}>
-              <select {...register("ageRange")} className="admin-input">
-                <option value="">Choose age range</option>
-                {AGE_OPTIONS.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Language" error={errors.language?.message}>
-              <select {...register("language")} className="admin-input">
-                {["English", "Arabic", "Hindi", "Marathi"].map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Format" error={errors.format?.message}>
-              <select {...register("format")} className="admin-input">
-                {["PDF", "Printable PDF", "Interactive PDF"].map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          <Field label="Page Count" error={errors.pageCount?.message}>
-              <input type="number" {...register("pageCount")} className="admin-input" />
-            </Field>
-            <Field label="Status">
-              <select {...register("status")} className="admin-input">
-                <option value="DRAFT">Draft</option>
-                <option value="PUBLISHED">Published</option>
-              </select>
-            </Field>
-          </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Field label="Age Range" error={errors.ageRange?.message} className="w-36">
+            <select {...register("ageRange")} className="admin-input">
+              <option value="">Choose</option>
+              {AGE_OPTIONS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Language" error={errors.language?.message} className="w-32">
+            <select {...register("language")} className="admin-input">
+              {["English", "Arabic", "Hindi", "Marathi"].map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Format" error={errors.format?.message} className="w-44">
+            <select {...register("format")} className="admin-input">
+              {["PDF", "Printable PDF", "Interactive PDF"].map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Page Count" error={errors.pageCount?.message} className="w-28">
+            <input type="number" {...register("pageCount")} className="admin-input" />
+          </Field>
+          <Field label="Status" className="w-32">
+            <select {...register("status")} className="admin-input">
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+            </select>
+          </Field>
         </div>
         <ArrayField
           className="mt-5"
@@ -333,11 +331,11 @@ export function ProductForm({
           <Checkbox label="Rent & Read" {...register("rentAndReadEnabled")} />
           <Checkbox label="Homepage sample" {...register("isHomepageSample")} />
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Display Order" error={errors.displayOrder?.message} hint="Lower number appears first in curated sections">
+        <div className="mt-4 flex flex-wrap gap-4">
+          <Field label="Display Order" error={errors.displayOrder?.message} hint="Lower number appears first" className="w-40">
             <input type="number" min="0" {...register("displayOrder")} className="admin-input" />
           </Field>
-          <Field label="Product Version" error={errors.productVersion?.message} hint="Optional, for future PDF updates">
+          <Field label="Product Version" error={errors.productVersion?.message} hint="Optional" className="w-32">
             <input {...register("productVersion")} className="admin-input" placeholder="1.0" />
           </Field>
         </div>
@@ -682,10 +680,10 @@ export function ProductForm({
               label="SEO Title"
               error={errors.seoTitle?.message}
               hint={`The title shown in search engine results. ${seoTitle.length}/60`}
+              className="lg:col-span-2"
             >
               <input {...register("seoTitle")} className="admin-input" />
             </Field>
-            <div className="hidden lg:block" />
             <Field
               label="Meta Description"
               error={errors.seoDescription?.message}

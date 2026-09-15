@@ -51,19 +51,21 @@ export function CategoryForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="card-surface flex flex-col gap-4 p-5" noValidate>
-      <div>
-        <label htmlFor="category-name" className="mb-1.5 block text-sm font-semibold text-ink-600">
-          Name
-        </label>
-        <input id="category-name" {...register("name")} className="admin-input" />
-        {errors.name && <p className="mt-1 text-xs text-gold-700">{errors.name.message}</p>}
-      </div>
-      <div>
-        <label htmlFor="category-slug" className="mb-1.5 block text-sm font-semibold text-ink-600">
-          Slug
-        </label>
-        <input id="category-slug" {...register("slug")} className="admin-input" />
-        {errors.slug && <p className="mt-1 text-xs text-gold-700">{errors.slug.message}</p>}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="category-name" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            Name
+          </label>
+          <input id="category-name" {...register("name")} className="admin-input" />
+          {errors.name && <p className="mt-1 text-xs text-gold-700">{errors.name.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="category-slug" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            Slug
+          </label>
+          <input id="category-slug" {...register("slug")} className="admin-input" />
+          {errors.slug && <p className="mt-1 text-xs text-gold-700">{errors.slug.message}</p>}
+        </div>
       </div>
       <div>
         <label htmlFor="category-description" className="mb-1.5 block text-sm font-semibold text-ink-600">

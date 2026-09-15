@@ -54,16 +54,15 @@ export function CouponForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="card-surface flex flex-col gap-4 p-5" noValidate>
-      <div>
-        <label htmlFor="coupon-code" className="mb-1.5 block text-sm font-semibold text-ink-600">
-          Code
-        </label>
-        <input id="coupon-code" {...register("code")} className="admin-input uppercase" placeholder="WELCOME10" />
-        {errors.code && <p className="mt-1 text-xs text-gold-700">{errors.code.message}</p>}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
-        <div>
+      <div className="flex flex-wrap gap-4">
+        <div className="w-40">
+          <label htmlFor="coupon-code" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            Code
+          </label>
+          <input id="coupon-code" {...register("code")} className="admin-input uppercase" placeholder="WELCOME10" />
+          {errors.code && <p className="mt-1 text-xs text-gold-700">{errors.code.message}</p>}
+        </div>
+        <div className="w-40">
           <label htmlFor="coupon-type" className="mb-1.5 block text-sm font-semibold text-ink-600">
             Discount Type
           </label>
@@ -72,25 +71,22 @@ export function CouponForm({
             <option value="FIXED_AMOUNT">Fixed Amount</option>
           </select>
         </div>
-        <div>
+        <div className="w-36">
           <label htmlFor="coupon-value" className="mb-1.5 block text-sm font-semibold text-ink-600">
             {type === "PERCENTAGE" ? "Percentage Off (%)" : "Amount Off"}
           </label>
           <input id="coupon-value" type="number" step="0.01" {...register("value")} className="admin-input" />
           {errors.value && <p className="mt-1 text-xs text-gold-700">{errors.value.message}</p>}
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
-        <div>
+        <div className="w-40">
           <label htmlFor="coupon-max-redemptions" className="mb-1.5 block text-sm font-semibold text-ink-600">
-            Max Redemptions (optional)
+            Max Redemptions
           </label>
-          <input id="coupon-max-redemptions" type="number" {...register("maxRedemptions")} className="admin-input" />
+          <input id="coupon-max-redemptions" type="number" {...register("maxRedemptions")} className="admin-input" placeholder="Optional" />
         </div>
-        <div>
+        <div className="w-40">
           <label htmlFor="coupon-expires-at" className="mb-1.5 block text-sm font-semibold text-ink-600">
-            Expires On (optional)
+            Expires On
           </label>
           <input id="coupon-expires-at" type="date" {...register("expiresAt")} className="admin-input" />
         </div>

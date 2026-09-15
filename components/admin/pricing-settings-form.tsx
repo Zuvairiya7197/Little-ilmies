@@ -53,8 +53,8 @@ export function PricingSettingsForm({ settings }: { settings: PricingSettings })
         These percentages calculate current sale prices. Existing paid orders keep their original charged amounts.
       </p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <label className="block">
+      <div className="mt-4 flex flex-wrap gap-4">
+        <label className="block w-48">
           <span className="mb-1.5 block text-sm font-semibold text-ink-600">Book sale discount (%)</span>
           <input
             type="number"
@@ -66,7 +66,7 @@ export function PricingSettingsForm({ settings }: { settings: PricingSettings })
             className="admin-input"
           />
         </label>
-        <label className="block">
+        <label className="block w-48">
           <span className="mb-1.5 block text-sm font-semibold text-ink-600">Custom bundle discount (%)</span>
           <input
             type="number"
