@@ -22,6 +22,15 @@ export async function POST(request: NextRequest) {
     const response = await handleUploadPresigned({
       request,
       body,
+      // We never pass onUploadCompleted below, so Blob's webhook-callback
+      // path (the only place this key is actually used, to verify a
+      // signed callback) never runs for us — uploads are attached to the
+      // product via our own explicit POST after uploadPresigned() resolves
+      // client-side, not via a Blob webhook. handleUploadPresigned still
+      // requires *some* value here unconditionally, so this placeholder
+      // just satisfies that presence check; it would need to be a real
+      // generated key if this route ever adopts onUploadCompleted.
+      webhookPublicKey: process.env.BLOB_WEBHOOK_PUBLIC_KEY ?? "unused-no-webhook-callback-configured",
       getSignedToken: async (pathname, clientPayload) => {
         const payload = clientPayload ? JSON.parse(clientPayload) : null;
         if (
