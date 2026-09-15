@@ -147,6 +147,13 @@ model Product {
   displayOrder Int?
   hasFreePreview Boolean @default(true)
   rentAndReadEnabled Boolean @default(true)
+  /// Full-book page images for the Rent & Read reader — admin-uploaded,
+  /// same private-storage pattern as previewImagePaths but covering every
+  /// page. Never derived from privatePdfPath at request time: the reader
+  /// route only ever serves these images, so the original PDF is never
+  /// sent to a rental customer. Rent & Read stays unavailable for a book
+  /// until these are uploaded, even if rentAndReadEnabled is true.
+  rentalPageImagePaths String[] @default([])
   /// At most one product should have this set — it's the book featured in
   /// the homepage "See before you buy" flip-through showcase. Enforced at
   /// the application layer (unsetting any previous sample before setting a

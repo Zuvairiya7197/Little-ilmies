@@ -44,6 +44,11 @@ export interface ProductSummary {
   displayOrder?: number;
   hasFreePreview: boolean;
   rentAndReadEnabled?: boolean;
+  /** True once the admin has uploaded Rent & Read page images for this
+   * book — the reader has nothing to serve until then, so the storefront
+   * hides the Rent & Read offer even if rentAndReadEnabled is on. Never
+   * exposes the actual rentalPageImagePaths paths to the client. */
+  hasRentalPages?: boolean;
   previewImages?: string[];
   tags?: string[];
   usageLicense?: "PERSONAL_USE" | "PERSONAL_CLASSROOM" | "COMMERCIAL_USE";

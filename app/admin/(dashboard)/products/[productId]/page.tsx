@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { ProductForm } from "@/components/admin/product-form";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
-import { productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
+import { productCoverUrl, productPreviewUrls, productRentalPageUrls } from "@/lib/catalog-assets";
 import type { CurrencyCode } from "@/types/pricing";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
@@ -49,6 +49,8 @@ export default async function EditProductPage({ params }: PageProps) {
           pdfFileSize: product.pdfFileSize ?? undefined,
           previewPageCount: product.previewImagePaths.length,
           previewImages: productPreviewUrls(product.id, product.previewImagePaths),
+          rentalPageCount: product.rentalPageImagePaths.length,
+          rentalPageImages: productRentalPageUrls(product.id, product.rentalPageImagePaths),
         }}
         defaultValues={{
           title: product.title,

@@ -21,6 +21,7 @@ import {
   Headset,
   Heart,
   Download,
+  BookOpen,
 } from "lucide-react";
 import { checkoutSchema, type CheckoutFormValues } from "@/lib/validation/checkout";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
@@ -28,6 +29,7 @@ import { useCartStore } from "@/lib/store/use-cart-store";
 import { useRazorpayScript } from "@/hooks/use-razorpay-script";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
+import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
 
 type PaymentMethod = "upi" | "card" | "netbanking" | "wallet";
 
@@ -128,6 +130,8 @@ export function CheckoutForm({
                 }
               : item.type === "RENTAL"
                 ? { type: "RENTAL", productId: item.productId, quantity: 1 }
+              : item.type === "UPGRADE"
+                ? { type: "UPGRADE", productId: item.productId, quantity: 1 }
               : { type: "PRODUCT", productId: item.productId, quantity: item.quantity }
           ),
         }),
@@ -179,7 +183,10 @@ export function CheckoutForm({
 
           if (verifyRes.ok) {
             clearCart();
-            router.push(`/payment-success?email=${encodeURIComponent(values.email)}`);
+            const isRentalOrder = lineItems.some((item) => item.type === "RENTAL");
+            router.push(
+              `/payment-success?email=${encodeURIComponent(values.email)}${isRentalOrder ? "&type=rental" : ""}`
+            );
           } else {
             router.push("/payment-failed");
           }
@@ -259,6 +266,16 @@ export function CheckoutForm({
       {/* Mobile & tablet: Order Items, matches app-style checkout design */}
       {mobilePhase === "details" && (
         <div className="flex flex-col gap-6">
+          {lineItems.some((item) => item.type === "RENTAL") && (
+            <div className="flex items-start gap-2.5 rounded-2xl bg-sage-50 p-3.5 text-xs font-semibold text-sage-800">
+              <BookOpen className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                Order type: Rental. Rent &amp; Read gives {RENTAL_DURATION_DAYS} days of online reading access —
+                no download. This is separate from any Buy &amp; Download items in your cart.
+              </span>
+            </div>
+          )}
+
           <div className="rounded-3xl bg-cream-50 p-5 shadow-clay-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-display text-lg font-bold text-ink-700">Order Items ({lineItems.length})</h2>
@@ -278,6 +295,7 @@ export function CheckoutForm({
                     <p className="mt-0.5 text-sm text-ink-400">
                       {item.type === "CUSTOM_BUNDLE" && item.bundleSize ? `${item.bundleSize} books - ` : ""}
                       {item.type === "RENTAL" ? "Rent & Read - " : ""}
+                      {item.type === "UPGRADE" ? "Upgrade to permanent ownership - " : ""}
                       {formatPrice(item.unitPrice, item.currencyCode)}
                     </p>
                   </div>

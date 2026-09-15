@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
   const { buyerName, buyerEmail, items } = parsed.data;
 
   const hasRentalItems = items.some((item) => item.type === "RENTAL");
+  const hasUpgradeItems = items.some((item) => item.type === "UPGRADE");
   const hasNonRentalItems = items.some((item) => item.type !== "RENTAL");
   if (hasRentalItems && hasNonRentalItems) {
     return NextResponse.json(
@@ -50,6 +51,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const session = await getAuthSession();
+  const userId = session?.user?.id;
+
+  if (hasUpgradeItems && !userId) {
+    return NextResponse.json({ error: "Please log in to upgrade a rental." }, { status: 401 });
+  }
+
   const productItems = items.filter((item) => item.type !== "CUSTOM_BUNDLE");
   const products = await prisma.product.findMany({
     where: { id: { in: productItems.map((i) => i.productId) }, status: "PUBLISHED", archivedAt: null },
@@ -59,6 +67,20 @@ export async function POST(request: NextRequest) {
   if (missing.length > 0) {
     return NextResponse.json(
       { error: "One or more products are unavailable", productIds: missing.map((m) => m.productId) },
+      { status: 422 }
+    );
+  }
+
+  const unrentable = items.filter(
+    (item) =>
+      item.type === "RENTAL" &&
+      !products.find(
+        (p) => p.id === item.productId && p.rentAndReadEnabled && p.rentalPageImagePaths.length > 0
+      )
+  );
+  if (unrentable.length > 0) {
+    return NextResponse.json(
+      { error: "Rent & Read is not available for one or more of these books yet." },
       { status: 422 }
     );
   }
@@ -136,6 +158,45 @@ export async function POST(request: NextRequest) {
       continue;
     }
 
+    if (item.type === "UPGRADE") {
+      // userId is guaranteed by the hasUpgradeItems check above.
+      const activeRental = await prisma.rentalAccess.findFirst({
+        where: {
+          productId: item.productId,
+          rentalExpiresAt: { gt: new Date() },
+          order: { userId, status: "PAID" },
+        },
+        include: { order: { include: { items: true } } },
+        orderBy: { rentalExpiresAt: "desc" },
+      });
+      const rentalOrderItem = activeRental?.order.items.find(
+        (orderItem) => orderItem.productId === item.productId && orderItem.itemType === "RENTAL"
+      );
+      if (!activeRental || !rentalOrderItem) {
+        return NextResponse.json(
+          { error: "No active rental found for this book to upgrade." },
+          { status: 422 }
+        );
+      }
+      const alreadyOwns = await prisma.download.findFirst({
+        where: { productId: item.productId, order: { userId, status: "PAID" } },
+        select: { id: true },
+      });
+      if (alreadyOwns) {
+        return NextResponse.json({ error: "You already own this ebook." }, { status: 422 });
+      }
+
+      const upgradePrice = Math.max(0, unitPrice - rentalOrderItem.unitPrice);
+      subtotal += upgradePrice;
+      orderItemsData.push({
+        product: { connect: { id: item.productId } },
+        itemType: "PRODUCT",
+        unitPrice: upgradePrice,
+        quantity: 1,
+      });
+      continue;
+    }
+
     subtotal += unitPrice * item.quantity;
     orderItemsData.push({
       product: { connect: { id: item.productId } },
@@ -151,9 +212,6 @@ export async function POST(request: NextRequest) {
   const discountAmount = 0;
   const taxAmount = 0;
   const totalAmount = subtotal - discountAmount + taxAmount;
-
-  const session = await getAuthSession();
-  const userId = session?.user?.id;
 
   const order = await prisma.order.create({
     data: {

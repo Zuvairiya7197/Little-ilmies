@@ -29,7 +29,14 @@ export default async function AdminOrdersPage() {
                 className="flex flex-wrap items-center justify-between gap-3 p-4 transition-colors hover:bg-cream-100"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-ink-600">{order.buyerEmail}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold text-ink-600">{order.buyerEmail}</p>
+                    {order.items.some((item) => item.itemType === "RENTAL") && (
+                      <span className="shrink-0 rounded-full bg-sage-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sage-700">
+                        Rental
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-ink-300">
                     #{order.id.slice(-8).toUpperCase()} ·{" "}
                     {new Date(order.createdAt).toLocaleDateString("en-US", {

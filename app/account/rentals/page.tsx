@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, BookOpen, Clock, ShoppingBag } from "lucide-react";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getRentalsForUser } from "@/lib/db/orders";
+import type { RentalRecord } from "@/types/account";
 
 export const metadata: Metadata = {
   title: "Rentals",
@@ -46,44 +47,85 @@ export default async function RentalsPage() {
           </Link>
         </section>
       ) : (
-        <section className="mt-8 grid gap-4">
-          {rentals.map((rental) => {
-            const expiresAt = new Date(rental.expiresAt).toLocaleString("en-IN", {
-              dateStyle: "medium",
-              timeStyle: "short",
-            });
-
-            return (
-              <article key={`${rental.orderId}-${rental.productId}`} className="flex gap-4 rounded-3xl bg-cream-50 p-4 shadow-clay-sm">
-                <Link href={`/product/${rental.slug}`} className="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-cream-200">
-                  <Image src={rental.coverImage} alt="" fill sizes="96px" className="object-cover" />
-                </Link>
-                <div className="flex min-w-0 flex-1 flex-col justify-between">
-                  <div>
-                    <Link href={`/product/${rental.slug}`} className="line-clamp-2 font-display text-lg font-bold text-ink-700">
-                      {rental.title}
-                    </Link>
-                    <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-ink-400">
-                      <Clock className="h-4 w-4" aria-hidden="true" />
-                      {rental.isActive ? `Expires ${expiresAt}` : `Expired ${expiresAt}`}
-                    </p>
-                  </div>
-                  {rental.isActive ? (
-                    <Link href={`/read/${rental.productId}`} className="btn-primary mt-4 w-fit">
-                      <BookOpen className="h-4 w-4" aria-hidden="true" />
-                      Read online
-                    </Link>
-                  ) : (
-                    <span className="mt-4 w-fit rounded-full bg-ink-50 px-4 py-2 text-xs font-bold text-ink-400">
-                      Rental expired
-                    </span>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </section>
+        <>
+          {rentals.some((r) => r.isActive) && (
+            <section className="mt-8 grid gap-4">
+              <h2 className="font-display text-lg font-bold text-ink-600">Active</h2>
+              {rentals
+                .filter((r) => r.isActive)
+                .map((rental) => (
+                  <RentalCard key={`${rental.orderId}-${rental.productId}`} rental={rental} />
+                ))}
+            </section>
+          )}
+          {rentals.some((r) => !r.isActive) && (
+            <section className="mt-8 grid gap-4">
+              <h2 className="font-display text-lg font-bold text-ink-600">Expired Rentals</h2>
+              {rentals
+                .filter((r) => !r.isActive)
+                .map((rental) => (
+                  <RentalCard key={`${rental.orderId}-${rental.productId}`} rental={rental} />
+                ))}
+            </section>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+function daysRemainingLabel(expiresAt: string) {
+  const msRemaining = new Date(expiresAt).getTime() - Date.now();
+  const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
+  if (daysRemaining <= 0) return "Expires soon";
+  if (daysRemaining === 1) return "1 day remaining";
+  return `${daysRemaining} days remaining`;
+}
+
+function RentalCard({ rental }: { rental: RentalRecord }) {
+  const expiresAt = new Date(rental.expiresAt).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  return (
+    <article className="flex gap-4 rounded-3xl bg-cream-50 p-4 shadow-clay-sm">
+      <Link href={`/product/${rental.slug}`} className="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-cream-200">
+        <Image src={rental.coverImage} alt="" fill sizes="96px" className="object-cover" />
+      </Link>
+      <div className="flex min-w-0 flex-1 flex-col justify-between">
+        <div>
+          <Link href={`/product/${rental.slug}`} className="line-clamp-2 font-display text-lg font-bold text-ink-700">
+            {rental.title}
+          </Link>
+          <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-ink-400">
+            <Clock className="h-4 w-4" aria-hidden="true" />
+            {rental.isActive ? `Expires ${expiresAt}` : `Expired ${expiresAt}`}
+          </p>
+          {rental.isActive && (
+            <p className="mt-0.5 text-xs font-semibold text-sage-700" role="status">
+              {daysRemainingLabel(rental.expiresAt)}
+            </p>
+          )}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {rental.isActive ? (
+            <Link href={`/read/${rental.productId}`} className="btn-primary w-fit">
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Read Now
+            </Link>
+          ) : (
+            <>
+              <span className="w-fit rounded-full bg-ink-50 px-4 py-2 text-xs font-bold text-ink-400">
+                Rental expired
+              </span>
+              <Link href={`/product/${rental.slug}`} className="btn-secondary w-fit">
+                Buy & Download
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }

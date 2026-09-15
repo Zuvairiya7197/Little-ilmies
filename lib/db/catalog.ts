@@ -68,6 +68,7 @@ function toProductSummary(
     displayOrder: product.displayOrder ?? undefined,
     hasFreePreview: product.hasFreePreview,
     rentAndReadEnabled: product.rentAndReadEnabled,
+    hasRentalPages: product.rentalPageImagePaths.length > 0,
     previewImages:
       product.previewImagePaths.length > 0
         ? productPreviewUrls(product.id, product.previewImagePaths)
@@ -92,7 +93,7 @@ export async function getRentAndReadProducts(limit?: number): Promise<ProductSum
       status: "PUBLISHED",
       archivedAt: null,
       rentAndReadEnabled: true,
-      privatePdfPath: { not: null },
+      rentalPageImagePaths: { isEmpty: false },
     },
     orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }],
     take: limit,

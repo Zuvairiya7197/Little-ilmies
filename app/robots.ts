@@ -18,6 +18,8 @@ export default function robots(): MetadataRoute.Robots {
         "/login",
         "/payment-success",
         "/payment-failed",
+        "/read",
+        "/read/",
       ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,

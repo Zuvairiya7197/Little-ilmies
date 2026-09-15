@@ -24,6 +24,15 @@ const rentalCheckoutItemSchema = z.object({
   quantity: z.literal(1).default(1),
 });
 
+/** Upgrades an existing active rental to a permanent purchase. The credit
+ * for the rental already paid is computed server-side from the buyer's
+ * own paid rental order — never trust a client-submitted discount. */
+const upgradeCheckoutItemSchema = z.object({
+  type: z.literal("UPGRADE"),
+  productId: z.string().min(1),
+  quantity: z.literal(1).default(1),
+});
+
 const customBundleCheckoutItemSchema = z.object({
   type: z.literal("CUSTOM_BUNDLE"),
   bundleId: z.string().min(1),
@@ -34,6 +43,7 @@ const customBundleCheckoutItemSchema = z.object({
 export const checkoutItemSchema = z.union([
   customBundleCheckoutItemSchema,
   rentalCheckoutItemSchema,
+  upgradeCheckoutItemSchema,
   productCheckoutItemSchema,
 ]);
 

@@ -4,7 +4,7 @@ import type { ProductSummary } from "@/types/catalog";
 
 export interface CartItem {
   cartItemId?: string;
-  type?: "PRODUCT" | "CUSTOM_BUNDLE" | "RENTAL";
+  type?: "PRODUCT" | "CUSTOM_BUNDLE" | "RENTAL" | "UPGRADE";
   productId: string;
   bundleId?: string;
   slug: string;
@@ -50,7 +50,8 @@ function matchesCartItem(item: CartItem, cartItemId: string) {
   const itemId = item.cartItemId ?? item.productId;
   return (
     itemId === cartItemId ||
-    (item.type === "RENTAL" && item.productId === cartItemId)
+    (item.type === "RENTAL" && item.productId === cartItemId) ||
+    (item.type === "UPGRADE" && item.productId === cartItemId)
   );
 }
 
@@ -68,7 +69,9 @@ export const useCartStore = create<CartState>()(
             item.cartItemId ??
             (item.type === "RENTAL"
               ? `rental:${item.productId}`
-              : item.productId),
+              : item.type === "UPGRADE"
+                ? `upgrade:${item.productId}`
+                : item.productId),
         };
         const existing = get().items.find(
           (i) => (i.cartItemId ?? i.productId) === itemWithId.cartItemId,

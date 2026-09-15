@@ -12,6 +12,8 @@ import { booksMenuSections } from "@/lib/store-navigation";
 import type { CurrencyCode } from "@/types/pricing";
 import { calculateBookSalePrice, BOOK_SALE_DISCOUNT_PERCENTAGE } from "@/lib/pricing/automatic-pricing";
 import { formatPrice } from "@/lib/utils/format";
+import { calculateRentalPrice } from "@/lib/rentals/pricing";
+import { RENTAL_CURRENCY_CODE, RENTAL_DURATION_DAYS, RENTAL_PERCENTAGE } from "@/lib/rentals/config";
 
 interface CategoryOption {
   id: string;
@@ -26,6 +28,8 @@ interface CurrentProductFiles {
   pdfFileSize?: number;
   previewPageCount?: number;
   previewImages?: string[];
+  rentalPageCount?: number;
+  rentalPageImages?: string[];
 }
 
 const CURRENCY_OPTIONS: CurrencyCode[] = ["INR", "USD", "GBP", "AED"];
@@ -58,6 +62,8 @@ export function ProductForm({
   const [pdfUploadProgress, setPdfUploadProgress] = useState<number | null>(null);
   const [previewUploadProgress, setPreviewUploadProgress] = useState<number | null>(null);
   const [previewFiles, setPreviewFiles] = useState<File[]>([]);
+  const [rentalUploadProgress, setRentalUploadProgress] = useState<number | null>(null);
+  const [rentalFiles, setRentalFiles] = useState<File[]>([]);
 
   const {
     register,
@@ -89,6 +95,7 @@ export function ProductForm({
   });
   const title = watch("title");
   const hasFreePreview = watch("hasFreePreview");
+  const rentAndReadEnabled = watch("rentAndReadEnabled");
   const slug = watch("slug");
   const shortDescription = watch("shortDescription") ?? "";
   const seoTitle = watch("seoTitle") ?? "";
@@ -150,6 +157,11 @@ export function ProductForm({
         const pathnames = await uploadPreviewPagesToBlob(savedId, previewFiles, setPreviewUploadProgress);
         await attachUploadedPreviewPages(savedId, pathnames);
       }
+      if (rentalFiles.length > 0) {
+        setRentalUploadProgress(0);
+        const pathnames = await uploadRentalPagesToBlob(savedId, rentalFiles, setRentalUploadProgress);
+        await attachUploadedRentalPages(savedId, pathnames);
+      }
 
       router.push("/admin/products");
       router.refresh();
@@ -159,6 +171,7 @@ export function ProductForm({
       setIsSubmitting(false);
       setPdfUploadProgress(null);
       setPreviewUploadProgress(null);
+      setRentalUploadProgress(null);
     }
   }
 
@@ -329,6 +342,107 @@ export function ProductForm({
           </Field>
         </div>
         <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
+      </div>
+
+      <div className="card-surface p-5">
+        <h2 className="font-display text-lg font-semibold text-ink-700">Rent & Read</h2>
+        <p className="mt-1 text-xs text-ink-400">
+          India-only temporary online reading access. Rental price is automatically calculated — never entered
+          manually.
+        </p>
+
+        {(() => {
+          const inrIndex = watchedPrices?.findIndex((p) => p?.currencyCode === "INR") ?? -1;
+          const inrRegularRupees = inrIndex >= 0 ? Number(watchedPrices?.[inrIndex]?.regularPrice) || 0 : 0;
+          const inrRegularMinor = Math.round(inrRegularRupees * 100);
+          const inrSaleMinor = calculateBookSalePrice(inrRegularMinor, BOOK_SALE_DISCOUNT_PERCENTAGE);
+          const rentalPriceMinor = calculateRentalPrice(inrSaleMinor);
+
+          return (
+            <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-cream-50 p-4 shadow-clay-pressed sm:grid-cols-4">
+              <div>
+                <p className="text-xs font-semibold text-ink-300">Sale Price (INR)</p>
+                <p className="mt-0.5 font-display text-base font-semibold text-ink-700">
+                  {inrIndex >= 0 ? formatPrice(inrSaleMinor, RENTAL_CURRENCY_CODE) : "No INR price set"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-ink-300">Rental Percentage</p>
+                <p className="mt-0.5 font-display text-base font-semibold text-ink-700">{RENTAL_PERCENTAGE}%</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-ink-300">Rental Duration</p>
+                <p className="mt-0.5 font-display text-base font-semibold text-ink-700">{RENTAL_DURATION_DAYS} days</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-ink-300">Calculated Rental Price</p>
+                <p className="mt-0.5 font-display text-base font-semibold text-sage-700">
+                  {inrIndex >= 0 ? formatPrice(rentalPriceMinor, RENTAL_CURRENCY_CODE) : "—"}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
+        <div className="mt-4">
+          <PreviewPagesField
+            files={rentalFiles}
+            onChange={setRentalFiles}
+            isReplacing={Boolean(productId)}
+            disabled={!rentAndReadEnabled}
+            label={productId ? "Replace Rent & Read Pages" : "Rent & Read Pages"}
+            placeholder={
+              !rentAndReadEnabled
+                ? "Enable Rent & Read to upload reader pages"
+                : "Choose every page as an image, in order"
+            }
+          />
+          <p className="mt-1.5 text-xs text-ink-300">
+            Upload every page of this book as an image (not the PDF). The rental reader serves only these
+            images — Rent & Read stays unavailable on the storefront until pages are uploaded, even if enabled
+            above.
+          </p>
+          {rentalUploadProgress !== null && (
+            <div className="mt-2 rounded-xl bg-cream-50 px-3 py-2">
+              <div className="h-2 overflow-hidden rounded-full bg-ink-100">
+                <div
+                  className="h-full rounded-full bg-sage-500 transition-all"
+                  style={{ width: `${rentalUploadProgress}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-xs font-semibold text-ink-400">
+                Uploading rental pages {Math.round(rentalUploadProgress)}%
+              </p>
+            </div>
+          )}
+          {productId && (
+            <div className="mt-3 rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
+              <p className="text-sm font-semibold text-ink-600">
+                Current rental pages:{" "}
+                {currentFiles?.rentalPageCount
+                  ? `${currentFiles.rentalPageCount} page${currentFiles.rentalPageCount === 1 ? "" : "s"}`
+                  : "None uploaded"}
+              </p>
+              {currentFiles?.rentalPageCount ? (
+                <div className="mt-2">
+                  <RentalPageThumbs
+                    productId={productId}
+                    images={currentFiles.rentalPageImages ?? []}
+                    refresh={router.refresh}
+                    setError={setSubmitError}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeUploadedAsset("rental", productId, router.refresh, setSubmitError)}
+                    className="mt-2 text-xs font-semibold text-gold-700 hover:underline"
+                  >
+                    Remove all rental pages
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="card-surface p-5">
@@ -920,11 +1034,15 @@ function PreviewPagesField({
   onChange,
   isReplacing = false,
   disabled = false,
+  label,
+  placeholder,
 }: {
   files: File[];
   onChange: (files: File[]) => void;
   isReplacing?: boolean;
   disabled?: boolean;
+  label?: string;
+  placeholder?: string;
 }) {
   function addFiles(fileList: FileList | null) {
     if (!fileList) return;
@@ -938,11 +1056,11 @@ function PreviewPagesField({
   return (
     <div>
       <label className="mb-1.5 block text-sm font-semibold text-ink-600">
-        {isReplacing ? "Replace Free Preview Pages" : "Free Preview Pages"}
+        {label ?? (isReplacing ? "Replace Free Preview Pages" : "Free Preview Pages")}
       </label>
       <label className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
         <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
-        {disabled ? "Enable free preview to upload preview pages" : "Choose multiple page images"}
+        {placeholder ?? (disabled ? "Enable free preview to upload preview pages" : "Choose multiple page images")}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -1020,7 +1138,7 @@ function formatBytes(bytes: number) {
 }
 
 async function removeUploadedAsset(
-  kind: "pdf" | "cover" | "preview",
+  kind: "pdf" | "cover" | "preview" | "rental",
   productId: string,
   refresh: () => void,
   setError: (message: string | null) => void
@@ -1031,7 +1149,9 @@ async function removeUploadedAsset(
       ? "/api/admin/products/upload-pdf"
       : kind === "cover"
         ? "/api/admin/products/upload-cover"
-        : "/api/admin/products/upload-preview";
+        : kind === "rental"
+          ? "/api/admin/products/upload-rental-pages"
+          : "/api/admin/products/upload-preview";
   const res = await fetch(endpoint, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
@@ -1090,6 +1210,30 @@ function PreviewThumbs({
               Remove
             </button>
           </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function RentalPageThumbs({
+  images,
+}: {
+  productId: string;
+  images: string[];
+  refresh: () => void;
+  setError: (message: string | null) => void;
+}) {
+  if (images.length === 0) return null;
+
+  return (
+    <ol className="flex max-w-full gap-2 overflow-x-auto pb-1">
+      {images.map((src, index) => (
+        <li key={src} className="w-16 shrink-0 rounded-lg border border-ink-100 bg-cream-50 p-1">
+          <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
+            <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+          </div>
+          <p className="mt-1 text-center text-[10px] font-semibold text-ink-400">Page {index + 1}</p>
         </li>
       ))}
     </ol>
@@ -1218,6 +1362,52 @@ async function uploadPreviewPagesToBlob(
     const message = error instanceof Error ? error.message : "Unknown Blob upload error";
     throw new Error(`Could not upload preview pages to Vercel Blob: ${message}`);
   }
+}
+
+async function attachUploadedRentalPages(productId: string, pathnames: string[]) {
+  const res = await fetch("/api/admin/products/upload-rental-pages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, pathnames }),
+  });
+  if (res.ok) return;
+
+  const data = await res.json().catch(() => null);
+  throw new Error(data?.error ?? "Could not attach uploaded rental pages to this product.");
+}
+
+async function uploadRentalPagesToBlob(
+  productId: string,
+  files: File[],
+  onProgress: (percentage: number) => void
+) {
+  try {
+    const pathnames: string[] = [];
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
+      const blob = await uploadPresigned(rentalPathname(productId, file.name, index), file, {
+        access: "private",
+        contentType: file.type || contentTypeForPreview(file.name),
+        handleUploadUrl: "/api/admin/products/client-upload",
+        clientPayload: JSON.stringify({ kind: "rental", productId, index }),
+        multipart: file.size > 5 * 1024 * 1024,
+        onUploadProgress: ({ percentage }) => {
+          onProgress(((index + percentage / 100) / files.length) * 100);
+        },
+      });
+      pathnames.push(blob.pathname);
+      onProgress(((index + 1) / files.length) * 100);
+    }
+    return pathnames;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Blob upload error";
+    throw new Error(`Could not upload rental pages to Vercel Blob: ${message}`);
+  }
+}
+
+function rentalPathname(productId: string, filename: string, index: number) {
+  const ext = previewExtension(filename);
+  return `rentals/${productId}/page-${index + 1}-${crypto.randomUUID()}${ext}`;
 }
 
 function pdfPathname(productId: string, filename: string) {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, Download, LogIn } from "lucide-react";
+import { BookOpen, CheckCircle2, Download, LogIn } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Payment Successful",
@@ -8,11 +8,12 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; type?: string }>;
 }
 
 export default async function PaymentSuccessPage({ searchParams }: PageProps) {
-  const { email } = await searchParams;
+  const { email, type } = await searchParams;
+  const isRental = type === "rental";
 
   return (
     <div className="container-content pb-28 pt-8 xs:pt-10">
@@ -25,16 +26,30 @@ export default async function PaymentSuccessPage({ searchParams }: PageProps) {
           Thank you!
         </h1>
         <p className="mt-2 text-sm font-semibold text-sage-700">Payment Successful</p>
-        <p className="mt-3 text-base leading-relaxed text-ink-500">
-          Your e-books are ready. You can access them anytime by logging in with
-          the same email{email ? ` (${email})` : ""}.
-        </p>
+        {isRental ? (
+          <p className="mt-3 text-base leading-relaxed text-ink-500">
+            Your Rent &amp; Read access is ready — 7 days of online reading, no download. Log in with the same
+            email{email ? ` (${email})` : ""} anytime to continue reading.
+          </p>
+        ) : (
+          <p className="mt-3 text-base leading-relaxed text-ink-500">
+            Your e-books are ready. You can access them anytime by logging in with
+            the same email{email ? ` (${email})` : ""}.
+          </p>
+        )}
 
         <div className="mt-8 flex w-full flex-col gap-3">
-          <Link href="/account/downloads" className="btn-primary w-full">
-            <Download className="h-4 w-4" aria-hidden="true" />
-            Go to Downloads
-          </Link>
+          {isRental ? (
+            <Link href="/account/rentals" className="btn-primary w-full">
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Go to My Rentals
+            </Link>
+          ) : (
+            <Link href="/account/downloads" className="btn-primary w-full">
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Go to Downloads
+            </Link>
+          )}
           <Link href="/login" className="btn-secondary w-full">
             <LogIn className="h-4 w-4" aria-hidden="true" />
             Login / Create Account

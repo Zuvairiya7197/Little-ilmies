@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
+import { RefundOrderButton } from "@/components/admin/refund-order-button";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
@@ -55,7 +56,10 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             })}
           </p>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div className="flex flex-col items-end gap-2">
+          <OrderStatusBadge status={order.status} />
+          {order.status === "PAID" && <RefundOrderButton orderId={order.id} />}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -73,8 +77,18 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                     <Image src={coverImage} alt="" fill sizes="48px" className="object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-ink-600">{title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-semibold text-ink-600">{title}</p>
+                      {item.itemType === "RENTAL" && (
+                        <span className="shrink-0 rounded-full bg-sage-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sage-700">
+                          Rental · 7 days
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-ink-300">Qty {item.quantity}</p>
+                    {item.itemType === "RENTAL" && (
+                      <p className="mt-0.5 text-xs text-ink-300">Online reading only — no download</p>
+                    )}
                     {snapshot && (
                       <p className="mt-1 line-clamp-2 text-xs text-ink-300">
                         {snapshot.selectedBooks.map((book) => book.title).join(", ")}

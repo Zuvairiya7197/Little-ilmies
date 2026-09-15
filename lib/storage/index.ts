@@ -21,6 +21,7 @@ const PRIVATE_ROOT = path.resolve(process.env.PRIVATE_UPLOADS_DIR ?? path.join("
 const PDFS_DIR = path.join(PRIVATE_ROOT, "pdfs");
 const PREVIEWS_DIR = path.join(PRIVATE_ROOT, "previews");
 const COVERS_DIR = path.join(PRIVATE_ROOT, "covers");
+const RENTALS_DIR = path.join(PRIVATE_ROOT, "rentals");
 
 const USE_BLOB_STORAGE = Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL);
 
@@ -175,6 +176,66 @@ export async function getPreviewPages(relativePaths: string[]): Promise<Buffer[]
 
   return Promise.all(
     relativePaths.map((p) => readFile(assertWithin(PREVIEWS_DIR, path.join(PRIVATE_ROOT, p))))
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Rent & Read full-book page images — private, and unlike preview pages
+// NEVER safe to expose publicly: this is the entire book. Only ever served
+// through /api/rentals/[productId]/pages/[page] after every rental
+// entitlement check passes. Deliberately kept in their own "rentals/"
+// storage prefix (not "previews/") so the public preview route's
+// startsWith("previews/") path check can never resolve to a rental image.
+// ---------------------------------------------------------------------------
+
+export async function saveRentalPages(
+  fileBuffers: Buffer[],
+  baseName: string
+): Promise<string[]> {
+  if (USE_BLOB_STORAGE) {
+    const paths: string[] = [];
+    for (let i = 0; i < fileBuffers.length; i++) {
+      const filename = safeFilename(`${baseName}-page-${i + 1}`, ".jpg");
+      const pathname = `rentals/${filename}`;
+      const blob = await put(pathname, fileBuffers[i], {
+        access: "private",
+        contentType: "image/jpeg",
+        addRandomSuffix: false,
+      });
+      paths.push(blob.pathname);
+    }
+    return paths;
+  }
+
+  await mkdir(RENTALS_DIR, { recursive: true });
+  const paths: string[] = [];
+  for (let i = 0; i < fileBuffers.length; i++) {
+    const filename = safeFilename(`${baseName}-page-${i + 1}`, ".jpg");
+    const fullPath = assertWithin(RENTALS_DIR, path.join(RENTALS_DIR, filename));
+    await writeFile(fullPath, fileBuffers[i]);
+    paths.push(path.relative(PRIVATE_ROOT, fullPath));
+  }
+  return paths;
+}
+
+export async function getRentalPage(relativePath: string): Promise<Buffer> {
+  if (USE_BLOB_STORAGE) {
+    return getBlobBuffer(relativePath);
+  }
+
+  return readFile(assertWithin(RENTALS_DIR, path.join(PRIVATE_ROOT, relativePath)));
+}
+
+export async function deleteRentalPages(relativePaths: string[]): Promise<void> {
+  if (USE_BLOB_STORAGE) {
+    await Promise.all(relativePaths.map((relativePath) => del(relativePath).catch(() => {})));
+    return;
+  }
+
+  await Promise.all(
+    relativePaths.map((relativePath) =>
+      unlink(assertWithin(RENTALS_DIR, path.join(PRIVATE_ROOT, relativePath))).catch(() => {})
+    )
   );
 }
 

@@ -12,7 +12,7 @@ import type { CurrencyCode } from "@/types/pricing";
 
 export interface CartLineItem {
   cartItemId: string;
-  type: "PRODUCT" | "CUSTOM_BUNDLE" | "RENTAL";
+  type: "PRODUCT" | "CUSTOM_BUNDLE" | "RENTAL" | "UPGRADE";
   productId: string;
   bundleId?: string;
   slug: string;
@@ -104,6 +104,38 @@ export function useCartLineItems() {
             productId: item.productId,
             cartItemId,
             type: "RENTAL",
+            slug: item.slug,
+            title: item.title,
+            coverImage: item.coverImage,
+            quantity: 1,
+            unitPrice,
+            regularUnitPrice: unitPrice,
+            lineTotal: unitPrice,
+            currencyCode: RENTAL_CURRENCY_CODE,
+            isFallbackPrice: false,
+            isOnSale: false,
+            ageRange: lineProduct.ageRange,
+            pageCount: lineProduct.pageCount,
+            isBestseller: lineProduct.isBestseller,
+            isNewArrival: lineProduct.isNewArrival,
+          },
+        ];
+      }
+
+      if (item.type === "UPGRADE") {
+        // Display estimate only — /checkout/create-order recomputes the
+        // real credit server-side from the buyer's actual paid rental
+        // order, since the amount already paid isn't available client-side.
+        const resolvedInr = resolveProductPrice(lineProduct, RENTAL_CURRENCY_CODE);
+        const salePriceInr = resolvedInr.salePrice ?? resolvedInr.regularPrice;
+        const rentalPricePaidEstimate = calculateRentalPrice(salePriceInr);
+        const unitPrice = Math.max(0, salePriceInr - rentalPricePaidEstimate);
+
+        return [
+          {
+            productId: item.productId,
+            cartItemId,
+            type: "UPGRADE",
             slug: item.slug,
             title: item.title,
             coverImage: item.coverImage,

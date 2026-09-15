@@ -14,6 +14,8 @@ import { RelatedBooks } from "@/components/store/related-books";
 import { ProductMobilePrice } from "@/components/store/product-mobile-price";
 import { findPrice } from "@/lib/pricing/resolve-price";
 import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
+import { getAuthSession } from "@/lib/auth/get-session";
+import { getProductEntitlementForUser } from "@/lib/db/orders";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
 import { Reveal } from "@/components/ui/reveal";
@@ -69,6 +71,10 @@ export default async function ProductPage({ params }: PageProps) {
 
   const relatedProducts = await getRelatedProductsBySlug(slug, 4);
   const rentalEligible = await isRentalEligibleFromHeaders();
+  const session = await getAuthSession();
+  const entitlement = session?.user
+    ? await getProductEntitlementForUser(session.user.id, product.id)
+    : { owns: false, activeRentalExpiresAt: null };
 
   const inrPrice = findPrice(product, "INR");
   const schemaPrice = inrPrice
@@ -132,7 +138,12 @@ export default async function ProductPage({ params }: PageProps) {
             <ProductMobilePrice product={product} />
 
             <div className="mt-6">
-              <ProductBuyBox product={product} rentalEligible={rentalEligible} />
+              <ProductBuyBox
+                product={product}
+                rentalEligible={rentalEligible}
+                owns={entitlement.owns}
+                activeRentalExpiresAt={entitlement.activeRentalExpiresAt}
+              />
             </div>
           </div>
         </div>

@@ -75,6 +75,27 @@ export async function getRentalsForUser(userId: string): Promise<RentalRecord[]>
   }));
 }
 
+/** A logged-in buyer's existing entitlement for one product — powers the
+ * product page's "You already own this" / "You are currently renting
+ * this" states so we don't re-sell what they already have. */
+export async function getProductEntitlementForUser(userId: string, productId: string) {
+  const [download, rental] = await Promise.all([
+    prisma.download.findFirst({
+      where: { productId, order: { userId, status: "PAID" } },
+      select: { id: true },
+    }),
+    prisma.rentalAccess.findFirst({
+      where: { productId, rentalExpiresAt: { gt: new Date() }, order: { userId, status: "PAID" } },
+      select: { rentalExpiresAt: true },
+    }),
+  ]);
+
+  return {
+    owns: Boolean(download),
+    activeRentalExpiresAt: rental?.rentalExpiresAt.toISOString() ?? null,
+  };
+}
+
 export async function getDownloadsForUser(userId: string): Promise<DownloadRecord[]> {
   const downloads = await prisma.download.findMany({
     where: { order: { userId, status: "PAID" } },
