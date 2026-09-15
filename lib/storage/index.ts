@@ -3,7 +3,7 @@ import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
-import { del, get, put } from "@vercel/blob";
+import { del, get, list, put } from "@vercel/blob";
 
 /**
  * Private file storage wrapper. In Vercel, files are stored in Vercel Blob.
@@ -24,6 +24,10 @@ const COVERS_DIR = path.join(PRIVATE_ROOT, "covers");
 const RENTALS_DIR = path.join(PRIVATE_ROOT, "rentals");
 
 const USE_BLOB_STORAGE = Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL);
+
+export function isUsingBlobStorage() {
+  return USE_BLOB_STORAGE;
+}
 
 /** Prevents path traversal — every stored path must resolve inside its own subdirectory. */
 function assertWithin(root: string, target: string) {
@@ -285,4 +289,50 @@ export async function deleteCoverImage(relativePath: string): Promise<void> {
 
   const fullPath = assertWithin(COVERS_DIR, path.join(PRIVATE_ROOT, relativePath));
   await unlink(fullPath).catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
+// Storage usage reporting — read-only, for the admin storage-usage page.
+// Only meaningful on Vercel Blob (Hobby plan's 1GB cap is what this
+// exists to help diagnose); local disk fallback has no comparable quota.
+// ---------------------------------------------------------------------------
+
+export interface BlobStorageEntry {
+  pathname: string;
+  size: number;
+  uploadedAt: string;
+}
+
+/** Deletes one blob by its exact pathname. Only for use after the caller
+ * has independently verified the pathname is safe to remove (e.g. it's
+ * unreferenced by any product) — this function does no such check
+ * itself. No-op on the local-disk fallback, which has no orphan-cleanup
+ * story of its own. */
+export async function deleteBlobByPathname(pathname: string): Promise<void> {
+  if (!USE_BLOB_STORAGE) return;
+  await del(pathname);
+}
+
+/** Lists every blob in the store, paginating through Vercel Blob's list()
+ * API. Read-only — never deletes anything. Empty array when not using
+ * Blob storage (local disk fallback). */
+export async function listAllBlobStorageEntries(): Promise<BlobStorageEntry[]> {
+  if (!USE_BLOB_STORAGE) return [];
+
+  const entries: BlobStorageEntry[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const result = await list({ cursor, limit: 1000 });
+    for (const blob of result.blobs) {
+      entries.push({
+        pathname: blob.pathname,
+        size: blob.size,
+        uploadedAt: blob.uploadedAt.toISOString(),
+      });
+    }
+    cursor = result.hasMore ? result.cursor : undefined;
+  } while (cursor);
+
+  return entries;
 }

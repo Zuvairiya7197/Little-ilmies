@@ -22,6 +22,9 @@ export default async function AdminProductsPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-semibold text-ink-700 xs:text-3xl">Products</h1>
         <div className="flex items-center gap-3">
+          <Link href="/admin/storage-usage" className="text-sm font-semibold text-sage-700 hover:underline">
+            Storage Usage
+          </Link>
           <Link href="/admin/rent-and-read-cleanup" className="text-sm font-semibold text-sage-700 hover:underline">
             Rent &amp; Read Cleanup
           </Link>
