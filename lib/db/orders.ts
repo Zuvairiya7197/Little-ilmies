@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import type { CurrencyCode } from "@/types/pricing";
-import type { OrderRecord, DownloadRecord, OrderSummaryItem } from "@/types/account";
+import type { OrderRecord, DownloadRecord, OrderSummaryItem, RentalRecord } from "@/types/account";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 
 /**
@@ -44,7 +44,7 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
       }
       if (!item.product) return [];
       return [{
-        type: "PRODUCT" as const,
+        type: item.itemType === "RENTAL" ? "RENTAL" as const : "PRODUCT" as const,
         productId: item.productId ?? undefined,
         slug: item.product.slug,
         title: item.product.title,
@@ -52,6 +52,26 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
         unitPrice: item.unitPrice,
       }];
     }),
+  }));
+}
+
+export async function getRentalsForUser(userId: string): Promise<RentalRecord[]> {
+  const now = new Date();
+  const rentals = await prisma.rentalAccess.findMany({
+    where: { order: { userId, status: "PAID" } },
+    orderBy: { rentalExpiresAt: "desc" },
+    include: { product: true },
+  });
+
+  return rentals.map((rental) => ({
+    orderId: rental.orderId,
+    productId: rental.productId,
+    slug: rental.product.slug,
+    title: rental.product.title,
+    coverImage: rental.product.coverImage,
+    startedAt: rental.rentalStartedAt.toISOString(),
+    expiresAt: rental.rentalExpiresAt.toISOString(),
+    isActive: rental.rentalExpiresAt > now,
   }));
 }
 

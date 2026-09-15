@@ -4,12 +4,14 @@ import { useMemo } from "react";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
+import { calculateRentalPrice } from "@/lib/rentals/pricing";
+import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
 import { getProductBySlug } from "@/data/products";
 import type { CurrencyCode } from "@/types/pricing";
 
 export interface CartLineItem {
   cartItemId: string;
-  type: "PRODUCT" | "CUSTOM_BUNDLE";
+  type: "PRODUCT" | "CUSTOM_BUNDLE" | "RENTAL";
   productId: string;
   bundleId?: string;
   slug: string;
@@ -89,6 +91,34 @@ export function useCartLineItems() {
           : null;
       const lineProduct = product ?? productSnapshot;
       if (!lineProduct) return [];
+
+      if (item.type === "RENTAL") {
+        const resolved = resolveProductPrice(lineProduct, RENTAL_CURRENCY_CODE);
+        const salePrice = resolved.salePrice ?? resolved.regularPrice;
+        const unitPrice = calculateRentalPrice(salePrice);
+
+        return [
+          {
+            productId: item.productId,
+            cartItemId,
+            type: "RENTAL",
+            slug: item.slug,
+            title: item.title,
+            coverImage: item.coverImage,
+            quantity: 1,
+            unitPrice,
+            regularUnitPrice: unitPrice,
+            lineTotal: unitPrice,
+            currencyCode: RENTAL_CURRENCY_CODE,
+            isFallbackPrice: false,
+            isOnSale: false,
+            ageRange: lineProduct.ageRange,
+            pageCount: lineProduct.pageCount,
+            isBestseller: lineProduct.isBestseller,
+            isNewArrival: lineProduct.isNewArrival,
+          },
+        ];
+      }
 
       const resolved = resolveProductPrice(lineProduct, currency);
       const unitPrice = resolved.salePrice ?? resolved.regularPrice;

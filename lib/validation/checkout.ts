@@ -18,6 +18,12 @@ const productCheckoutItemSchema = z.object({
   quantity: z.number().int().min(1).max(10),
 });
 
+const rentalCheckoutItemSchema = z.object({
+  type: z.literal("RENTAL"),
+  productId: z.string().min(1),
+  quantity: z.literal(1).default(1),
+});
+
 const customBundleCheckoutItemSchema = z.object({
   type: z.literal("CUSTOM_BUNDLE"),
   bundleId: z.string().min(1),
@@ -25,7 +31,11 @@ const customBundleCheckoutItemSchema = z.object({
   selectedProductIds: z.array(z.string().min(1)).min(1).max(100),
 });
 
-export const checkoutItemSchema = z.union([customBundleCheckoutItemSchema, productCheckoutItemSchema]);
+export const checkoutItemSchema = z.union([
+  customBundleCheckoutItemSchema,
+  rentalCheckoutItemSchema,
+  productCheckoutItemSchema,
+]);
 
 export const createOrderRequestSchema = z.object({
   buyerName: z.string().trim().min(2),

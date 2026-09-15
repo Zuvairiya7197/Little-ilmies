@@ -4,7 +4,7 @@ import type { ProductSummary } from "@/types/catalog";
 
 export interface CartItem {
   cartItemId?: string;
-  type?: "PRODUCT" | "CUSTOM_BUNDLE";
+  type?: "PRODUCT" | "CUSTOM_BUNDLE" | "RENTAL";
   productId: string;
   bundleId?: string;
   slug: string;
@@ -41,7 +41,10 @@ export const useCartStore = create<CartState>()(
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       addItem: (item) => {
-        const itemWithId = { ...item, cartItemId: item.cartItemId ?? item.productId };
+        const itemWithId = {
+          ...item,
+          cartItemId: item.cartItemId ?? (item.type === "RENTAL" ? `rental:${item.productId}` : item.productId),
+        };
         const existing = get().items.find((i) => (i.cartItemId ?? i.productId) === itemWithId.cartItemId);
         if (existing) {
           set({

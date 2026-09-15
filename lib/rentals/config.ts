@@ -1,0 +1,6 @@
+export const RENTAL_PERCENTAGE = 25;
+export const RENTAL_MINIMUM_PRICE = 2000;
+export const RENTAL_ROUNDING_INCREMENT = 500;
+export const RENTAL_DURATION_DAYS = 7;
+export const RENTAL_COUNTRY_CODE = "IN";
+export const RENTAL_CURRENCY_CODE = "INR";

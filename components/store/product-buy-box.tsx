@@ -8,8 +8,17 @@ import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useProductPrice } from "@/hooks/use-product-price";
 import { cn } from "@/lib/utils/cn";
 import type { ProductDetail } from "@/types/catalog";
+import { calculateRentalPrice } from "@/lib/rentals/pricing";
+import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
+import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 
-export function ProductBuyBox({ product }: { product: ProductDetail }) {
+export function ProductBuyBox({
+  product,
+  rentalEligible = false,
+}: {
+  product: ProductDetail;
+  rentalEligible?: boolean;
+}) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const toggleWishlist = useWishlistStore((s) => s.toggleItem);
@@ -19,6 +28,8 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
 
   const resolvedPrice = useProductPrice(product);
   const displayPrice = resolvedPrice.salePrice ?? resolvedPrice.regularPrice;
+  const inrPrice = resolveProductPrice(product, RENTAL_CURRENCY_CODE);
+  const rentalPrice = calculateRentalPrice(inrPrice.salePrice ?? inrPrice.regularPrice);
 
   function addToCart() {
     addItem({
@@ -36,6 +47,23 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
 
   function buyNow() {
     addToCart();
+    router.push("/checkout");
+  }
+
+  function rentNow() {
+    addItem({
+      type: "RENTAL",
+      cartItemId: `rental:${product.id}`,
+      productId: product.id,
+      slug: product.slug,
+      title: product.title,
+      coverImage: product.coverImage,
+      prices: product.prices,
+      ageRange: product.ageRange,
+      pageCount: product.pageCount,
+      isBestseller: product.isBestseller,
+      isNewArrival: product.isNewArrival,
+    });
     router.push("/checkout");
   }
 
@@ -70,6 +98,15 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
           />
           {isWishlisted ? "Saved" : "Add to Wishlist"}
         </button>
+        {rentalEligible && (
+          <button
+            type="button"
+            onClick={rentNow}
+            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-sage-50 px-2 py-4 text-base font-semibold text-sage-800 shadow-soft transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
+          >
+            Rent & Read - {formatPrice(rentalPrice, RENTAL_CURRENCY_CODE)}
+          </button>
+        )}
       </div>
 
       <div className="hidden rounded-3xl bg-cream-50 p-6 shadow-clay lg:block">
@@ -85,6 +122,23 @@ export function ProductBuyBox({ product }: { product: ProductDetail }) {
         )}
       </div>
       <p className="mt-1 text-sm text-ink-400">Instant PDF download after purchase</p>
+
+      {rentalEligible && (
+        <div className="mt-5 rounded-2xl border border-sage-200 bg-sage-50 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-display text-lg font-semibold text-ink-700">Rent & Read</p>
+              <p className="mt-1 text-sm text-ink-500">7 days online reading access. No PDF download.</p>
+            </div>
+            <span className="shrink-0 font-display text-xl font-semibold text-sage-700">
+              {formatPrice(rentalPrice, RENTAL_CURRENCY_CODE)}
+            </span>
+          </div>
+          <button type="button" onClick={rentNow} className="btn-secondary mt-4 w-full justify-center">
+            Rent & Read
+          </button>
+        </div>
+      )}
 
       {resolvedPrice.isFallback && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-gold-50 px-3 py-2 text-xs text-gold-700">

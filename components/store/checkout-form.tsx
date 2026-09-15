@@ -126,6 +126,8 @@ export function CheckoutForm({
                   quantity: item.bundleSize,
                   selectedProductIds: item.selectedBooks?.map((book) => book.id) ?? [],
                 }
+              : item.type === "RENTAL"
+                ? { type: "RENTAL", productId: item.productId, quantity: 1 }
               : { type: "PRODUCT", productId: item.productId, quantity: item.quantity }
           ),
         }),
@@ -150,7 +152,9 @@ export function CheckoutForm({
         currency: createData.currencyCode,
         order_id: createData.razorpayOrderId,
         name: "Little Ilmies",
-        description: "Digital e-book purchase",
+        description: lineItems.some((item) => item.type === "RENTAL")
+          ? "Rent & Read access"
+          : "Digital e-book purchase",
         prefill: { name: values.fullName, email: values.email },
         theme: { color: "#4B449D" },
         // Keep Razorpay Checkout aligned with the payment method selected in
@@ -273,6 +277,7 @@ export function CheckoutForm({
                     <p className="line-clamp-1 text-sm font-semibold text-ink-700">{item.title}</p>
                     <p className="mt-0.5 text-sm text-ink-400">
                       {item.type === "CUSTOM_BUNDLE" && item.bundleSize ? `${item.bundleSize} books - ` : ""}
+                      {item.type === "RENTAL" ? "Rent & Read - " : ""}
                       {formatPrice(item.unitPrice, item.currencyCode)}
                     </p>
                   </div>

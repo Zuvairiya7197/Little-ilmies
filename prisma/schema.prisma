@@ -171,6 +171,7 @@ model Product {
   cartItems   CartItem[]
   orderItems  OrderItem[]
   downloads   Download[]
+  rentals     RentalAccess[]
   reviews     Review[]
   bundles     BundleProduct[]
   customBundleSelections CustomBundleSelection[]
@@ -371,6 +372,7 @@ model Order {
   items    OrderItem[]
   payments Payment[]
   downloads Download[]
+  rentals RentalAccess[]
 
   @@index([buyerEmail])
   @@map("orders")
@@ -408,6 +410,23 @@ model OrderItem {
 enum OrderItemType {
   PRODUCT
   CUSTOM_BUNDLE
+  RENTAL
+}
+
+model RentalAccess {
+  id              String   @id @default(cuid())
+  orderId         String
+  productId       String
+  rentalStartedAt DateTime
+  rentalExpiresAt DateTime
+  createdAt       DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([orderId, productId])
+  @@index([productId])
+  @@map("rental_accesses")
 }
 
 model CustomBundleSelection {

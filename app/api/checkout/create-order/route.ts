@@ -6,6 +6,9 @@ import { resolveProductPriceFromDb } from "@/lib/pricing/resolve-price-db";
 import { resolveVerifiedCurrency } from "@/lib/pricing/verify-region";
 import { createRazorpayOrder, getRazorpayClient } from "@/lib/payments/razorpay";
 import { validateCustomBundleSelection } from "@/lib/bundles/custom-bundle";
+import { isRentalEligibleRequest } from "@/lib/rentals/eligibility";
+import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
+import { calculateRentalPrice } from "@/lib/rentals/pricing";
 import type { Prisma } from "@prisma/client";
 
 /**
@@ -32,6 +35,21 @@ export async function POST(request: NextRequest) {
   }
   const { buyerName, buyerEmail, items } = parsed.data;
 
+  const hasRentalItems = items.some((item) => item.type === "RENTAL");
+  const hasNonRentalItems = items.some((item) => item.type !== "RENTAL");
+  if (hasRentalItems && hasNonRentalItems) {
+    return NextResponse.json(
+      { error: "Please check out Rent & Read books separately from purchases." },
+      { status: 422 }
+    );
+  }
+  if (hasRentalItems && !isRentalEligibleRequest(request)) {
+    return NextResponse.json(
+      { error: "Rent & Read is currently available only for customers in India." },
+      { status: 403 }
+    );
+  }
+
   const productItems = items.filter((item) => item.type !== "CUSTOM_BUNDLE");
   const products = await prisma.product.findMany({
     where: { id: { in: productItems.map((i) => i.productId) }, status: "PUBLISHED", archivedAt: null },
@@ -45,7 +63,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const currency = resolveVerifiedCurrency(request);
+  const currency = hasRentalItems ? RENTAL_CURRENCY_CODE : resolveVerifiedCurrency(request);
 
   let subtotal = 0;
   const orderItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = [];
@@ -106,6 +124,18 @@ export async function POST(request: NextRequest) {
       );
     }
     const unitPrice = resolved.salePrice ?? resolved.regularPrice;
+    if (item.type === "RENTAL") {
+      const rentalPrice = calculateRentalPrice(unitPrice);
+      subtotal += rentalPrice;
+      orderItemsData.push({
+        product: { connect: { id: item.productId } },
+        itemType: "RENTAL",
+        unitPrice: rentalPrice,
+        quantity: 1,
+      });
+      continue;
+    }
+
     subtotal += unitPrice * item.quantity;
     orderItemsData.push({
       product: { connect: { id: item.productId } },

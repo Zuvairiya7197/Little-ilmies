@@ -5,7 +5,7 @@ export type OrderStatus = "PAID" | "PENDING" | "FAILED" | "REFUNDED";
 export interface OrderSummaryItem {
   productId?: string;
   bundleId?: string;
-  type?: "PRODUCT" | "CUSTOM_BUNDLE";
+  type?: "PRODUCT" | "CUSTOM_BUNDLE" | "RENTAL";
   slug: string;
   title: string;
   coverImage: string;
@@ -31,4 +31,15 @@ export interface DownloadRecord {
   fileType: "PDF" | "Printable PDF" | "Interactive PDF";
   purchasedAt: string; // ISO date
   downloadCount: number;
+}
+
+export interface RentalRecord {
+  orderId: string;
+  productId: string;
+  slug: string;
+  title: string;
+  coverImage: string;
+  startedAt: string;
+  expiresAt: string;
+  isActive: boolean;
 }

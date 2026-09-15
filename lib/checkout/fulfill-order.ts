@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { sendOrderConfirmationEmail } from "@/lib/email/send-order-confirmation";
+import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Idempotent: safe to call from both the client-side verify-payment route
@@ -27,6 +29,47 @@ export async function fulfillOrder({
 
   if (order.status === "PAID") return; // already fulfilled — no-op
 
+  const rentalStartedAt = new Date();
+  const rentalExpiresAt = new Date(rentalStartedAt);
+  rentalExpiresAt.setDate(rentalExpiresAt.getDate() + RENTAL_DURATION_DAYS);
+
+  const accessWrites: Prisma.PrismaPromise<unknown>[] = [];
+
+  for (const item of order.items) {
+    if (item.itemType === "RENTAL" && item.productId) {
+      accessWrites.push(
+        prisma.rentalAccess.upsert({
+          where: { orderId_productId: { orderId: order.id, productId: item.productId } },
+          update: {},
+          create: {
+            orderId: order.id,
+            productId: item.productId,
+            rentalStartedAt,
+            rentalExpiresAt,
+          },
+        })
+      );
+      continue;
+    }
+
+    const productIds =
+      item.itemType === "CUSTOM_BUNDLE"
+        ? item.customSelections.map((selection) => selection.productId)
+        : item.productId
+          ? [item.productId]
+          : [];
+
+    for (const productId of productIds) {
+      accessWrites.push(
+        prisma.download.upsert({
+          where: { orderId_productId: { orderId: order.id, productId } },
+          update: {},
+          create: { orderId: order.id, productId },
+        })
+      );
+    }
+  }
+
   await prisma.$transaction([
     prisma.payment.update({
       where: { id: paymentId },
@@ -38,22 +81,7 @@ export async function fulfillOrder({
       },
     }),
     prisma.order.update({ where: { id: order.id }, data: { status: "PAID" } }),
-    ...order.items.flatMap((item) => {
-      const productIds =
-        item.itemType === "CUSTOM_BUNDLE"
-          ? item.customSelections.map((selection) => selection.productId)
-          : item.productId
-            ? [item.productId]
-            : [];
-
-      return productIds.map((productId) =>
-        prisma.download.upsert({
-          where: { orderId_productId: { orderId: order.id, productId } },
-          update: {},
-          create: { orderId: order.id, productId },
-        })
-      );
-    }),
+    ...accessWrites,
   ]);
 
   await sendOrderConfirmationEmail(order.id).catch((err) => {

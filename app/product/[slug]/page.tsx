@@ -13,6 +13,7 @@ import { ProductMobileAbout } from "@/components/store/product-mobile-about";
 import { RelatedBooks } from "@/components/store/related-books";
 import { ProductMobilePrice } from "@/components/store/product-mobile-price";
 import { findPrice } from "@/lib/pricing/resolve-price";
+import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
 import { Reveal } from "@/components/ui/reveal";
@@ -67,6 +68,7 @@ export default async function ProductPage({ params }: PageProps) {
   if (!product) notFound();
 
   const relatedProducts = await getRelatedProductsBySlug(slug, 4);
+  const rentalEligible = await isRentalEligibleFromHeaders();
 
   const inrPrice = findPrice(product, "INR");
   const schemaPrice = inrPrice
@@ -130,7 +132,7 @@ export default async function ProductPage({ params }: PageProps) {
             <ProductMobilePrice product={product} />
 
             <div className="mt-6">
-              <ProductBuyBox product={product} />
+              <ProductBuyBox product={product} rentalEligible={rentalEligible} />
             </div>
           </div>
         </div>
