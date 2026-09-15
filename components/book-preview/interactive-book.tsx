@@ -78,7 +78,12 @@ export function InteractiveBook({
   const [isHovering, setIsHovering] = useState(false);
 
   const previewPages = previewImages;
+  // Falls back to the product's real cover image, never to previewImages[0]
+  // itself — if that first preview page is broken (dead/unauthorized URL,
+  // not just empty), falling back to itself would leave the broken image
+  // showing forever since src === fallbackSrc never changes on error.
   const previewCoverImage = safeImageSrc(previewImages[0], coverImage);
+  const finalFallbackImage = safeImageSrc(coverImage, previewImages[0] ?? "");
   const hasTurnedPage = currentPageIndex >= 0;
   const contentLeafCount = Math.ceil(previewPages.length / 2);
   const totalLeaves = contentLeafCount + 1; // + the locked page
@@ -177,7 +182,7 @@ export function InteractiveBook({
           >
             <BookPageImage
               src={previewCoverImage}
-              fallbackSrc={previewCoverImage}
+              fallbackSrc={finalFallbackImage}
               alt={`${bookTitle} preview cover`}
               sizes="(max-width: 480px) 90vw, 520px"
               className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -231,7 +236,7 @@ export function InteractiveBook({
                 >
                   <BookPageImage
                     src={rightImage}
-                    fallbackSrc={previewCoverImage}
+                    fallbackSrc={finalFallbackImage}
                     alt={`Sample page ${index * 2 + 1} of ${bookTitle}`}
                     sizes="520px"
                     className="object-cover"
@@ -254,7 +259,7 @@ export function InteractiveBook({
                   >
                     <BookPageImage
                       src={safeImageSrc(leftImage, previewCoverImage)}
-                      fallbackSrc={previewCoverImage}
+                      fallbackSrc={finalFallbackImage}
                       alt={`Sample page ${index * 2 + 2} of ${bookTitle}`}
                       sizes="520px"
                       className="object-cover"
