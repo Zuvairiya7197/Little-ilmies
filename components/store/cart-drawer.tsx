@@ -92,7 +92,7 @@ export function CartDrawer() {
               <>
                 <ul className="flex-1 divide-y divide-ink-100 overflow-y-auto px-5">
                   {lineItems.map((item) => (
-                    <li key={item.productId} className="flex gap-4 py-4">
+                    <li key={item.cartItemId} className="flex gap-4 py-4">
                       <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-cream-200">
                         <Image
                           src={item.coverImage}
@@ -113,7 +113,7 @@ export function CartDrawer() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeItem(item.productId)}
+                          onClick={() => removeItem(item.cartItemId)}
                           className="tap-target -ml-2 self-start text-xs font-semibold text-ink-300 underline-offset-2 hover:text-ink-500 hover:underline"
                         >
                           Remove

@@ -55,6 +55,9 @@ export default async function HomePage() {
       <Reveal>
         <ShopByAge />
       </Reveal>
+      <Reveal>
+        <BookPreviewShowcase product={homepageSample} />
+      </Reveal>
       {rentalEligible && (
         <Reveal>
           <RentAndReadHighlight />
@@ -67,9 +70,6 @@ export default async function HomePage() {
       )}
       <Reveal>
         <RecommendedBooks products={products} />
-      </Reveal>
-      <Reveal>
-        <BookPreviewShowcase product={homepageSample} />
       </Reveal>
       <Reveal>
         <WhyParentsChoose />

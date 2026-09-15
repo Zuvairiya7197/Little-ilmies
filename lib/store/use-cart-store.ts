@@ -34,6 +34,11 @@ interface CartState {
   clear: () => void;
 }
 
+function matchesCartItem(item: CartItem, cartItemId: string) {
+  const itemId = item.cartItemId ?? item.productId;
+  return itemId === cartItemId || (item.type === "RENTAL" && item.productId === cartItemId);
+}
+
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
@@ -57,14 +62,14 @@ export const useCartStore = create<CartState>()(
         set({ items: [...get().items, { ...itemWithId, quantity: 1 }], isOpen: true });
       },
       removeItem: (cartItemId) =>
-        set({ items: get().items.filter((i) => (i.cartItemId ?? i.productId) !== cartItemId) }),
+        set({ items: get().items.filter((item) => !matchesCartItem(item, cartItemId)) }),
       setQuantity: (cartItemId, quantity) => {
         if (quantity < 1) {
-          set({ items: get().items.filter((i) => (i.cartItemId ?? i.productId) !== cartItemId) });
+          set({ items: get().items.filter((item) => !matchesCartItem(item, cartItemId)) });
           return;
         }
         set({
-          items: get().items.map((i) => ((i.cartItemId ?? i.productId) === cartItemId ? { ...i, quantity } : i)),
+          items: get().items.map((item) => (matchesCartItem(item, cartItemId) ? { ...item, quantity } : item)),
         });
       },
       clear: () => set({ items: [] }),
