@@ -60,8 +60,6 @@ export function ProductForm({
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfUploadProgress, setPdfUploadProgress] = useState<number | null>(null);
-  const [previewUploadProgress, setPreviewUploadProgress] = useState<number | null>(null);
-  const [previewFiles, setPreviewFiles] = useState<File[]>([]);
   const [rentalUploadProgress, setRentalUploadProgress] = useState<number | null>(null);
   const [rentalFiles, setRentalFiles] = useState<File[]>([]);
 
@@ -94,7 +92,6 @@ export function ProductForm({
     },
   });
   const title = watch("title");
-  const hasFreePreview = watch("hasFreePreview");
   const rentAndReadEnabled = watch("rentAndReadEnabled");
   const slug = watch("slug");
   const shortDescription = watch("shortDescription") ?? "";
@@ -152,11 +149,6 @@ export function ProductForm({
         const blob = await uploadPdfToBlob(savedId, pdfFile, setPdfUploadProgress);
         await attachUploadedPdf(savedId, blob.pathname, pdfFile);
       }
-      if (previewFiles.length > 0) {
-        setPreviewUploadProgress(0);
-        const pathnames = await uploadPreviewPagesToBlob(savedId, previewFiles, setPreviewUploadProgress);
-        await attachUploadedPreviewPages(savedId, pathnames);
-      }
       if (rentalFiles.length > 0) {
         setRentalUploadProgress(0);
         const pathnames = await uploadRentalPagesToBlob(savedId, rentalFiles, setRentalUploadProgress);
@@ -170,7 +162,6 @@ export function ProductForm({
     } finally {
       setIsSubmitting(false);
       setPdfUploadProgress(null);
-      setPreviewUploadProgress(null);
       setRentalUploadProgress(null);
     }
   }
@@ -646,25 +637,10 @@ export function ProductForm({
                 </p>
               </div>
             )}
-            <PreviewPagesField
-              files={previewFiles}
-              onChange={setPreviewFiles}
-              isReplacing={Boolean(productId)}
-              disabled={!hasFreePreview}
-            />
-            {previewUploadProgress !== null && (
-              <div className="rounded-xl bg-cream-50 px-3 py-2">
-                <div className="h-2 overflow-hidden rounded-full bg-ink-100">
-                  <div
-                    className="h-full rounded-full bg-sage-500 transition-all"
-                    style={{ width: `${previewUploadProgress}%` }}
-                  />
-                </div>
-                <p className="mt-1.5 text-xs font-semibold text-ink-400">
-                  Uploading preview pages {Math.round(previewUploadProgress)}%
-                </p>
-              </div>
-            )}
+            <p className="rounded-xl bg-cream-50 px-3 py-2 text-xs text-ink-400">
+              Free preview pages are now set from the Rent &amp; Read card below — upload Rent &amp; Read
+              pages first, then use &quot;Use these pages as free preview&quot; to pick which ones go public.
+            </p>
           </div>
         </div>
         </details>
@@ -1427,18 +1403,6 @@ async function attachUploadedPdf(productId: string, pathname: string, file: File
   throw new Error(data?.error ?? "Could not attach uploaded PDF to this product.");
 }
 
-async function attachUploadedPreviewPages(productId: string, pathnames: string[]) {
-  const res = await fetch("/api/admin/products/upload-preview", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, pathnames }),
-  });
-  if (res.ok) return;
-
-  const data = await res.json().catch(() => null);
-  throw new Error(data?.error ?? "Could not attach uploaded preview pages to this product.");
-}
-
 async function uploadPdfToBlob(
   productId: string,
   file: File,
@@ -1456,35 +1420,6 @@ async function uploadPdfToBlob(
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Blob upload error";
     throw new Error(`Could not upload PDF to Vercel Blob: ${message}`);
-  }
-}
-
-async function uploadPreviewPagesToBlob(
-  productId: string,
-  files: File[],
-  onProgress: (percentage: number) => void
-) {
-  try {
-    const pathnames: string[] = [];
-    for (let index = 0; index < files.length; index++) {
-      const file = files[index];
-      const blob = await uploadPresigned(previewPathname(productId, file.name, index), file, {
-        access: "private",
-        contentType: file.type || contentTypeForPreview(file.name),
-        handleUploadUrl: "/api/admin/products/client-upload",
-        clientPayload: JSON.stringify({ kind: "preview", productId, index }),
-        multipart: file.size > 5 * 1024 * 1024,
-        onUploadProgress: ({ percentage }) => {
-          onProgress(((index + percentage / 100) / files.length) * 100);
-        },
-      });
-      pathnames.push(blob.pathname);
-      onProgress(((index + 1) / files.length) * 100);
-    }
-    return pathnames;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown Blob upload error";
-    throw new Error(`Could not upload preview pages to Vercel Blob: ${message}`);
   }
 }
 
@@ -1540,11 +1475,6 @@ function pdfPathname(productId: string, filename: string) {
     .replace(/[^a-zA-Z0-9-_]/g, "-")
     .slice(0, 80);
   return `pdfs/${productId}/${base || "book"}-${crypto.randomUUID()}.pdf`;
-}
-
-function previewPathname(productId: string, filename: string, index: number) {
-  const ext = previewExtension(filename);
-  return `previews/${productId}/page-${index + 1}-${crypto.randomUUID()}${ext}`;
 }
 
 function previewExtension(filename: string) {
