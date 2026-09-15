@@ -19,8 +19,11 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
       items: {
         include: { product: true },
       },
+      rentals: true,
     },
   });
+
+  const now = new Date();
 
   return orders.map((order) => ({
     id: order.id,
@@ -43,13 +46,19 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
         }];
       }
       if (!item.product) return [];
+      const isRental = item.itemType === "RENTAL";
+      const rental = isRental
+        ? order.rentals.find((r) => r.productId === item.productId)
+        : undefined;
       return [{
-        type: item.itemType === "RENTAL" ? "RENTAL" as const : "PRODUCT" as const,
+        type: isRental ? ("RENTAL" as const) : ("PRODUCT" as const),
         productId: item.productId ?? undefined,
         slug: item.product.slug,
         title: item.product.title,
         coverImage: item.product.coverImage,
         unitPrice: item.unitPrice,
+        rentalExpiresAt: rental?.rentalExpiresAt.toISOString(),
+        rentalIsActive: rental ? rental.rentalExpiresAt > now : undefined,
       }];
     }),
   }));

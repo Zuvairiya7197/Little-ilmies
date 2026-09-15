@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { BookOpen, Download } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
 import type { OrderRecord } from "@/types/account";
 
@@ -61,15 +61,24 @@ export function OrderCard({ order }: { order: OrderRecord }) {
         <span className="font-display text-base font-semibold text-ink-700">
           Total: {formatPrice(order.totalAmount, order.currencyCode)}
         </span>
-        {order.status === "PAID" && (
-          <Link
-            href="/account/downloads"
-            className="tap-target flex items-center gap-1.5 rounded-full bg-ink-500 px-4 py-2 text-xs font-semibold text-cream-50 hover:bg-ink-600"
-          >
-            <Download className="h-3.5 w-3.5" aria-hidden="true" />
-            Downloads
-          </Link>
-        )}
+        {order.status === "PAID" &&
+          (order.items.every((item) => item.type === "RENTAL") ? (
+            <Link
+              href="/account/rentals"
+              className="tap-target flex items-center gap-1.5 rounded-full bg-ink-500 px-4 py-2 text-xs font-semibold text-cream-50 hover:bg-ink-600"
+            >
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              My Rentals
+            </Link>
+          ) : (
+            <Link
+              href="/account/downloads"
+              className="tap-target flex items-center gap-1.5 rounded-full bg-ink-500 px-4 py-2 text-xs font-semibold text-cream-50 hover:bg-ink-600"
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              Downloads
+            </Link>
+          ))}
       </div>
     </div>
   );

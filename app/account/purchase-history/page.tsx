@@ -3,8 +3,10 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
+  BookOpen,
   Calendar,
   Check,
+  Clock,
   CloudDownload,
   Download,
   Heart,
@@ -56,7 +58,10 @@ export default async function PurchaseHistoryPage() {
 
   const userId = session.user.id;
   const orders = await getOrdersForUser(userId);
-  const totalDownloads = orders.reduce((sum, order) => sum + order.items.length, 0);
+  const totalDownloads = orders.reduce(
+    (sum, order) => sum + order.items.filter((item) => item.type !== "RENTAL").length,
+    0
+  );
   const lastOrderDate = orders[0]
     ? new Date(orders[0].createdAt).toLocaleDateString("en-US", {
         month: "short",
@@ -179,6 +184,15 @@ export default async function PurchaseHistoryPage() {
                     year: "numeric",
                   });
                   const firstItem = order.items[0];
+                  const isRental = firstItem?.type === "RENTAL";
+                  const rentalExpired = isRental && firstItem.rentalIsActive === false;
+                  const expiresAtLabel = firstItem?.rentalExpiresAt
+                    ? new Date(firstItem.rentalExpiresAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "2-digit",
+                        year: "numeric",
+                      })
+                    : null;
                   return (
                     <div
                       key={order.id}
@@ -194,24 +208,62 @@ export default async function PurchaseHistoryPage() {
                         )}
                         <div className="min-w-0">
                           <p className="line-clamp-1 font-semibold text-ink-600">{firstItem?.title ?? "Order items"}</p>
-                          <p className="text-sm text-ink-400">{order.items.length} e-book</p>
+                          <p className="text-sm text-ink-400">
+                            {isRental
+                              ? `Rent & Read${expiresAtLabel ? ` · ${rentalExpired ? "Expired" : "Expires"} ${expiresAtLabel}` : ""}`
+                              : `${order.items.length} e-book`}
+                          </p>
                         </div>
                       </div>
                       <p className="font-semibold text-ink-600">{formatPrice(order.totalAmount, order.currencyCode)}</p>
-                      <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sage-50 px-4 py-2 text-sm font-bold text-sage-700">
-                        Completed
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sage-500 text-cream-50">
-                          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                      {isRental ? (
+                        rentalExpired ? (
+                          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-ink-50 px-4 py-2 text-sm font-bold text-ink-400">
+                            Expired
+                            <Clock className="h-4 w-4" aria-hidden="true" />
+                          </span>
+                        ) : (
+                          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sage-50 px-4 py-2 text-sm font-bold text-sage-700">
+                            Active Rental
+                            <Clock className="h-4 w-4" aria-hidden="true" />
+                          </span>
+                        )
+                      ) : (
+                        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sage-50 px-4 py-2 text-sm font-bold text-sage-700">
+                          Completed
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sage-500 text-cream-50">
+                            <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                          </span>
                         </span>
-                      </span>
+                      )}
                       <div className="flex items-center gap-4">
-                        <Link
-                          href="/account/downloads"
-                          className="tap-target inline-flex items-center gap-2 rounded-xl border border-gold-200 px-4 py-2 text-sm font-bold text-ink-600 hover:bg-gold-50"
-                        >
-                          <Download className="h-4 w-4" aria-hidden="true" />
-                          Download
-                        </Link>
+                        {isRental ? (
+                          rentalExpired ? (
+                            <Link
+                              href={firstItem.slug ? `/product/${firstItem.slug}` : "/account/rentals"}
+                              className="tap-target inline-flex items-center gap-2 rounded-xl border border-gold-200 px-4 py-2 text-sm font-bold text-ink-600 hover:bg-gold-50"
+                            >
+                              <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+                              Buy &amp; Download
+                            </Link>
+                          ) : (
+                            <Link
+                              href={firstItem.productId ? `/read/${firstItem.productId}` : "/account/rentals"}
+                              className="tap-target inline-flex items-center gap-2 rounded-xl border border-gold-200 px-4 py-2 text-sm font-bold text-ink-600 hover:bg-gold-50"
+                            >
+                              <BookOpen className="h-4 w-4" aria-hidden="true" />
+                              Read
+                            </Link>
+                          )
+                        ) : (
+                          <Link
+                            href="/account/downloads"
+                            className="tap-target inline-flex items-center gap-2 rounded-xl border border-gold-200 px-4 py-2 text-sm font-bold text-ink-600 hover:bg-gold-50"
+                          >
+                            <Download className="h-4 w-4" aria-hidden="true" />
+                            Download
+                          </Link>
+                        )}
                         <button type="button" aria-label="Order actions" className="tap-target text-ink-500">
                           <MoreVertical className="h-5 w-5" aria-hidden="true" />
                         </button>

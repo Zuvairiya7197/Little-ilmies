@@ -11,6 +11,9 @@ export interface OrderSummaryItem {
   coverImage: string;
   unitPrice: number;
   selectedBooks?: { id: string; title: string }[];
+  /** Only set when type === "RENTAL". */
+  rentalExpiresAt?: string;
+  rentalIsActive?: boolean;
 }
 
 export interface OrderRecord {
