@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import type { CurrencyCode } from "@/types/pricing";
+import { resolveProductPrice } from "@/lib/pricing/resolve-price";
+import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 
 export type CustomBundleValidationResult = {
   bundleId: string;
@@ -11,6 +13,15 @@ export type CustomBundleValidationResult = {
     slug: string;
     title: string;
     coverImage: string;
+    prices: {
+      currencyCode: CurrencyCode;
+      regularPrice: number;
+      salePrice?: number;
+      saleStartDate?: string;
+      saleEndDate?: string;
+      isDefault?: boolean;
+      isActive?: boolean;
+    }[];
   }[];
 };
 
@@ -35,13 +46,12 @@ export async function validateCustomBundleSelection({
     where: { id: bundleId, isActive: true, type: "CUSTOM" },
     include: {
       products: { select: { productId: true } },
-      customPrices: { where: { quantity, currencyCode: currency, enabled: true } },
+      customPrices: { where: { quantity, enabled: true } },
     },
   });
   if (!bundle) throw new Error("Bundle is unavailable");
 
-  const price = bundle.customPrices[0];
-  if (!price || price.price < 0) throw new Error(`This bundle size is not available in ${currency}`);
+  if (bundle.customPrices.length === 0) throw new Error("This bundle size is not available");
 
   const eligibleIds = new Set(bundle.products.map((product) => product.productId));
   if (quantity > eligibleIds.size) throw new Error("Bundle size exceeds eligible books");
@@ -51,16 +61,55 @@ export async function validateCustomBundleSelection({
 
   const selectedProducts = await prisma.product.findMany({
     where: { id: { in: selectedProductIds }, status: "PUBLISHED", archivedAt: null },
-    select: { id: true, slug: true, title: true, coverImage: true },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      coverImage: true,
+      prices: true,
+    },
   });
   if (selectedProducts.length !== selectedProductIds.length) throw new Error("One or more selected books are unavailable");
 
   const selectedById = new Map(selectedProducts.map((product) => [product.id, product]));
+  const orderedProducts = selectedProductIds.map((productId) => selectedById.get(productId)!);
+  const regularPrices = orderedProducts.map((product) =>
+    resolveProductPrice(
+      {
+        prices: product.prices.map((price) => ({
+          currencyCode: price.currencyCode as CurrencyCode,
+          regularPrice: price.regularPrice,
+          salePrice: price.salePrice ?? undefined,
+          saleStartDate: price.saleStartDate?.toISOString(),
+          saleEndDate: price.saleEndDate?.toISOString(),
+          isDefault: price.isDefault,
+          isActive: price.isActive,
+        })),
+      },
+      currency
+    ).regularPrice
+  );
+  const price = calculateCustomBundlePrice(regularPrices);
+
   return {
     bundleId: bundle.id,
     bundleName: bundle.name,
     quantity,
-    unitPrice: price.price,
-    selectedProducts: selectedProductIds.map((productId) => selectedById.get(productId)!),
+    unitPrice: price.salePrice,
+    selectedProducts: orderedProducts.map((product) => ({
+      id: product.id,
+      slug: product.slug,
+      title: product.title,
+      coverImage: product.coverImage,
+      prices: product.prices.map((price) => ({
+        currencyCode: price.currencyCode as CurrencyCode,
+        regularPrice: price.regularPrice,
+        salePrice: price.salePrice ?? undefined,
+        saleStartDate: price.saleStartDate?.toISOString(),
+        saleEndDate: price.saleEndDate?.toISOString(),
+        isDefault: price.isDefault,
+        isActive: price.isActive,
+      })),
+    })),
   };
 }

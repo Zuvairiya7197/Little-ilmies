@@ -26,7 +26,7 @@ const reasons = [
     cardBg: "bg-blossom-50",
   },
   {
-    title: "Easy To Read",
+    title: "Rent & Read",
     description: "Simple language and clear layout",
     image: "/images/why-easy-to-read.png",
     cardBg: "bg-sunny-50",

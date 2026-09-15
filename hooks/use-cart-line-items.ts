@@ -6,6 +6,7 @@ import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import { calculateRentalPrice } from "@/lib/rentals/pricing";
 import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
+import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { getProductBySlug } from "@/data/products";
 import type { CurrencyCode } from "@/types/pricing";
 
@@ -28,7 +29,7 @@ export interface CartLineItem {
   pageCount: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;
-  selectedBooks?: { id: string; slug: string; title: string; coverImage: string }[];
+  selectedBooks?: { id: string; slug: string; title: string; coverImage: string; prices?: import("@/types/catalog").ProductSummary["prices"] }[];
   bundleSize?: number;
 }
 
@@ -46,13 +47,14 @@ export function useCartLineItems() {
     return items.flatMap((item): CartLineItem[] => {
       const cartItemId = item.cartItemId ?? item.productId;
       if (item.type === "CUSTOM_BUNDLE" && item.bundleSize && item.bundlePrices) {
-        const exactPrice = item.bundlePrices.find(
-          (price) => price.quantity === item.bundleSize && price.currencyCode === currency && price.enabled
-        );
-        const fallbackPrice =
-          exactPrice ??
-          item.bundlePrices.find((price) => price.quantity === item.bundleSize && price.currencyCode === "USD" && price.enabled);
-        if (!fallbackPrice) return [];
+        const selectedBooks = item.selectedBooks ?? [];
+        const regularPrices = selectedBooks.flatMap((book) => {
+          if (!book.prices) return [];
+          return [resolveProductPrice({ prices: book.prices }, currency).regularPrice];
+        });
+        if (regularPrices.length !== item.bundleSize) return [];
+
+        const computed = calculateCustomBundlePrice(regularPrices);
 
         return [
           {
@@ -64,12 +66,12 @@ export function useCartLineItems() {
             title: item.title,
             coverImage: item.coverImage,
             quantity: 1,
-            unitPrice: fallbackPrice.price,
-            regularUnitPrice: fallbackPrice.compareAtPrice ?? fallbackPrice.price,
-            lineTotal: fallbackPrice.price,
-            currencyCode: fallbackPrice.currencyCode as CurrencyCode,
-            isFallbackPrice: fallbackPrice.currencyCode !== currency,
-            isOnSale: false,
+            unitPrice: computed.salePrice,
+            regularUnitPrice: computed.regularPrice,
+            lineTotal: computed.salePrice,
+            currencyCode: currency,
+            isFallbackPrice: false,
+            isOnSale: computed.salePrice < computed.regularPrice,
             ageRange: item.ageRange ?? "",
             pageCount: item.pageCount ?? 0,
             selectedBooks: item.selectedBooks,

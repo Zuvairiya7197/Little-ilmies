@@ -5,7 +5,7 @@ const trustBadges: { label: string; image: string; iconBg: string; imageScale?: 
   { label: "Instant Digital Download", image: "/images/why-instant-download.png", iconBg: "bg-sunny-50" },
   { label: "Printable PDF", image: "/images/why-print-at-home.png", iconBg: "bg-teal-50" },
   { label: "Kid Friendly", image: "/images/why-loved-by-parents.png", iconBg: "bg-blossom-50" },
-  { label: "Easy To Read", image: "/images/why-easy-to-read.png", iconBg: "bg-sunny-50" },
+  { label: "Rent & Read", image: "/images/why-easy-to-read.png", iconBg: "bg-sunny-50" },
   // Renders larger than the others at the same scale, so it gets a smaller override.
   { label: "Secure Checkout", image: "/images/why-secure-checkout.png", iconBg: "bg-ink-50", imageScale: "scale-100" },
 ];

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { FALLBACK_CURRENCY, type CurrencyCode } from "@/types/pricing";
+import { calculateBookSalePrice } from "@/lib/pricing/automatic-pricing";
 
 export interface ResolvedDbPrice {
   currencyCode: CurrencyCode;
@@ -71,10 +72,9 @@ export async function resolveProductPriceFromDb(
   throw new Error(`Product ${productId} has no active ${requestedCurrency} or international price configured.`);
 }
 
-function activeSalePrice(price: { salePrice: number | null; saleStartDate: Date | null; saleEndDate: Date | null }) {
-  if (price.salePrice == null) return null;
+function activeSalePrice(price: { regularPrice: number; currencyCode: string; saleStartDate: Date | null; saleEndDate: Date | null }) {
   const now = Date.now();
   if (price.saleStartDate && now < price.saleStartDate.getTime()) return null;
   if (price.saleEndDate && now > price.saleEndDate.getTime()) return null;
-  return price.salePrice;
+  return calculateBookSalePrice(price.regularPrice);
 }

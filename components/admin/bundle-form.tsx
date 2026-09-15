@@ -200,16 +200,14 @@ export function BundleForm({
 
       {bundleType === "CUSTOM" && (
         <div>
-          <p className="mb-2 text-sm font-semibold text-ink-600">Bundle sizes & pricing</p>
+          <p className="mb-2 text-sm font-semibold text-ink-600">Bundle sizes</p>
           <div className="overflow-x-auto rounded-xl bg-cream-100 shadow-clay-pressed">
-            <table className="min-w-[720px] w-full text-sm">
+            <table className="w-full text-sm">
               <thead className="text-left text-xs font-bold uppercase text-ink-400">
                 <tr>
                   <th className="px-3 py-2">Enabled</th>
                   <th className="px-3 py-2">Quantity</th>
-                  {currencyCodes.map((currency) => (
-                    <th key={currency} className="px-3 py-2">{currency}</th>
-                  ))}
+                  <th className="px-3 py-2">Pricing</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-cream-200">
@@ -221,28 +219,9 @@ export function BundleForm({
                     <td className="px-3 py-2">
                       <input type="number" {...register(`sizePrices.${index}.quantity`)} className="admin-input h-9 w-24" />
                     </td>
-                    {currencyCodes.map((currency) => (
-                      <td key={currency} className="px-3 py-2">
-                        <div className="grid w-36 gap-1">
-                          <input
-                            type="number"
-                            step="0.01"
-                            {...register(`sizePrices.${index}.prices.${currency}`)}
-                            className="admin-input h-9"
-                            placeholder="Sale"
-                            aria-label={`${quantity} book ${currency} selling price`}
-                          />
-                          <input
-                            type="number"
-                            step="0.01"
-                            {...register(`sizePrices.${index}.compareAtPrices.${currency}`)}
-                            className="admin-input h-9"
-                            placeholder="Regular"
-                            aria-label={`${quantity} book ${currency} regular price`}
-                          />
-                        </div>
-                      </td>
-                    ))}
+                    <td className="px-3 py-2 text-xs font-semibold text-ink-400">
+                      Automatically calculated from the selected books at checkout.
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
           currencyCode: p.currencyCode,
           pricingRegion: p.currencyCode === "INR" ? "India" : "International",
           regularPrice: Math.round(p.regularPrice * 100),
-          salePrice: p.salePrice ? Math.round(p.salePrice * 100) : undefined,
+          salePrice: null,
           saleStartDate: p.saleStartDate ? new Date(p.saleStartDate) : undefined,
           saleEndDate: p.saleEndDate ? new Date(p.saleEndDate) : undefined,
           isDefault: p.currencyCode === productData.baseCurrency,

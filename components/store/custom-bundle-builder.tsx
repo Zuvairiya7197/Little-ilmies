@@ -9,6 +9,8 @@ import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
+import { resolveProductPrice } from "@/lib/pricing/resolve-price";
+import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 
 export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
   const currency = useCurrencyStore((state) => state.currency);
@@ -25,13 +27,9 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
       byQuantity.set(price.quantity, [...(byQuantity.get(price.quantity) ?? []), price]);
     }
     return Array.from(byQuantity.entries())
-      .map(([quantity, prices]) => ({
-        quantity,
-        price: prices.find((price) => price.currencyCode === currency),
-      }))
-      .filter((size): size is { quantity: number; price: NonNullable<typeof size.price> } => Boolean(size.price))
+      .map(([quantity]) => ({ quantity }))
       .sort((a, b) => a.quantity - b.quantity);
-  }, [bundle.customPrices, currency]);
+  }, [bundle.customPrices]);
 
   const [selectedQuantity, setSelectedQuantity] = useState(
     editingItem?.bundleSize && enabledSizes.some((size) => size.quantity === editingItem.bundleSize)
@@ -41,6 +39,16 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
   const [selectedIds, setSelectedIds] = useState<string[]>(editingItem?.selectedProductIds ?? []);
   const selectedSize = enabledSizes.find((size) => size.quantity === selectedQuantity);
   const isComplete = Boolean(selectedQuantity && selectedIds.length === selectedQuantity);
+  const selectedProducts = selectedIds
+    .map((id) => bundle.products.find((product) => product.id === id))
+    .filter(Boolean);
+  const selectedRegularPrices = selectedProducts.map((product) =>
+    resolveProductPrice(product!, currency).regularPrice
+  );
+  const selectedPricing =
+    selectedRegularPrices.length > 0
+      ? calculateCustomBundlePrice(selectedRegularPrices)
+      : null;
   const heroBooks = bundle.products.slice(0, 8);
 
   function toggleBook(productId: string) {
@@ -61,6 +69,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
         slug: product!.slug,
         title: product!.title,
         coverImage: product!.coverImage,
+        prices: product!.prices,
       }));
 
     addItem({
@@ -149,15 +158,8 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
                 )}
               >
                 <span className="block font-display text-lg font-bold text-ink-900">{size.quantity} Books</span>
-                <span className="mt-1 flex flex-wrap items-baseline gap-2 text-sm">
-                  <span className="font-semibold text-violet-800">
-                    {formatPrice(size.price.price, size.price.currencyCode)}
-                  </span>
-                  {size.price.compareAtPrice != null && size.price.compareAtPrice > size.price.price && (
-                    <span className="text-xs font-medium text-ink-300 line-through">
-                      {formatPrice(size.price.compareAtPrice, size.price.currencyCode)}
-                    </span>
-                  )}
+                <span className="mt-1 block text-sm font-semibold text-violet-800">
+                  Select {size.quantity} books
                 </span>
               </button>
             ))}
@@ -203,6 +205,27 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
               );
             })}
           </div>
+
+          {selectedPricing && (
+            <div className="mt-5 rounded-2xl bg-lilac-50 p-4 text-sm">
+              <div className="flex items-center justify-between gap-3 text-ink-500">
+                <span>Regular value</span>
+                <span className="font-semibold line-through">
+                  {formatPrice(selectedPricing.regularPrice, currency)}
+                </span>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3 text-ink-800">
+                <span className="font-bold">Bundle price</span>
+                <span className="font-display text-xl font-bold text-violet-800">
+                  {formatPrice(selectedPricing.salePrice, currency)}
+                </span>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3 text-sage-700">
+                <span>You save</span>
+                <span className="font-bold">{formatPrice(selectedPricing.savings, currency)}</span>
+              </div>
+            </div>
+          )}
 
           <button
             type="button"

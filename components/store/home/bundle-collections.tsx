@@ -121,16 +121,16 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
         </p>
 
         <div className="mt-4 flex items-center justify-between gap-2">
-          <div className="flex items-baseline gap-2">
-            <span className="font-display text-lg font-semibold text-ink-700">
+          <div className="flex min-w-0 items-baseline gap-2 overflow-hidden">
+            <span className="whitespace-nowrap font-display text-lg font-semibold text-ink-700">
               {displayPrice}
             </span>
             {displayCompareAtPrice ? (
-              <span className="text-sm text-ink-300 line-through">
+              <span className="whitespace-nowrap text-sm text-ink-300 line-through">
                 {displayCompareAtPrice}
               </span>
             ) : savings > 0 && (
-              <span className="text-sm text-ink-300 line-through">
+              <span className="whitespace-nowrap text-sm text-ink-300 line-through">
                 {formatPrice(regularTotal, bundlePrice.currencyCode)}
               </span>
             )}

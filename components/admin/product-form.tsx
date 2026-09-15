@@ -10,6 +10,8 @@ import { Loader2, AlertTriangle, Upload, Trash2, ChevronDown, Check, Wand2, X } 
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import { booksMenuSections } from "@/lib/store-navigation";
 import type { CurrencyCode } from "@/types/pricing";
+import { calculateBookSalePrice, BOOK_SALE_DISCOUNT_PERCENTAGE } from "@/lib/pricing/automatic-pricing";
+import { formatPrice } from "@/lib/utils/format";
 
 interface CategoryOption {
   id: string;
@@ -92,6 +94,7 @@ export function ProductForm({
   const previewTitle = seoTitle || title || "Product SEO title";
   const previewDescription =
     seoDescription || shortDescription || "A short description used by search engines and social previews.";
+  const watchedPrices = watch("prices");
 
   useEffect(() => {
     if (productId || !title) return;
@@ -364,13 +367,15 @@ export function ProductForm({
                   className="admin-input"
                 />
               </Field>
-              <Field label="Sale Price" className="w-32">
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register(`prices.${index}.salePrice`)}
-                  className="admin-input"
-                />
+              <Field label="Sale Price" className="w-40" hint={`Automatically calculated at ${BOOK_SALE_DISCOUNT_PERCENTAGE}% off`}>
+                <div className="rounded-xl bg-cream-100 px-3 py-2 text-sm font-semibold text-ink-600 shadow-clay-pressed">
+                  {formatPrice(
+                    calculateBookSalePrice(
+                      Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100)
+                    ),
+                    watchedPrices?.[index]?.currencyCode ?? "INR"
+                  )}
+                </div>
               </Field>
               <Field label="Sale Start" className="w-40">
                 <input type="date" {...register(`prices.${index}.saleStartDate`)} className="admin-input" />

@@ -1,5 +1,6 @@
 import { FALLBACK_CURRENCY, type CurrencyCode } from "@/types/pricing";
 import type { ProductSummary } from "@/types/catalog";
+import { calculateBookSalePrice } from "@/lib/pricing/automatic-pricing";
 
 export interface ResolvedPrice {
   currencyCode: CurrencyCode;
@@ -81,11 +82,10 @@ export function resolveProductPrice(
 }
 
 function activeSalePrice(price: ProductSummary["prices"][number]) {
-  if (price.salePrice == null) return undefined;
   const now = Date.now();
   if (price.saleStartDate && now < new Date(price.saleStartDate).getTime()) return undefined;
   if (price.saleEndDate && now > new Date(price.saleEndDate).getTime()) return undefined;
-  return price.salePrice;
+  return calculateBookSalePrice(price.regularPrice);
 }
 
 function findPrice(product: Pick<ProductSummary, "prices">, currency: CurrencyCode) {

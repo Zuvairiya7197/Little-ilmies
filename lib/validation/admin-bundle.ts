@@ -49,24 +49,8 @@ export const bundleFormSchema = z.object({
       });
     }
 
-    for (const currency of supportedCurrencies) {
-      const price = size.prices[currency];
-      if (price == null || Number.isNaN(price)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["sizePrices", index, "prices", currency],
-          message: `${currency} price is required`,
-        });
-      }
-      const compareAtPrice = size.compareAtPrices[currency];
-      if (compareAtPrice != null && price != null && compareAtPrice < price) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["sizePrices", index, "compareAtPrices", currency],
-          message: `${currency} compare-at price must be greater than or equal to the selling price`,
-        });
-      }
-    }
+    // Custom bundle prices are calculated dynamically from selected books.
+    // Rows only control which quantities are available.
   }
 
   if (!value.sizePrices.some((size) => size.enabled)) {
