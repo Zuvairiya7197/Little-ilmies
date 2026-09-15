@@ -53,10 +53,10 @@ export default async function HomePage() {
         <ShopByLearningGoal />
       </Reveal>
       <Reveal>
-        <ShopByAge />
+        <BookPreviewShowcase product={homepageSample} />
       </Reveal>
       <Reveal>
-        <BookPreviewShowcase product={homepageSample} />
+        <ShopByAge />
       </Reveal>
       {rentalEligible && (
         <Reveal>
