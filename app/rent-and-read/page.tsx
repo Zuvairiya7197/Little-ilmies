@@ -51,18 +51,18 @@ export default async function RentAndReadPage() {
           </p>
         </section>
       ) : (
-        <section className="grid auto-rows-fr grid-cols-2 items-stretch gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
           {products.map((product) => {
             const price = resolveProductPrice(product, "INR");
             const salePrice = price.salePrice ?? price.regularPrice;
             const rentalPrice = calculateRentalPrice(salePrice);
 
             return (
-              <article key={product.id} className="flex h-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
-                <Link href={`/product/${product.slug}`} className="relative block aspect-[3/4] bg-cream-100 p-6 xs:p-7">
-                  <Image src={product.coverImage} alt={`${product.title} cover`} fill sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw" className="object-contain p-6 xs:p-7" />
+              <article key={product.id} className="flex flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
+                <Link href={`/product/${product.slug}`} className="relative block aspect-[3/4] bg-cream-100 p-4 xs:p-5 lg:aspect-[4/3] lg:p-4">
+                  <Image src={product.coverImage} alt={`${product.title} cover`} fill sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw" className="object-contain p-4 xs:p-5 lg:p-4" />
                 </Link>
-                <div className="flex flex-1 flex-col p-4">
+                <div className="flex flex-1 flex-col p-3 sm:p-4">
                   <h2 className="line-clamp-2 min-h-[2.75rem] font-display text-base font-semibold leading-snug text-ink-700">
                     <Link href={`/product/${product.slug}`}>{product.title}</Link>
                   </h2>
@@ -75,7 +75,7 @@ export default async function RentAndReadPage() {
                       <span className="text-sm text-ink-300 line-through">{formatPrice(price.regularPrice, "INR")}</span>
                     )}
                   </div>
-                  <div className="mt-3 rounded-xl bg-sage-50 p-3">
+                  <div className="mt-3 rounded-xl bg-sage-50 p-2.5 sm:p-3">
                     <p className="flex items-center justify-between gap-2 text-xs">
                       <span className="font-bold text-sage-800">Rent &amp; Read</span>
                       <span className="font-display text-base font-bold text-sage-800">{formatPrice(rentalPrice, "INR")}</span>
@@ -85,7 +85,7 @@ export default async function RentAndReadPage() {
                       7 days online reading
                     </p>
                   </div>
-                  <Link href={`/product/${product.slug}`} className="btn-primary mt-auto justify-center px-4 py-2.5 text-sm">
+                  <Link href={`/product/${product.slug}`} className="btn-primary mt-3 justify-center px-3 py-2 text-sm">
                     <BookOpen className="h-4 w-4" aria-hidden="true" />
                     Rent &amp; Read
                   </Link>
