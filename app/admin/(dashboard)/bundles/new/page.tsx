@@ -13,7 +13,14 @@ export default async function NewBundlePage() {
     prisma.product.findMany({
       where: { archivedAt: null },
       orderBy: { title: "asc" },
-      select: { id: true, title: true, prices: { where: { isActive: true }, select: { currencyCode: true, regularPrice: true } } },
+      select: {
+        id: true,
+        title: true,
+        prices: {
+          where: { isActive: true },
+          select: { currencyCode: true, regularPrice: true },
+        },
+      },
     }),
     getPricingSettings(),
   ]);
@@ -26,9 +33,16 @@ export default async function NewBundlePage() {
       <BundleForm
         products={products.map((product) => ({
           ...product,
-          prices: Object.fromEntries(product.prices.map((price) => [price.currencyCode, price.regularPrice])),
+          prices: Object.fromEntries(
+            product.prices.map((price) => [
+              price.currencyCode,
+              price.regularPrice,
+            ]),
+          ),
         }))}
-        customBundleDiscountPercentage={pricingSettings.customBundleDiscountPercentage}
+        customBundleDiscountPercentage={
+          pricingSettings.customBundleDiscountPercentage
+        }
       />
     </div>
   );

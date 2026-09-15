@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Loader2, Search } from "lucide-react";
-import { bundleFormSchema, type BundleFormValues } from "@/lib/validation/admin-bundle";
+import {
+  bundleFormSchema,
+  type BundleFormValues,
+} from "@/lib/validation/admin-bundle";
 import { CURRENCIES, type CurrencyCode } from "@/types/pricing";
 import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { formatPrice } from "@/lib/utils/format";
@@ -17,8 +20,12 @@ function defaultSizePrices() {
   return starterQuantities.map((quantity) => ({
     quantity,
     enabled: quantity <= 4,
-    prices: Object.fromEntries(currencyCodes.map((currency) => [currency, undefined])),
-    compareAtPrices: Object.fromEntries(currencyCodes.map((currency) => [currency, undefined])),
+    prices: Object.fromEntries(
+      currencyCodes.map((currency) => [currency, undefined]),
+    ),
+    compareAtPrices: Object.fromEntries(
+      currencyCodes.map((currency) => [currency, undefined]),
+    ),
   }));
 }
 
@@ -30,7 +37,11 @@ export function BundleForm({
 }: {
   bundleId?: string;
   defaultValues?: Partial<BundleFormValues>;
-  products: { id: string; title: string; prices: Partial<Record<CurrencyCode, number>> }[];
+  products: {
+    id: string;
+    title: string;
+    prices: Partial<Record<CurrencyCode, number>>;
+  }[];
   customBundleDiscountPercentage: number;
 }) {
   const router = useRouter();
@@ -51,13 +62,18 @@ export function BundleForm({
       productIds: [],
       ...defaultValues,
       sizePrices: defaultSizePrices().map((row) => {
-        const saved = defaultValues?.sizePrices?.find((size) => size.quantity === row.quantity);
+        const saved = defaultValues?.sizePrices?.find(
+          (size) => size.quantity === row.quantity,
+        );
         return saved
           ? {
               ...row,
               ...saved,
               prices: { ...row.prices, ...saved.prices },
-              compareAtPrices: { ...row.compareAtPrices, ...saved.compareAtPrices },
+              compareAtPrices: {
+                ...row.compareAtPrices,
+                ...saved.compareAtPrices,
+              },
             }
           : row;
       }),
@@ -66,18 +82,24 @@ export function BundleForm({
 
   const bundleType = useWatch({ control, name: "type" });
   const selectedProductIds = useWatch({ control, name: "productIds" }) ?? [];
-  const selectedProducts = products.filter((product) => selectedProductIds.includes(product.id));
+  const selectedProducts = products.filter((product) =>
+    selectedProductIds.includes(product.id),
+  );
   const filteredProducts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return products;
-    return products.filter((product) => product.title.toLowerCase().includes(normalized));
+    return products.filter((product) =>
+      product.title.toLowerCase().includes(normalized),
+    );
   }, [products, query]);
 
   async function onSubmit(values: BundleFormValues) {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const endpoint = bundleId ? `/api/admin/bundles/${bundleId}` : "/api/admin/bundles";
+      const endpoint = bundleId
+        ? `/api/admin/bundles/${bundleId}`
+        : "/api/admin/bundles";
       const res = await fetch(endpoint, {
         method: bundleId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,43 +118,84 @@ export function BundleForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="card-surface flex flex-col gap-5 p-5" noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="card-surface flex flex-col gap-5 p-5"
+      noValidate
+    >
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label htmlFor="bundle-name" className="mb-1.5 block text-sm font-semibold text-ink-600">
+          <label
+            htmlFor="bundle-name"
+            className="mb-1.5 block text-sm font-semibold text-ink-600"
+          >
             Name
           </label>
-          <input id="bundle-name" {...register("name")} className="admin-input" />
-          {errors.name && <p className="mt-1 text-xs text-gold-700">{errors.name.message}</p>}
+          <input
+            id="bundle-name"
+            {...register("name")}
+            className="admin-input"
+          />
+          {errors.name && (
+            <p className="mt-1 text-xs text-gold-700">{errors.name.message}</p>
+          )}
         </div>
         <div>
-          <label htmlFor="bundle-slug" className="mb-1.5 block text-sm font-semibold text-ink-600">
+          <label
+            htmlFor="bundle-slug"
+            className="mb-1.5 block text-sm font-semibold text-ink-600"
+          >
             Slug
           </label>
-          <input id="bundle-slug" {...register("slug")} className="admin-input" />
-          {errors.slug && <p className="mt-1 text-xs text-gold-700">{errors.slug.message}</p>}
+          <input
+            id="bundle-slug"
+            {...register("slug")}
+            className="admin-input"
+          />
+          {errors.slug && (
+            <p className="mt-1 text-xs text-gold-700">{errors.slug.message}</p>
+          )}
         </div>
       </div>
 
       <div>
-        <label htmlFor="bundle-description" className="mb-1.5 block text-sm font-semibold text-ink-600">
+        <label
+          htmlFor="bundle-description"
+          className="mb-1.5 block text-sm font-semibold text-ink-600"
+        >
           Description
         </label>
-        <textarea id="bundle-description" {...register("description")} rows={3} className="admin-input resize-none" />
+        <textarea
+          id="bundle-description"
+          {...register("description")}
+          rows={3}
+          className="admin-input resize-none"
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label htmlFor="bundle-type" className="mb-1.5 block text-sm font-semibold text-ink-600">
+          <label
+            htmlFor="bundle-type"
+            className="mb-1.5 block text-sm font-semibold text-ink-600"
+          >
             Bundle type
           </label>
-          <select id="bundle-type" {...register("type")} className="admin-input">
+          <select
+            id="bundle-type"
+            {...register("type")}
+            className="admin-input"
+          >
             <option value="FIXED">Fixed bundle</option>
             <option value="CUSTOM">Custom bundle</option>
           </select>
         </div>
         <label className="flex items-end gap-2.5 pb-2 text-sm font-semibold text-ink-600">
-          <input type="checkbox" {...register("isActive")} className="h-4 w-4 accent-ink-500" />
+          <input
+            type="checkbox"
+            {...register("isActive")}
+            className="h-4 w-4 accent-ink-500"
+          />
           Active
         </label>
       </div>
@@ -140,16 +203,34 @@ export function BundleForm({
       {bundleType === "FIXED" && (
         <div className="grid grid-cols-1 gap-4 xs:grid-cols-2">
           <div>
-            <label htmlFor="bundle-price-inr" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            <label
+              htmlFor="bundle-price-inr"
+              className="mb-1.5 block text-sm font-semibold text-ink-600"
+            >
               Bundle price INR
             </label>
-            <input id="bundle-price-inr" type="number" step="0.01" {...register("bundlePriceInr")} className="admin-input" />
+            <input
+              id="bundle-price-inr"
+              type="number"
+              step="0.01"
+              {...register("bundlePriceInr")}
+              className="admin-input"
+            />
           </div>
           <div>
-            <label htmlFor="bundle-price-usd" className="mb-1.5 block text-sm font-semibold text-ink-600">
+            <label
+              htmlFor="bundle-price-usd"
+              className="mb-1.5 block text-sm font-semibold text-ink-600"
+            >
               Bundle price USD
             </label>
-            <input id="bundle-price-usd" type="number" step="0.01" {...register("bundlePriceUsd")} className="admin-input" />
+            <input
+              id="bundle-price-usd"
+              type="number"
+              step="0.01"
+              {...register("bundlePriceUsd")}
+              className="admin-input"
+            />
           </div>
         </div>
       )}
@@ -157,7 +238,9 @@ export function BundleForm({
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
           <p className="block text-sm font-semibold text-ink-600">
-            {bundleType === "CUSTOM" ? "Eligible books" : "Products in this bundle"}
+            {bundleType === "CUSTOM"
+              ? "Eligible books"
+              : "Products in this bundle"}
           </p>
           <label className="relative w-full max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300" />
@@ -187,7 +270,7 @@ export function BundleForm({
                             field.onChange(
                               e.target.checked
                                 ? [...field.value, product.id]
-                                : field.value.filter((id) => id !== product.id)
+                                : field.value.filter((id) => id !== product.id),
                             );
                           }}
                           className="h-4 w-4 shrink-0 accent-ink-500"
@@ -201,12 +284,18 @@ export function BundleForm({
             </div>
           )}
         />
-        {errors.productIds && <p className="mt-1 text-xs text-gold-700">{errors.productIds.message}</p>}
+        {errors.productIds && (
+          <p className="mt-1 text-xs text-gold-700">
+            {errors.productIds.message}
+          </p>
+        )}
       </div>
 
       {bundleType === "CUSTOM" && (
         <div>
-          <p className="mb-2 text-sm font-semibold text-ink-600">Bundle sizes</p>
+          <p className="mb-2 text-sm font-semibold text-ink-600">
+            Bundle sizes
+          </p>
           <div className="overflow-x-auto rounded-xl bg-cream-100 shadow-clay-pressed">
             <table className="w-full text-sm">
               <thead className="text-left text-xs font-bold uppercase text-ink-400">
@@ -220,32 +309,49 @@ export function BundleForm({
                 {starterQuantities.map((quantity, index) => (
                   <tr key={quantity}>
                     <td className="px-3 py-2">
-                      <input type="checkbox" {...register(`sizePrices.${index}.enabled`)} className="h-4 w-4 accent-ink-500" />
+                      <input
+                        type="checkbox"
+                        {...register(`sizePrices.${index}.enabled`)}
+                        className="h-4 w-4 accent-ink-500"
+                      />
                     </td>
                     <td className="px-3 py-2">
-                      <input type="number" {...register(`sizePrices.${index}.quantity`)} className="admin-input h-9 w-24" />
+                      <input
+                        type="number"
+                        {...register(`sizePrices.${index}.quantity`)}
+                        className="admin-input h-9 w-24"
+                      />
                     </td>
                     <td className="px-3 py-2 text-xs font-semibold text-ink-500">
                       <div className="flex flex-wrap gap-x-4 gap-y-1">
-                        {(Object.keys(CURRENCIES) as CurrencyCode[]).map((currency) => {
-                          const regularPrices = selectedProducts
-                            .map((product) => product.prices[currency])
-                            .filter((price): price is number => price != null)
-                            .slice(0, quantity);
-                          const calculated =
-                            regularPrices.length === quantity
-                              ? calculateCustomBundlePrice(regularPrices, customBundleDiscountPercentage)
-                              : null;
+                        {(Object.keys(CURRENCIES) as CurrencyCode[]).map(
+                          (currency) => {
+                            const regularPrices = selectedProducts
+                              .map((product) => product.prices[currency])
+                              .filter((price): price is number => price != null)
+                              .slice(0, quantity);
+                            const calculated =
+                              regularPrices.length === quantity
+                                ? calculateCustomBundlePrice(
+                                    regularPrices,
+                                    customBundleDiscountPercentage,
+                                  )
+                                : null;
 
-                          return (
-                            <span key={currency}>
-                              {currency}: {calculated ? formatPrice(calculated.salePrice, currency) : "Select enough books"}
-                            </span>
-                          );
-                        })}
+                            return (
+                              <span key={currency}>
+                                {currency}:{" "}
+                                {calculated
+                                  ? formatPrice(calculated.salePrice, currency)
+                                  : "Select enough books"}
+                              </span>
+                            );
+                          },
+                        )}
                       </div>
                       <p className="mt-1 font-normal text-ink-400">
-                        Calculated from the first {quantity} selected books at checkout.
+                        Calculated from the first {quantity} selected books at
+                        checkout.
                       </p>
                     </td>
                   </tr>
@@ -253,19 +359,37 @@ export function BundleForm({
               </tbody>
             </table>
           </div>
-          {errors.sizePrices && <p className="mt-1 text-xs text-gold-700">Check enabled quantities and prices.</p>}
+          {errors.sizePrices && (
+            <p className="mt-1 text-xs text-gold-700">
+              Check enabled quantities and prices.
+            </p>
+          )}
         </div>
       )}
 
       {submitError && (
-        <p role="alert" className="flex items-start gap-2 rounded-xl bg-gold-50 px-3.5 py-2.5 text-sm text-gold-700">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <p
+          role="alert"
+          className="flex items-start gap-2 rounded-xl bg-gold-50 px-3.5 py-2.5 text-sm text-gold-700"
+        >
+          <AlertTriangle
+            className="mt-0.5 h-4 w-4 shrink-0"
+            aria-hidden="true"
+          />
           {submitError}
         </p>
       )}
 
-      <button type="submit" disabled={isSubmitting} className="btn-primary w-fit disabled:opacity-60">
-        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Save"}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="btn-primary w-fit disabled:opacity-60"
+      >
+        {isSubmitting ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          "Save"
+        )}
       </button>
     </form>
   );
