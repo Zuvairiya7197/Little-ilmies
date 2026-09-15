@@ -16,10 +16,22 @@ export interface CartItem {
   isBestseller?: boolean;
   isNewArrival?: boolean;
   selectedProductIds?: string[];
-  selectedBooks?: { id: string; slug: string; title: string; coverImage: string; prices?: ProductSummary["prices"] }[];
+  selectedBooks?: {
+    id: string;
+    slug: string;
+    title: string;
+    coverImage: string;
+    prices?: ProductSummary["prices"];
+  }[];
   bundleSize?: number;
   customBundleDiscountPercentage?: number;
-  bundlePrices?: { quantity: number; currencyCode: string; price: number; compareAtPrice?: number; enabled: boolean }[];
+  bundlePrices?: {
+    quantity: number;
+    currencyCode: string;
+    price: number;
+    compareAtPrice?: number;
+    enabled: boolean;
+  }[];
   quantity: number;
 }
 
@@ -36,7 +48,10 @@ interface CartState {
 
 function matchesCartItem(item: CartItem, cartItemId: string) {
   const itemId = item.cartItemId ?? item.productId;
-  return itemId === cartItemId || (item.type === "RENTAL" && item.productId === cartItemId);
+  return (
+    itemId === cartItemId ||
+    (item.type === "RENTAL" && item.productId === cartItemId)
+  );
 }
 
 export const useCartStore = create<CartState>()(
@@ -49,33 +64,56 @@ export const useCartStore = create<CartState>()(
       addItem: (item) => {
         const itemWithId = {
           ...item,
-          cartItemId: item.cartItemId ?? (item.type === "RENTAL" ? `rental:${item.productId}` : item.productId),
+          cartItemId:
+            item.cartItemId ??
+            (item.type === "RENTAL"
+              ? `rental:${item.productId}`
+              : item.productId),
         };
-        const existing = get().items.find((i) => (i.cartItemId ?? i.productId) === itemWithId.cartItemId);
+        const existing = get().items.find(
+          (i) => (i.cartItemId ?? i.productId) === itemWithId.cartItemId,
+        );
         if (existing) {
           set({
-            items: get().items.map((i) => ((i.cartItemId ?? i.productId) === itemWithId.cartItemId ? { ...i, ...itemWithId } : i)),
+            items: get().items.map((i) =>
+              (i.cartItemId ?? i.productId) === itemWithId.cartItemId
+                ? { ...i, ...itemWithId }
+                : i,
+            ),
             isOpen: true,
           });
           return;
         }
-        set({ items: [...get().items, { ...itemWithId, quantity: 1 }], isOpen: true });
+        set({
+          items: [...get().items, { ...itemWithId, quantity: 1 }],
+          isOpen: true,
+        });
       },
       removeItem: (cartItemId) =>
-        set({ items: get().items.filter((item) => !matchesCartItem(item, cartItemId)) }),
+        set({
+          items: get().items.filter(
+            (item) => !matchesCartItem(item, cartItemId),
+          ),
+        }),
       setQuantity: (cartItemId, quantity) => {
         if (quantity < 1) {
-          set({ items: get().items.filter((item) => !matchesCartItem(item, cartItemId)) });
+          set({
+            items: get().items.filter(
+              (item) => !matchesCartItem(item, cartItemId),
+            ),
+          });
           return;
         }
         set({
-          items: get().items.map((item) => (matchesCartItem(item, cartItemId) ? { ...item, quantity } : item)),
+          items: get().items.map((item) =>
+            matchesCartItem(item, cartItemId) ? { ...item, quantity } : item,
+          ),
         });
       },
       clear: () => set({ items: [] }),
     }),
-    { name: "little-ilmies-cart" }
-  )
+    { name: "little-ilmies-cart" },
+  ),
 );
 
 export const selectCartCount = (state: CartState) =>
