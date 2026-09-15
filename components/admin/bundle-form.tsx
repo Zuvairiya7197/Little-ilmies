@@ -6,7 +6,9 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Loader2, Search } from "lucide-react";
 import { bundleFormSchema, type BundleFormValues } from "@/lib/validation/admin-bundle";
-import { CURRENCIES } from "@/types/pricing";
+import { CURRENCIES, type CurrencyCode } from "@/types/pricing";
+import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
+import { formatPrice } from "@/lib/utils/format";
 
 const starterQuantities = Array.from({ length: 9 }, (_, index) => index + 2);
 const currencyCodes = Object.keys(CURRENCIES) as (keyof typeof CURRENCIES)[];
@@ -24,10 +26,12 @@ export function BundleForm({
   bundleId,
   defaultValues,
   products,
+  customBundleDiscountPercentage,
 }: {
   bundleId?: string;
   defaultValues?: Partial<BundleFormValues>;
-  products: { id: string; title: string }[];
+  products: { id: string; title: string; prices: Partial<Record<CurrencyCode, number>> }[];
+  customBundleDiscountPercentage: number;
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +65,8 @@ export function BundleForm({
   });
 
   const bundleType = useWatch({ control, name: "type" });
+  const selectedProductIds = useWatch({ control, name: "productIds" }) ?? [];
+  const selectedProducts = products.filter((product) => selectedProductIds.includes(product.id));
   const filteredProducts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return products;
@@ -219,8 +225,28 @@ export function BundleForm({
                     <td className="px-3 py-2">
                       <input type="number" {...register(`sizePrices.${index}.quantity`)} className="admin-input h-9 w-24" />
                     </td>
-                    <td className="px-3 py-2 text-xs font-semibold text-ink-400">
-                      Automatically calculated from the selected books at checkout.
+                    <td className="px-3 py-2 text-xs font-semibold text-ink-500">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {(Object.keys(CURRENCIES) as CurrencyCode[]).map((currency) => {
+                          const regularPrices = selectedProducts
+                            .map((product) => product.prices[currency])
+                            .filter((price): price is number => price != null)
+                            .slice(0, quantity);
+                          const calculated =
+                            regularPrices.length === quantity
+                              ? calculateCustomBundlePrice(regularPrices, customBundleDiscountPercentage)
+                              : null;
+
+                          return (
+                            <span key={currency}>
+                              {currency}: {calculated ? formatPrice(calculated.salePrice, currency) : "Select enough books"}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-1 font-normal text-ink-400">
+                        Calculated from the first {quantity} selected books at checkout.
+                      </p>
                     </td>
                   </tr>
                 ))}

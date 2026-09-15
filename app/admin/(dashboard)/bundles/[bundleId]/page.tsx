@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { BundleForm } from "@/components/admin/bundle-form";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export const metadata: Metadata = {
   title: "Edit Bundle",
@@ -14,9 +15,14 @@ interface PageProps {
 
 export default async function EditBundlePage({ params }: PageProps) {
   const { bundleId } = await params;
-  const [bundle, products] = await Promise.all([
+  const [bundle, products, pricingSettings] = await Promise.all([
     prisma.bundle.findUnique({ where: { id: bundleId }, include: { products: true, customPrices: true } }),
-    prisma.product.findMany({ where: { archivedAt: null }, orderBy: { title: "asc" }, select: { id: true, title: true } }),
+    prisma.product.findMany({
+      where: { archivedAt: null },
+      orderBy: { title: "asc" },
+      select: { id: true, title: true, prices: { where: { isActive: true }, select: { currencyCode: true, regularPrice: true } } },
+    }),
+    getPricingSettings(),
   ]);
   if (!bundle) notFound();
 
@@ -27,7 +33,11 @@ export default async function EditBundlePage({ params }: PageProps) {
       </h1>
       <BundleForm
         bundleId={bundle.id}
-        products={products}
+        products={products.map((product) => ({
+          ...product,
+          prices: Object.fromEntries(product.prices.map((price) => [price.currencyCode, price.regularPrice])),
+        }))}
+        customBundleDiscountPercentage={pricingSettings.customBundleDiscountPercentage}
         defaultValues={{
           name: bundle.name,
           slug: bundle.slug,
