@@ -39,7 +39,9 @@ export async function fulfillOrder({
     if (item.itemType === "RENTAL" && item.productId) {
       accessWrites.push(
         prisma.rentalAccess.upsert({
-          where: { orderId_productId: { orderId: order.id, productId: item.productId } },
+          where: {
+            orderId_productId: { orderId: order.id, productId: item.productId },
+          },
           update: {},
           create: {
             orderId: order.id,
@@ -47,7 +49,7 @@ export async function fulfillOrder({
             rentalStartedAt,
             rentalExpiresAt,
           },
-        })
+        }),
       );
       continue;
     }
@@ -65,7 +67,7 @@ export async function fulfillOrder({
           where: { orderId_productId: { orderId: order.id, productId } },
           update: {},
           create: { orderId: order.id, productId },
-        })
+        }),
       );
     }
   }
