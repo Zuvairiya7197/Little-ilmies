@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, XCircle } from "lucide-react";
 
@@ -43,8 +44,15 @@ export function RentAndReadHighlight() {
             </Link>
           </div>
 
-          {/* Reserved for the Rent & Read illustration — added separately. */}
-          <div className="relative mt-8 hidden aspect-[4/3] w-full md:mt-0 md:block" aria-hidden="true" />
+          <div className="relative mt-8 hidden aspect-[16/9] w-full md:mt-0 md:block" aria-hidden="true">
+            <Image
+              src="/images/rent and read.png"
+              alt=""
+              fill
+              sizes="(max-width: 1024px) 40vw, 480px"
+              className="object-contain object-right"
+            />
+          </div>
         </div>
       </div>
     </section>
