@@ -73,7 +73,7 @@ export default async function PurchaseHistoryPage() {
   return (
     <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-44 pt-14 xl:pb-6 xl:pt-4">
       <div className="container-content relative">
-        <div className="relative min-h-0 text-center xl:text-left">
+        <div className={`relative min-h-0 text-center xl:text-left ${orders.length > 0 ? "xl:min-h-56" : ""}`}>
           <h1 className="font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:text-4xl">
             Purchase History <span className="text-blossom-400">♥</span>
           </h1>
