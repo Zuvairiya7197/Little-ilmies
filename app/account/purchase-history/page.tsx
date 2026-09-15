@@ -11,7 +11,6 @@ import {
   Download,
   Heart,
   Mail,
-  MoreVertical,
   ShieldCheck,
   ShoppingBag,
   Star,
@@ -73,7 +72,7 @@ export default async function PurchaseHistoryPage() {
   return (
     <div className="relative isolate min-h-[calc(100vh-8rem)] overflow-hidden bg-gradient-to-br from-cream via-blossom-50/20 to-ink-50/20 pb-44 pt-14 xl:pb-6 xl:pt-4">
       <div className="container-content relative">
-        <div className={`relative min-h-0 text-center xl:text-left ${orders.length > 0 ? "xl:min-h-56" : ""}`}>
+        <div className={`relative min-h-0 text-center xl:text-left ${orders.length > 0 ? "xl:min-h-28" : ""}`}>
           <h1 className="font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:text-4xl">
             Purchase History <span className="text-blossom-400">♥</span>
           </h1>
@@ -88,12 +87,12 @@ export default async function PurchaseHistoryPage() {
             )}
           </p>
           {orders.length > 0 && (
-            <div className="pointer-events-none absolute right-0 top-0 hidden h-56 w-[30rem] xl:block">
+            <div className="pointer-events-none absolute right-0 top-[-2.5rem] hidden h-28 w-72 xl:block">
               <Image
                 src="/images/purchase history.png"
                 alt=""
                 fill
-                sizes="480px"
+                sizes="288px"
                 className="object-contain object-right"
                 aria-hidden="true"
                 priority
@@ -264,9 +263,6 @@ export default async function PurchaseHistoryPage() {
                             Download
                           </Link>
                         )}
-                        <button type="button" aria-label="Order actions" className="tap-target text-ink-500">
-                          <MoreVertical className="h-5 w-5" aria-hidden="true" />
-                        </button>
                       </div>
                     </div>
                   );
