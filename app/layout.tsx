@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import { Baloo_2, Nunito } from "next/font/google";
 import "@/styles/globals.css";
-import { SiteHeader } from "@/components/store/site-header";
-import { SiteFooter } from "@/components/store/site-footer";
-import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
+import { StorefrontChrome } from "@/components/store/storefront-chrome";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
@@ -73,15 +70,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const headerStore = await headers();
-  // The admin panel has its own sidebar/nav (see app/admin/(dashboard)/layout.tsx)
-  // and must never show the customer-facing storefront header/footer/mobile
-  // nav around it — those were previously wrapping every page unconditionally,
-  // including /admin, which is why the storefront logo/nav appeared to
-  // "scroll away" above the admin sidebar instead of the admin UI owning the
-  // whole viewport.
-  const isAdminRoute = (headerStore.get("x-pathname") ?? "").startsWith("/admin");
-  const showRentAndRead = isAdminRoute ? false : await isRentalEligibleFromHeaders();
+  const showRentAndRead = await isRentalEligibleFromHeaders();
 
   return (
     <html lang="en" className={`${baloo.variable} ${nunito.variable}`}>
@@ -95,22 +84,7 @@ export default async function RootLayout({
           Skip to main content
         </a>
         <AuthSessionProvider>
-          {isAdminRoute ? (
-            <main id="main-content" className="flex-1">
-              {children}
-            </main>
-          ) : (
-            <>
-              <SiteHeader showRentAndRead={showRentAndRead} />
-              <main id="main-content" className="flex-1">
-                {children}
-              </main>
-              <div className="pb-20 xl:pb-0">
-                <SiteFooter />
-              </div>
-              <MobileBottomNav />
-            </>
-          )}
+          <StorefrontChrome showRentAndRead={showRentAndRead}>{children}</StorefrontChrome>
         </AuthSessionProvider>
       </body>
     </html>

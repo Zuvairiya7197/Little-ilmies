@@ -3,12 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const COUNTRY_COOKIE = "li_detected_country";
 
 export function middleware(request: NextRequest) {
-  // Forwarded so the root layout can skip the storefront header/footer/
-  // mobile nav for /admin routes without a large route-group refactor —
-  // next/headers has no direct pathname access in a layout otherwise.
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", request.nextUrl.pathname);
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const response = NextResponse.next();
 
   const existing = request.cookies.get(COUNTRY_COOKIE);
   if (existing) return response;
