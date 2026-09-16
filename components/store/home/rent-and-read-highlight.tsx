@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, XCircle } from "lucide-react";
+import type { ProductSummary } from "@/types/catalog";
 
 const features = [
   { icon: BookOpen, label: "Read online", tint: "bg-ink-50 text-ink-400" },
@@ -8,7 +9,13 @@ const features = [
   { icon: XCircle, label: "No PDF download", tint: "bg-blossom-50 text-blossom-500" },
 ] as const;
 
-export function RentAndReadHighlight() {
+const MAX_COVERS = 6;
+
+export function RentAndReadHighlight({ products }: { products: ProductSummary[] }) {
+  const rentalBooks = products
+    .filter((p) => p.rentAndReadEnabled && p.hasRentalPages)
+    .slice(0, MAX_COVERS);
+
   return (
     <section aria-labelledby="rent-read-heading" className="py-10 xs:py-12 md:py-16">
       <div className="container-content">
@@ -44,15 +51,35 @@ export function RentAndReadHighlight() {
             </Link>
           </div>
 
-          <div className="relative mt-8 hidden aspect-[16/9] w-full md:mt-0 md:block" aria-hidden="true">
-            <Image
-              src="/images/rent and read.png"
-              alt=""
-              fill
-              sizes="(max-width: 1024px) 40vw, 480px"
-              className="object-contain object-right"
-            />
-          </div>
+          {rentalBooks.length > 0 ? (
+            <div className="mt-8 grid grid-cols-3 gap-3 md:mt-0 md:grid-cols-3">
+              {rentalBooks.map((book) => (
+                <Link
+                  key={book.id}
+                  href={`/product/${book.slug}`}
+                  className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-cream-100 shadow-clay-sm transition-transform duration-200 hover:-translate-y-1"
+                >
+                  <Image
+                    src={book.coverImage}
+                    alt={`${book.title} book cover`}
+                    fill
+                    sizes="(max-width: 768px) 30vw, 150px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="relative mt-8 hidden aspect-[16/9] w-full md:mt-0 md:block" aria-hidden="true">
+              <Image
+                src="/images/rent and read.png"
+                alt=""
+                fill
+                sizes="(max-width: 1024px) 40vw, 480px"
+                className="object-contain object-right"
+              />
+            </div>
+          )}
         </div>
       </div>
     </section>

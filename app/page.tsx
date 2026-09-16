@@ -66,7 +66,7 @@ export default async function HomePage() {
       </Reveal>
       {rentalEligible && (
         <Reveal>
-          <RentAndReadHighlight />
+          <RentAndReadHighlight products={products} />
         </Reveal>
       )}
       {bundles.length > 0 && (
