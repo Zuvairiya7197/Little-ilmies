@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useId, cloneElement } from "react";
+import { useEffect, useRef, useState, useId, cloneElement } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -372,18 +372,31 @@ export function ProductForm({
         })()}
 
         <div className="mt-4">
-          <PreviewPagesField
-            files={rentalFiles}
-            onChange={setRentalFiles}
-            isReplacing={Boolean(productId)}
-            disabled={!rentAndReadEnabled}
-            label={productId ? "Replace Rent & Read Pages" : "Rent & Read Pages"}
-            placeholder={
-              !rentAndReadEnabled
-                ? "Enable Rent & Read to upload reader pages"
-                : "Choose every page as an image, in order"
-            }
-          />
+          {productId ? (
+            <RentalPagesUploader
+              productId={productId}
+              disabled={!rentAndReadEnabled}
+              onUploaded={router.refresh}
+              setError={setSubmitError}
+            />
+          ) : (
+            <>
+              <PreviewPagesField
+                files={rentalFiles}
+                onChange={setRentalFiles}
+                disabled={!rentAndReadEnabled}
+                label="Rent & Read Pages"
+                placeholder={
+                  !rentAndReadEnabled
+                    ? "Enable Rent & Read to upload reader pages"
+                    : "Choose every page as an image, in order"
+                }
+              />
+              <p className="mt-1.5 text-xs text-ink-300">
+                Pages upload once you create the product below.
+              </p>
+            </>
+          )}
           <p className="mt-1.5 text-xs text-ink-300">
             Upload every page of this book as an image (not the PDF). The rental reader serves only these
             images — Rent & Read stays unavailable on the storefront until pages are uploaded, even if enabled
@@ -609,20 +622,50 @@ export function ProductForm({
 
           <div className={productId ? "flex flex-col gap-4" : "flex flex-col gap-4 xl:col-span-2"}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FileField
-                label={productId ? "Replace Cover Image" : "Cover Image"}
-                accept="image/jpeg,image/png,image/webp"
-                file={coverFile}
-                onChange={setCoverFile}
-              />
-              <FileField
-                label={productId ? "Replace Main Product PDF" : "Main Product PDF"}
-                accept="application/pdf"
-                file={pdfFile}
-                onChange={setPdfFile}
-              />
+              {productId ? (
+                <InstantFileUpload
+                  key={`cover-${productId}`}
+                  label="Replace Cover Image"
+                  accept="image/jpeg,image/png,image/webp"
+                  onUpload={async (file, onProgress) => {
+                    onProgress(0);
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    fd.append("productId", productId);
+                    await uploadFile("/api/admin/products/upload-cover", fd, "cover image");
+                    onProgress(100);
+                  }}
+                  onDone={router.refresh}
+                />
+              ) : (
+                <FileField
+                  label="Cover Image"
+                  accept="image/jpeg,image/png,image/webp"
+                  file={coverFile}
+                  onChange={setCoverFile}
+                />
+              )}
+              {productId ? (
+                <InstantFileUpload
+                  key={`pdf-${productId}`}
+                  label="Replace Main Product PDF"
+                  accept="application/pdf"
+                  onUpload={async (file, onProgress) => {
+                    const blob = await uploadPdfToBlob(productId, file, onProgress);
+                    await attachUploadedPdf(productId, blob.pathname, file);
+                  }}
+                  onDone={router.refresh}
+                />
+              ) : (
+                <FileField
+                  label="Main Product PDF"
+                  accept="application/pdf"
+                  file={pdfFile}
+                  onChange={setPdfFile}
+                />
+              )}
             </div>
-            {pdfUploadProgress !== null && (
+            {!productId && pdfUploadProgress !== null && (
               <div className="rounded-xl bg-cream-50 px-3 py-2">
                 <div className="h-2 overflow-hidden rounded-full bg-ink-100">
                   <div
@@ -1007,6 +1050,92 @@ function FileField({
   );
 }
 
+/**
+ * A file picker that uploads immediately on selection (rather than
+ * waiting for the surrounding form's Save), with its own Add/Uploading/
+ * Done states — used for cover and PDF replacement once a product
+ * already exists, so a single change doesn't require re-saving the
+ * whole product form.
+ */
+function InstantFileUpload({
+  label,
+  accept,
+  onUpload,
+  onDone,
+}: {
+  label: string;
+  accept: string;
+  onUpload: (file: File, onProgress: (percentage: number) => void) => Promise<void>;
+  onDone?: () => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleAdd() {
+    if (!file) return;
+    setStatus("uploading");
+    setError(null);
+    setProgress(0);
+    try {
+      await onUpload(file, setProgress);
+      setStatus("done");
+      onDone?.();
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    }
+  }
+
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-semibold text-ink-600">{label}</label>
+      <div className="flex gap-2">
+        <label
+          className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${status === "uploading" ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+        >
+          <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="min-w-0 truncate">{file ? file.name : "Choose file"}</span>
+          <input
+            type="file"
+            accept={accept}
+            disabled={status === "uploading"}
+            className="sr-only"
+            onChange={(e) => {
+              setFile(e.target.files?.[0] ?? null);
+              setStatus("idle");
+              setError(null);
+            }}
+          />
+        </label>
+        {file && status !== "done" && (
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={status === "uploading"}
+            className="tap-target shrink-0 rounded-xl bg-sage-600 px-4 text-sm font-semibold text-cream-50 hover:bg-sage-700 disabled:opacity-60"
+          >
+            {status === "uploading" ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Add"}
+          </button>
+        )}
+        {status === "done" && (
+          <span className="tap-target flex shrink-0 items-center gap-1.5 rounded-xl bg-sage-50 px-4 text-sm font-semibold text-sage-700">
+            <Check className="h-4 w-4" aria-hidden="true" />
+            Done
+          </span>
+        )}
+      </div>
+      {status === "uploading" && (
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-100">
+          <div className="h-full rounded-full bg-sage-500 transition-all" style={{ width: `${progress}%` }} />
+        </div>
+      )}
+      {error && <p className="mt-1.5 text-xs text-gold-700">{error}</p>}
+    </div>
+  );
+}
+
 function PreviewPagesField({
   files,
   onChange,
@@ -1064,22 +1193,23 @@ function PreviewPagesField({
               Clear all
             </button>
           </div>
-          <ol className="flex flex-col gap-2">
+          <ol className="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto xs:grid-cols-4 sm:grid-cols-6">
             {files.map((file, index) => (
               <li
                 key={`${file.name}-${file.lastModified}-${index}`}
-                className="flex items-center justify-between gap-3 rounded-lg bg-cream-100 px-3 py-2 text-sm text-ink-500"
+                className="group relative flex flex-col items-center gap-1 rounded-lg bg-cream-100 p-2 text-center"
               >
-                <span className="min-w-0 truncate">
-                  Page {index + 1}: {file.name}
+                <span className="text-xs font-bold text-ink-500">{index + 1}</span>
+                <span className="w-full truncate text-[10px] text-ink-400" title={file.name}>
+                  {file.name}
                 </span>
                 <button
                   type="button"
                   onClick={() => removeFile(index)}
-                  aria-label={`Remove ${file.name}`}
-                  className="tap-target shrink-0 rounded-full p-1 text-ink-300 hover:bg-gold-50 hover:text-gold-700"
+                  aria-label={`Remove page ${index + 1}: ${file.name}`}
+                  className="tap-target absolute right-0.5 top-0.5 rounded-full bg-cream-50 p-1 text-ink-300 hover:bg-gold-50 hover:text-gold-700"
                 >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  <Trash2 className="h-3 w-3" aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -1194,6 +1324,151 @@ function PreviewThumbs({
   );
 }
 
+interface RentalPageUploadItem {
+  id: string;
+  file: File;
+  status: "queued" | "uploading" | "done" | "error";
+  progress: number;
+  error?: string;
+}
+
+/**
+ * Rent & Read page uploader for an existing product — each selected page
+ * uploads (and appends to the product) as soon as it's picked, rather
+ * than waiting for the whole product form to be saved. Uploads run one
+ * at a time in the background; each item shows its own progress and
+ * settles into a "Done" state once the page is live.
+ */
+function RentalPagesUploader({
+  productId,
+  disabled,
+  onUploaded,
+  setError,
+}: {
+  productId: string;
+  disabled: boolean;
+  onUploaded: () => void;
+  setError: (message: string | null) => void;
+}) {
+  const [items, setItems] = useState<RentalPageUploadItem[]>([]);
+  const queueRef = useRef(false);
+
+  function updateItem(id: string, patch: Partial<RentalPageUploadItem>) {
+    setItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  async function processQueue() {
+    if (queueRef.current) return;
+    queueRef.current = true;
+    try {
+      // Re-read latest items each iteration so files added mid-run are picked up.
+      let next = items.find((item) => item.status === "queued");
+      while (next) {
+        const item = next;
+        updateItem(item.id, { status: "uploading", progress: 0 });
+        try {
+          const key = rentalPathname(productId, item.file.name, 0);
+          const contentType = item.file.type || "image/jpeg";
+          const { uploadUrl } = await getPresignedUploadUrl({
+            kind: "rental",
+            productId,
+            key,
+            contentType,
+            fileSize: item.file.size,
+          });
+          await uploadToPresignedUrl(uploadUrl, item.file, contentType, (percentage) =>
+            updateItem(item.id, { progress: percentage })
+          );
+          await finalizeRentalPage(productId, key, true);
+          updateItem(item.id, { status: "done", progress: 100 });
+          onUploaded();
+        } catch (err) {
+          updateItem(item.id, {
+            status: "error",
+            error: err instanceof Error ? err.message : "Upload failed.",
+          });
+          setError(err instanceof Error ? err.message : "Could not upload a rental page.");
+        }
+        next = await new Promise<RentalPageUploadItem | undefined>((resolve) => {
+          setItems((current) => {
+            resolve(current.find((i) => i.status === "queued"));
+            return current;
+          });
+        });
+      }
+    } finally {
+      queueRef.current = false;
+    }
+  }
+
+  function addFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    const newItems: RentalPageUploadItem[] = Array.from(fileList).map((file) => ({
+      id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+      file,
+      status: "queued",
+      progress: 0,
+    }));
+    setItems((current) => [...current, ...newItems]);
+    // processQueue reads from `items` state, so give React a tick to commit
+    // the addition above before kicking off the loop.
+    setTimeout(processQueue, 0);
+  }
+
+  return (
+    <div>
+      <label
+        className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+      >
+        <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {disabled ? "Enable Rent & Read to upload reader pages" : "Add pages — each uploads immediately"}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          disabled={disabled}
+          className="sr-only"
+          onChange={(e) => {
+            addFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+      </label>
+
+      {items.length > 0 && (
+        <ol className="mt-2 flex flex-col gap-1.5">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-center gap-3 rounded-lg bg-cream-100 px-3 py-2 text-xs text-ink-500"
+            >
+              <span className="min-w-0 flex-1 truncate">{item.file.name}</span>
+              {item.status === "queued" && <span className="shrink-0 text-ink-300">Queued</span>}
+              {item.status === "uploading" && (
+                <span className="flex shrink-0 items-center gap-1.5 font-semibold text-sage-700">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  {Math.round(item.progress)}%
+                </span>
+              )}
+              {item.status === "done" && (
+                <span className="flex shrink-0 items-center gap-1 font-semibold text-sage-700">
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                  Done
+                </span>
+              )}
+              {item.status === "error" && (
+                <span className="shrink-0 font-semibold text-gold-700" title={item.error}>
+                  Failed
+                </span>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
 function RentalPageThumbs({
   images,
 }: {
@@ -1209,7 +1484,11 @@ function RentalPageThumbs({
       {images.map((src, index) => (
         <li key={src} className="w-16 shrink-0 rounded-lg border border-ink-100 bg-cream-50 p-1">
           <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
-            <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+            {/* eslint-disable-next-line @next/next/no-img-element -- next/image's
+                optimizer fetches this URL server-side without our admin session
+                cookie, so it 400s; this route is admin-authenticated and not
+                cacheable/optimizable by a third party anyway. */}
+            <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
           </div>
           <p className="mt-1 text-center text-[10px] font-semibold text-ink-400">Page {index + 1}</p>
         </li>
@@ -1300,7 +1579,8 @@ function UseRentalPagesAsPreview({
                 }`}
               >
                 <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
-                  <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+                  {/* eslint-disable-next-line @next/next/no-img-element -- see RentalPageThumbs above */}
+                  <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 </div>
                 <p className="mt-1 text-center text-[10px] font-semibold text-ink-400">Page {index + 1}</p>
                 {isSelected && (
