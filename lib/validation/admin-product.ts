@@ -38,6 +38,7 @@ export const productFormSchema = z.object({
   shortDescription: z.string().trim().min(5, "Short description is required"),
   categoryIds: z.array(z.string()).min(1, "Select at least one category"),
   tags: stringListSchema,
+  learningGoals: z.array(z.string()).default([]),
   ageRange: z.enum(["0-3", "3-6", "6-9", "9-12", "12+"], {
     errorMap: () => ({ message: "Choose an age range" }),
   }),

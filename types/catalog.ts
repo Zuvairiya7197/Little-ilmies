@@ -51,6 +51,7 @@ export interface ProductSummary {
   hasRentalPages?: boolean;
   previewImages?: string[];
   tags?: string[];
+  learningGoals?: string[];
   usageLicense?: "PERSONAL_USE" | "PERSONAL_CLASSROOM" | "COMMERCIAL_USE";
   licenseInfo?: string;
   baseCurrency?: import("@/types/pricing").CurrencyCode;

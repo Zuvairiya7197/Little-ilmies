@@ -74,6 +74,7 @@ function toProductSummary(
         ? productPreviewUrls(product.id, product.previewImagePaths)
         : extra.previewImages,
     tags: product.tags,
+    learningGoals: product.learningGoals,
     usageLicense: product.usageLicense,
     licenseInfo: product.licenseInfo ?? undefined,
     baseCurrency: product.baseCurrency as CurrencyCode,

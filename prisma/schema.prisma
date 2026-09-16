@@ -131,6 +131,10 @@ model Product {
   /// Public sample-preview page image paths — safe to expose.
   previewImagePaths String[]
   tags        String[] @default([])
+  /// Slugs from lib/learning-goals.ts — powers the "Shop by Learning Goal"
+  /// homepage cards and /shop/goal/[goal] filtering. Independent of
+  /// Category/ProductCategory, which is a separate, finer-grained taxonomy.
+  learningGoals String[] @default([])
   whatsIncluded String[] @default([])
   learningObjectives String[] @default([])
   suitableFor String[] @default([])

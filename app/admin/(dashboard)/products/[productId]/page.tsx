@@ -61,6 +61,7 @@ export default async function EditProductPage({ params }: PageProps) {
           shortDescription: product.shortDescription,
           categoryIds: product.categories.map((c) => c.categoryId),
           tags: product.tags,
+          learningGoals: product.learningGoals,
           ageRange: product.ageRange as never,
           language: product.language as never,
           format: product.format as never,

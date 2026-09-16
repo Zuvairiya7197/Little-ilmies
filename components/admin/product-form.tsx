@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, AlertTriangle, Upload, Trash2, ChevronDown, Check, Wand2, X } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import { booksMenuSections } from "@/lib/store-navigation";
+import { learningGoals } from "@/lib/learning-goals";
 import type { CurrencyCode } from "@/types/pricing";
 import { calculateBookSalePrice, BOOK_SALE_DISCOUNT_PERCENTAGE } from "@/lib/pricing/automatic-pricing";
 import { formatPrice } from "@/lib/utils/format";
@@ -81,6 +82,7 @@ export function ProductForm({
       format: "PDF",
       baseCurrency: "INR",
       tags: [],
+      learningGoals: [],
       whatsIncluded: [],
       learningObjectives: [],
       suitableFor: [],
@@ -210,6 +212,44 @@ export function ProductForm({
             render={({ field }) => <CategoryDropdown categories={categories} value={field.value ?? []} onChange={field.onChange} />}
           />
           {errors.categoryIds && <p className="mt-2 text-xs text-gold-700">{errors.categoryIds.message}</p>}
+        </div>
+
+        <div className="mt-4">
+          <p className="mb-2 text-sm font-semibold text-ink-600">Learning Goals</p>
+          <p className="mb-2 text-xs text-ink-400">
+            Controls which &ldquo;Shop by Learning Goal&rdquo; homepage card this book appears under.
+          </p>
+          <Controller
+            control={control}
+            name="learningGoals"
+            render={({ field }) => (
+              <div className="flex flex-wrap gap-2">
+                {learningGoals.map((goal) => {
+                  const value = field.value ?? [];
+                  const checked = value.includes(goal.slug);
+                  return (
+                    <button
+                      key={goal.slug}
+                      type="button"
+                      onClick={() =>
+                        field.onChange(
+                          checked ? value.filter((slug) => slug !== goal.slug) : [...value, goal.slug]
+                        )
+                      }
+                      className={`flex min-h-9 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-colors ${
+                        checked
+                          ? "bg-sage-500 font-semibold text-cream-50"
+                          : "bg-cream-100 text-ink-500 hover:bg-cream-200"
+                      }`}
+                    >
+                      {checked && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                      {goal.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          />
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
