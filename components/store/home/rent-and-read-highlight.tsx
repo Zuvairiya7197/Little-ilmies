@@ -52,19 +52,19 @@ export function RentAndReadHighlight({ products }: { products: ProductSummary[] 
           </div>
 
           {rentalBooks.length > 0 ? (
-            <div className="mt-8 grid grid-cols-3 gap-3 md:mt-0 md:grid-cols-3">
+            <div className="-mx-4 mt-8 flex gap-3 overflow-x-auto px-4 pb-1 no-scrollbar xs:-mx-5 xs:px-5 md:mx-0 md:mt-0 md:justify-end md:overflow-visible md:px-0">
               {rentalBooks.map((book) => (
                 <Link
                   key={book.id}
                   href={`/product/${book.slug}`}
-                  className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-cream-100 shadow-clay-sm transition-transform duration-200 hover:-translate-y-1"
+                  className="group relative aspect-[3/4] w-20 shrink-0 transition-transform duration-200 hover:-translate-y-1.5 xs:w-24"
                 >
                   <Image
                     src={book.coverImage}
                     alt={`${book.title} book cover`}
                     fill
-                    sizes="(max-width: 768px) 30vw, 150px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="96px"
+                    className="object-contain object-center drop-shadow-md"
                   />
                 </Link>
               ))}
