@@ -7,7 +7,11 @@ import { z } from "zod";
 
 const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_PREVIEW_SIZE = 10 * 1024 * 1024; // 10MB per page
-const MAX_RENTAL_PAGE_SIZE = 10 * 1024 * 1024; // 10MB per page
+// Raw pre-compression cap — the finalize step in upload-rental-pages
+// re-encodes anything over 1.5MB down to a small JPEG right after this
+// upload lands in B2, so this only needs to be generous enough for an
+// uncompressed scan/export, not the size actually kept long-term.
+const MAX_RENTAL_PAGE_SIZE = 30 * 1024 * 1024; // 30MB per page, pre-compression
 
 const requestSchema = z.object({
   kind: z.enum(["pdf", "preview", "rental"]),

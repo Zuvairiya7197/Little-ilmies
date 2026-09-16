@@ -255,6 +255,20 @@ export async function getRentalPage(relativePath: string): Promise<Buffer> {
   return readFile(assertWithin(RENTALS_DIR, path.join(PRIVATE_ROOT, relativePath)));
 }
 
+/** Overwrites an existing rental page at its exact stored path — used to
+ * replace an admin-uploaded page with a compressed version in place,
+ * after the original was uploaded directly via a presigned URL. Unlike
+ * saveRentalPages, this never generates a new filename. */
+export async function putRentalPage(relativePath: string, fileBuffer: Buffer): Promise<void> {
+  if (USE_B2_STORAGE) {
+    await putObject(relativePath, fileBuffer, "image/jpeg");
+    return;
+  }
+
+  const fullPath = assertWithin(RENTALS_DIR, path.join(PRIVATE_ROOT, relativePath));
+  await writeFile(fullPath, fileBuffer);
+}
+
 export async function deleteRentalPages(relativePaths: string[]): Promise<void> {
   if (USE_B2_STORAGE) {
     await Promise.all(relativePaths.map((relativePath) => deleteObject(relativePath).catch(() => {})));

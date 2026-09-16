@@ -1423,15 +1423,16 @@ async function uploadPdfToBlob(
 }
 
 /**
- * Rental pages go through our own server one at a time (not a presigned
- * direct-to-B2 upload like the PDF, and not batched into one request)
- * so it can compress oversized scans/exports before storing them — see
- * app/api/admin/products/upload-rental-pages/route.ts — while keeping
- * each individual request small and well under Vercel's serverless
- * request body-size limit, regardless of how many pages a book has or
- * how large any single scan is. The first page replaces the product's
- * existing rental pages; every page after that appends, so the end
- * result is exactly the new set in order.
+ * Rental pages upload directly to B2 via a presigned URL (like the PDF)
+ * rather than through our own server — a raw scan/export can be 15-30MB,
+ * well over Vercel's serverless request body-size limit, so the file
+ * bytes can never pass through a Next.js API route as a request body.
+ * After each upload, a small "finalize" call (JSON only, no file bytes)
+ * tells the server which key was just uploaded; the server downloads it
+ * from B2 itself (an outbound call, not subject to that body-size limit),
+ * compresses it in place if needed, and attaches its path to the
+ * product. One page per request throughout, so a book's total size or
+ * page count never matters to any single request.
  */
 async function uploadRentalPages(
   productId: string,
@@ -1439,47 +1440,40 @@ async function uploadRentalPages(
   onProgress: (percentage: number) => void
 ): Promise<void> {
   for (let index = 0; index < files.length; index++) {
-    await uploadOneRentalPage(productId, files[index], index === 0, (pageProgress) => {
-      onProgress(((index + pageProgress / 100) / files.length) * 100);
+    const file = files[index];
+    const key = rentalPathname(productId, file.name, index);
+    const contentType = file.type || "image/jpeg";
+    const { uploadUrl } = await getPresignedUploadUrl({
+      kind: "rental",
+      productId,
+      key,
+      contentType,
+      fileSize: file.size,
     });
+    await uploadToPresignedUrl(uploadUrl, file, contentType, (percentage) => {
+      onProgress(((index + percentage / 100) / files.length) * 100);
+    });
+    await finalizeRentalPage(productId, key, index > 0);
     onProgress(((index + 1) / files.length) * 100);
   }
 }
 
-function uploadOneRentalPage(
-  productId: string,
-  file: File,
-  replaceExisting: boolean,
-  onProgress: (percentage: number) => void
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append("productId", productId);
-    formData.append("files", file);
-    formData.append("append", replaceExisting ? "false" : "true");
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/admin/products/upload-rental-pages");
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress((event.loaded / event.total) * 100);
-    };
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-        return;
-      }
-      let message = `Upload failed with status ${xhr.status}`;
-      try {
-        const data = JSON.parse(xhr.responseText);
-        if (data?.error) message = data.error;
-      } catch {
-        // keep default message
-      }
-      reject(new Error(`Could not upload rental pages: ${message}`));
-    };
-    xhr.onerror = () => reject(new Error("Could not upload rental pages: network error."));
-    xhr.send(formData);
+async function finalizeRentalPage(productId: string, key: string, append: boolean): Promise<void> {
+  const res = await fetch("/api/admin/products/upload-rental-pages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId, key, append }),
   });
+  if (res.ok) return;
+
+  const data = await res.json().catch(() => null);
+  throw new Error(`Could not finalize rental page: ${data?.error ?? `status ${res.status}`}`);
+}
+
+function rentalPathname(productId: string, filename: string, index: number) {
+  const ext = filename.match(/\.(jpe?g|png|webp)$/i)?.[0]?.toLowerCase() ?? ".jpg";
+  const normalizedExt = ext === ".jpeg" ? ".jpg" : ext;
+  return `rentals/${productId}/page-${index + 1}-${crypto.randomUUID()}${normalizedExt}`;
 }
 
 async function getPresignedUploadUrl(params: {
