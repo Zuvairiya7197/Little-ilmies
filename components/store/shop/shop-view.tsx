@@ -16,7 +16,7 @@ import {
 import { FilterSidebar } from "@/components/store/shop/filter-sidebar";
 import { FilterDrawer } from "@/components/store/shop/filter-drawer";
 import { ShopToolbar } from "@/components/store/shop/shop-toolbar";
-import { ProductGrid } from "@/components/store/shop/product-grid";
+import { ProductGrid, NoProductsMessage } from "@/components/store/shop/product-grid";
 import { ProductCard } from "@/components/store/product-card";
 import { BundleCard } from "@/components/store/home/bundle-collections";
 import { useShopFilters } from "@/hooks/use-shop-filters";
@@ -198,6 +198,10 @@ export function ShopView({
 
         {(isBundleView && !selectedBundle) || typeFilter === "Bundles" ? (
           <BundleResults bundles={filteredVisibleBundles} />
+        ) : mobileResults.length === 0 ? (
+          <div className="mt-4">
+            <NoProductsMessage />
+          </div>
         ) : (
           <div className="mt-4 grid grid-cols-2 items-stretch gap-x-4 gap-y-6">
             {mobileResults.map((product, index) => (
