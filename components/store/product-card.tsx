@@ -29,12 +29,13 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
 
   return (
     <div className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
+      <Link
+        href={`/product/${product.slug}`}
+        className="absolute inset-0 z-[1]"
+        aria-label={`View ${product.title}`}
+      />
       <div className="relative overflow-hidden bg-cream-100">
-        <Link
-          href={`/product/${product.slug}`}
-          className="relative block aspect-[3/4] p-6 xs:p-7"
-          aria-label={`View ${product.title}`}
-        >
+        <div className="relative aspect-[3/4] p-6 xs:p-7">
           <Image
             src={product.coverImage}
             alt={`${product.title} book cover`}
@@ -42,7 +43,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
             sizes="(max-width: 480px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 18vw"
             className="object-contain object-center p-6 xs:p-7"
           />
-        </Link>
+        </div>
 
         {(product.isBestseller || product.isNewArrival || isOnSale) && (
           <span
@@ -71,7 +72,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           }
           aria-pressed={isWishlisted}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className="tap-target absolute right-2.5 top-2.5 flex items-center justify-center rounded-full bg-cream-50 text-ink-500 shadow-soft transition-transform duration-200 hover:scale-125 active:scale-90"
+          className="tap-target absolute right-2.5 top-2.5 z-10 flex items-center justify-center rounded-full bg-cream-50 text-ink-500 shadow-soft transition-transform duration-200 hover:scale-125 active:scale-90"
         >
           <Heart
             className={cn(
@@ -82,7 +83,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
           />
         </button>
 
-        <div className="absolute inset-x-2.5 bottom-2.5 hidden lg:flex">
+        <div className="absolute inset-x-2.5 bottom-2.5 z-10 hidden lg:flex">
           <button
             type="button"
             onClick={() => setPreviewOpen(true)}
@@ -99,11 +100,9 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
         <p className="text-[11px] font-semibold uppercase tracking-wide text-sage-600">
           {product.category.name}
         </p>
-        <Link href={`/product/${product.slug}`} className="mt-1">
-          <h3 className="line-clamp-2 min-h-[2.75rem] font-display text-base font-semibold leading-snug text-ink-700 transition-colors hover:text-sage-700">
-            {product.title}
-          </h3>
-        </Link>
+        <h3 className="mt-1 line-clamp-2 min-h-[2.75rem] font-display text-base font-semibold leading-snug text-ink-700 transition-colors group-hover:text-sage-700">
+          {product.title}
+        </h3>
 
         <div className="mt-1.5 flex min-h-4 items-center gap-2 text-xs text-ink-300">
           {product.reviewCount > 0 && (
@@ -147,7 +146,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
                 isNewArrival: product.isNewArrival,
               })
             }
-            className="tap-target hidden items-center gap-1.5 rounded-full bg-ink-600 px-4 py-2 text-xs font-semibold text-cream-50 transition-all hover:bg-ink-700 active:scale-95 lg:flex"
+            className="tap-target relative z-10 hidden items-center gap-1.5 rounded-full bg-ink-600 px-4 py-2 text-xs font-semibold text-cream-50 transition-all hover:bg-ink-700 active:scale-95 lg:flex"
           >
             <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
             Add
@@ -168,7 +167,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
               })
             }
             aria-label={`Add ${product.title} to cart`}
-            className="tap-target flex shrink-0 items-center justify-center rounded-full bg-ink-600 p-2.5 text-cream-50 transition-all active:scale-95 lg:hidden"
+            className="tap-target relative z-10 flex shrink-0 items-center justify-center rounded-full bg-ink-600 p-2.5 text-cream-50 transition-all active:scale-95 lg:hidden"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden="true" />
           </button>

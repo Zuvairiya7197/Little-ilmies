@@ -28,7 +28,7 @@ const explore = [
   {
     title: "Browse Printable Activities",
     description: "Creative pages and hands-on activities to make learning fun.",
-    href: "/shop/printables",
+    href: "/shop/activities-and-printables",
     icon: Palette,
     image: "/images/explore-printable-activities.png",
     cardBg: "bg-sunny-50",
