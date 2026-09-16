@@ -40,6 +40,12 @@ const finalizeRentalPageSchema = z.object({
   productId: z.string().min(1),
   key: z.string().min(1),
   append: z.boolean().default(true),
+  // Set when the browser already compressed the image (see
+  // compressImageInBrowser in product-form.tsx) before uploading it to B2 —
+  // skips the download-from-B2-then-reupload compression pass below, since
+  // there's nothing left to shrink. Every download here counts against B2's
+  // daily download bandwidth cap, so this avoids one per uploaded page.
+  skipCompress: z.boolean().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -54,7 +60,7 @@ export async function POST(request: NextRequest) {
       if (!parsed.success) {
         return NextResponse.json({ error: "Invalid finalize request" }, { status: 400 });
       }
-      const { productId, key, append } = parsed.data;
+      const { productId, key, append, skipCompress } = parsed.data;
 
       if (!key.startsWith(`rentals/${productId}/`) || !/\.(jpe?g|png|webp)$/i.test(key)) {
         return NextResponse.json({ error: "Invalid uploaded rental page path" }, { status: 400 });
@@ -68,22 +74,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
       }
 
-      let buffer: Buffer;
-      try {
-        buffer = await getRentalPage(key);
-      } catch {
-        return NextResponse.json({ error: "Could not find the uploaded page — try uploading again." }, { status: 404 });
-      }
-
-      if (buffer.byteLength > COMPRESS_ABOVE_BYTES) {
+      if (!skipCompress) {
+        let buffer: Buffer;
         try {
-          const compressed = await sharp(buffer)
-            .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
-            .jpeg({ quality: JPEG_QUALITY, mozjpeg: true })
-            .toBuffer();
-          await putRentalPage(key, compressed);
-        } catch (error) {
-          console.error(`Rental page compression failed for ${key}, keeping original`, error);
+          buffer = await getRentalPage(key);
+        } catch {
+          return NextResponse.json({ error: "Could not find the uploaded page — try uploading again." }, { status: 404 });
+        }
+
+        if (buffer.byteLength > COMPRESS_ABOVE_BYTES) {
+          try {
+            const compressed = await sharp(buffer)
+              .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
+              .jpeg({ quality: JPEG_QUALITY, mozjpeg: true })
+              .toBuffer();
+            await putRentalPage(key, compressed);
+          } catch (error) {
+            console.error(`Rental page compression failed for ${key}, keeping original`, error);
+          }
         }
       }
 

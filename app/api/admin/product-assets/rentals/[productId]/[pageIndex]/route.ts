@@ -38,7 +38,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "private, no-store",
+        // The URL's ?v= query param is the exact storage key, so a given
+        // URL always resolves to the same bytes — caching it in the
+        // requesting browser only (never a shared/public cache) is safe
+        // and avoids re-downloading every thumbnail from B2 on every
+        // admin page load, which was needlessly eating into B2's daily
+        // download bandwidth cap.
+        "Cache-Control": "private, max-age=3600",
       },
     });
   } catch {

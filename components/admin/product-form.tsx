@@ -1414,19 +1414,20 @@ function RentalPagesUploader({
 
     updateItem(id, { status: "uploading", progress: 0, error: undefined });
     try {
+      const compressed = await compressImageInBrowser(item.file);
       const key = rentalPathname(productId, item.file.name, 0);
-      const contentType = item.file.type || "image/jpeg";
+      const contentType = compressed.type || "image/jpeg";
       const { uploadUrl } = await getPresignedUploadUrl({
         kind: "rental",
         productId,
         key,
         contentType,
-        fileSize: item.file.size,
+        fileSize: compressed.size,
       });
-      await uploadToPresignedUrl(uploadUrl, item.file, contentType, (percentage) =>
+      await uploadToPresignedUrl(uploadUrl, compressed, contentType, (percentage) =>
         updateItem(id, { progress: percentage })
       );
-      await finalizeRentalPage(productId, key, true);
+      await finalizeRentalPage(productId, key, true, compressed !== item.file);
       updateItem(id, { status: "done", progress: 100 });
       onUploaded();
     } catch (err) {
@@ -1840,8 +1841,9 @@ async function uploadRentalPages(
   onProgress: (percentage: number) => void
 ): Promise<void> {
   for (let index = 0; index < files.length; index++) {
-    const file = files[index];
-    const key = rentalPathname(productId, file.name, index);
+    const original = files[index];
+    const file = await compressImageInBrowser(original);
+    const key = rentalPathname(productId, original.name, index);
     const contentType = file.type || "image/jpeg";
     const { uploadUrl } = await getPresignedUploadUrl({
       kind: "rental",
@@ -1853,16 +1855,16 @@ async function uploadRentalPages(
     await uploadToPresignedUrl(uploadUrl, file, contentType, (percentage) => {
       onProgress(((index + percentage / 100) / files.length) * 100);
     });
-    await finalizeRentalPage(productId, key, index > 0);
+    await finalizeRentalPage(productId, key, index > 0, file !== original);
     onProgress(((index + 1) / files.length) * 100);
   }
 }
 
-async function finalizeRentalPage(productId: string, key: string, append: boolean): Promise<void> {
+async function finalizeRentalPage(productId: string, key: string, append: boolean, skipCompress = false): Promise<void> {
   const res = await fetch("/api/admin/products/upload-rental-pages", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, key, append }),
+    body: JSON.stringify({ productId, key, append, skipCompress }),
   });
   if (res.ok) return;
 
@@ -1882,6 +1884,47 @@ function rentalPathname(productId: string, filename: string, index: number) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
   return `rentals/${productId}/page-${index + 1}-${crypto.randomUUID()}${nameSlug ? `-${nameSlug}` : ""}${normalizedExt}`;
+}
+
+// Mirrors the server-side sharp() compression the finalize step used to do
+// (JPEG quality 85, max 2400px) — but here, in the browser, before the file
+// ever reaches B2. This is what lets an upload skip the old
+// download-from-B2-then-reupload round trip entirely: B2 only ever
+// receives the already-small final file, so the finalize call no longer
+// needs to read anything back to compress it (see finalizeRentalPage's
+// skipCompress flag below). Falls back to the original file untouched if
+// canvas encoding fails for any reason (e.g. an unsupported format).
+const COMPRESS_ABOVE_BYTES_CLIENT = 1.5 * 1024 * 1024;
+const MAX_DIMENSION_CLIENT = 2400;
+const JPEG_QUALITY_CLIENT = 0.85;
+
+async function compressImageInBrowser(file: File): Promise<File> {
+  if (file.size <= COMPRESS_ABOVE_BYTES_CLIENT || !file.type.startsWith("image/")) return file;
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_DIMENSION_CLIENT / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY_CLIENT)
+    );
+    if (!blob || blob.size >= file.size) return file;
+
+    const newName = file.name.replace(/\.(jpe?g|png|webp)$/i, ".jpg");
+    return new File([blob], newName, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
 }
 
 async function getPresignedUploadUrl(params: {
