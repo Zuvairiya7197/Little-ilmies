@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import sharp from "sharp";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { deleteRentalPages, saveRentalPages } from "@/lib/storage";
@@ -6,7 +7,18 @@ import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { productRentalPageUrls } from "@/lib/catalog-assets";
 import { z } from "zod";
 
-const MAX_SIZE = 10 * 1024 * 1024; // 10MB per page
+// Raw scans/exports from admins commonly arrive far larger than a screen
+// can even display (15-30MB+ isn't unusual). Re-encoding to JPEG at this
+// quality is visually lossless for book-page content (text/illustrations)
+// while typically cutting file size by 90%+ — keeps the rental reader
+// fast on mobile without the admin having to compress anything by hand.
+// Only re-encodes if the source is actually larger than the cap below;
+// small, already-optimized images pass through untouched.
+const COMPRESS_ABOVE_BYTES = 1.5 * 1024 * 1024; // 1.5MB
+const JPEG_QUALITY = 85;
+const MAX_DIMENSION = 2400; // px on the longest side — plenty for any screen
+
+const MAX_SIZE = 30 * 1024 * 1024; // 30MB per page, pre-compression
 
 const attachedRentalPagesSchema = z.object({
   productId: z.string().min(1),
@@ -55,6 +67,13 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const files = formData.getAll("files");
     const productId = formData.get("productId");
+    // Each page is uploaded in its own request (see uploadRentalPages in
+    // product-form.tsx) to stay well under Vercel's serverless request
+    // body-size limit regardless of how many pages a book has, so by
+    // default a successful upload here appends to the product's existing
+    // pages rather than replacing them. Pass append=false to replace
+    // instead (used when starting a fresh set of pages).
+    const append = formData.get("append") !== "false";
 
     if (files.length === 0 || typeof productId !== "string") {
       return NextResponse.json({ error: "Missing files or productId" }, { status: 400 });
@@ -70,7 +89,7 @@ export async function POST(request: NextRequest) {
       const file = files[i];
       if (!(file instanceof File)) continue;
       if (file.size > MAX_SIZE) {
-        return NextResponse.json({ error: `Page ${i + 1} is too large (max 10MB)` }, { status: 413 });
+        return NextResponse.json({ error: `Page ${i + 1} is too large (max 30MB)` }, { status: 413 });
       }
       if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
         return NextResponse.json(
@@ -79,7 +98,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const buffer = Buffer.from(await file.arrayBuffer());
+      let buffer = Buffer.from(await file.arrayBuffer());
+      if (buffer.byteLength > COMPRESS_ABOVE_BYTES) {
+        try {
+          buffer = await sharp(buffer)
+            .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
+            .jpeg({ quality: JPEG_QUALITY, mozjpeg: true })
+            .toBuffer();
+        } catch (error) {
+          console.error(`Rental page ${i + 1} compression failed, storing original`, error);
+        }
+      }
       buffers.push(buffer);
     }
 
@@ -87,11 +116,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No valid rental page images were uploaded" }, { status: 400 });
     }
 
-    const storedPaths = await saveRentalPages(buffers, product.slug);
+    const newPaths = await saveRentalPages(buffers, product.slug);
+    const storedPaths = append ? [...product.rentalPageImagePaths, ...newPaths] : newPaths;
     const rentalPageImagePaths = productRentalPageUrls(productId, storedPaths);
 
     await prisma.product.update({ where: { id: productId }, data: { rentalPageImagePaths: storedPaths } });
-    await deleteRentalPages(product.rentalPageImagePaths);
+    if (!append) {
+      await deleteRentalPages(product.rentalPageImagePaths);
+    }
     revalidateCatalogPaths(product.slug);
 
     return NextResponse.json({ rentalPageImagePaths });
