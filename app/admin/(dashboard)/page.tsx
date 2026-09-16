@@ -25,7 +25,7 @@ export default async function AdminDashboardPage() {
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink-700 xs:text-3xl">Dashboard</h1>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-5">
         {revenueEntries.length > 0 ? (
           revenueEntries.map(([currency, amount]) => (
             <StatCard
