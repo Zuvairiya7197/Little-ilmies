@@ -237,7 +237,7 @@ verification.
 
 ## Security notes
 
-- Full PDF files are never stored in `/public` and never exposed by direct URL — see `lib/storage/index.ts`. On Vercel, uploads use the connected private Vercel Blob store. Locally, if Blob env/auth is unavailable, uploads fall back to `PRIVATE_UPLOADS_DIR` or `/tmp/private-uploads`.
+- Full PDF files are never stored in `/public` and never exposed by direct URL — see `lib/storage/index.ts`. In production, uploads go to a private Backblaze B2 bucket (S3-compatible; see `B2_*` env vars). Locally, if B2 env vars are unset, uploads fall back to `PRIVATE_UPLOADS_DIR` or `/tmp/private-uploads`. Cover images and free-preview pages may additionally be served from a public CDN domain (`ASSETS_CDN_DOMAIN`) when configured — full PDFs and Rent & Read pages never are.
 - Downloads are streamed only through `/api/download/[productId]` after verifying, in order: logged in → email verified → product owned via a `PAID` order → download access record exists → not expired. Verified end-to-end: an authenticated user with no purchase gets a 403, not a file.
 - Payment status is verified server-side (`verifyPaymentSignature`) and via the Razorpay webhook (`verifyWebhookSignature`) — the frontend's payment callback is informational only, never the trigger that marks an order paid.
 - `/api/checkout/create-order` fails fast (before writing anything to the database) if Razorpay isn't configured, and marks the order `FAILED` rather than leaving it `PENDING` if order creation fails after the local row already exists.

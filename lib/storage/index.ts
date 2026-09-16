@@ -3,12 +3,21 @@ import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
-import { del, get, list, put } from "@vercel/blob";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  getB2Bucket,
+  getB2Client,
+  isB2Configured,
+} from "@/lib/storage/b2Client";
 
 /**
- * Private file storage wrapper. In Vercel, files are stored in Vercel Blob.
- * Locally, if Blob env/auth is unavailable, files fall back to local disk.
- * Callers never touch the underlying storage provider directly.
+ * Private file storage wrapper. In production, files are stored in
+ * Backblaze B2 (S3-compatible). Locally, if B2 env vars aren't set, files
+ * fall back to local disk. Callers never touch the underlying storage
+ * provider directly.
  *
  * Security invariant: nothing under PRIVATE_UPLOADS_DIR is ever served by
  * a public static route. Full PDFs only ever leave this module through
@@ -23,10 +32,10 @@ const PREVIEWS_DIR = path.join(PRIVATE_ROOT, "previews");
 const COVERS_DIR = path.join(PRIVATE_ROOT, "covers");
 const RENTALS_DIR = path.join(PRIVATE_ROOT, "rentals");
 
-const USE_BLOB_STORAGE = Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL);
+const USE_B2_STORAGE = isB2Configured();
 
 export function isUsingBlobStorage() {
-  return USE_BLOB_STORAGE;
+  return USE_B2_STORAGE;
 }
 
 /** Prevents path traversal — every stored path must resolve inside its own subdirectory. */
@@ -56,13 +65,45 @@ function contentTypeFor(filename: string, fallback = "application/octet-stream")
   return fallback;
 }
 
-async function getBlobBuffer(pathname: string): Promise<Buffer> {
-  const result = await get(pathname, { access: "private", useCache: false });
-  if (!result || result.statusCode !== 200) {
-    throw new Error(`Blob not found: ${pathname}`);
+async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
+  const client = getB2Client();
+  await client.send(
+    new PutObjectCommand({
+      Bucket: getB2Bucket(),
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    })
+  );
+}
+
+async function getObjectBuffer(key: string): Promise<Buffer> {
+  const client = getB2Client();
+  const result = await client.send(new GetObjectCommand({ Bucket: getB2Bucket(), Key: key }));
+  if (!result.Body) {
+    throw new Error(`B2 object not found or empty: ${key}`);
   }
-  const arrayBuffer = await new Response(result.stream).arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  const bytes = await result.Body.transformToByteArray();
+  return Buffer.from(bytes);
+}
+
+async function getObjectStream(key: string): Promise<{ stream: Readable; size: number }> {
+  const client = getB2Client();
+  const result = await client.send(new GetObjectCommand({ Bucket: getB2Bucket(), Key: key }));
+  if (!result.Body) {
+    throw new Error(`B2 object not found or empty: ${key}`);
+  }
+  // Body is a web ReadableStream in the AWS SDK v3 Node runtime by default;
+  // normalize to a Node Readable for consistent use in route handlers.
+  const stream = result.Body.transformToWebStream
+    ? Readable.fromWeb(result.Body.transformToWebStream() as unknown as Parameters<typeof Readable.fromWeb>[0])
+    : (result.Body as unknown as Readable);
+  return { stream, size: result.ContentLength ?? 0 };
+}
+
+async function deleteObject(key: string): Promise<void> {
+  const client = getB2Client();
+  await client.send(new DeleteObjectCommand({ Bucket: getB2Bucket(), Key: key }));
 }
 
 // ---------------------------------------------------------------------------
@@ -70,14 +111,10 @@ async function getBlobBuffer(pathname: string): Promise<Buffer> {
 // ---------------------------------------------------------------------------
 
 export async function savePrivatePdf(fileBuffer: Buffer, originalName: string): Promise<string> {
-  if (USE_BLOB_STORAGE) {
-    const pathname = `pdfs/${safeFilename(originalName, ".pdf")}`;
-    const blob = await put(pathname, fileBuffer, {
-      access: "private",
-      contentType: "application/pdf",
-      addRandomSuffix: false,
-    });
-    return blob.pathname;
+  if (USE_B2_STORAGE) {
+    const key = `pdfs/${safeFilename(originalName, ".pdf")}`;
+    await putObject(key, fileBuffer, "application/pdf");
+    return key;
   }
 
   await mkdir(PDFS_DIR, { recursive: true });
@@ -90,8 +127,8 @@ export async function savePrivatePdf(fileBuffer: Buffer, originalName: string): 
 }
 
 export async function getPrivatePdf(relativePath: string): Promise<Buffer> {
-  if (USE_BLOB_STORAGE) {
-    return getBlobBuffer(relativePath);
+  if (USE_B2_STORAGE) {
+    return getObjectBuffer(relativePath);
   }
 
   const fullPath = assertWithin(PDFS_DIR, path.join(PRIVATE_ROOT, relativePath));
@@ -100,12 +137,8 @@ export async function getPrivatePdf(relativePath: string): Promise<Buffer> {
 
 /** Returns a Node.js ReadStream for the given private PDF, for efficient streaming responses. */
 export async function streamPrivatePdf(relativePath: string) {
-  if (USE_BLOB_STORAGE) {
-    const result = await get(relativePath, { access: "private", useCache: false });
-    if (!result || result.statusCode !== 200) {
-      throw new Error(`Blob not found: ${relativePath}`);
-    }
-    return { stream: Readable.fromWeb(result.stream as unknown as Parameters<typeof Readable.fromWeb>[0]), size: result.blob.size };
+  if (USE_B2_STORAGE) {
+    return getObjectStream(relativePath);
   }
 
   const fullPath = assertWithin(PDFS_DIR, path.join(PRIVATE_ROOT, relativePath));
@@ -114,8 +147,8 @@ export async function streamPrivatePdf(relativePath: string) {
 }
 
 export async function deletePrivatePdf(relativePath: string): Promise<void> {
-  if (USE_BLOB_STORAGE) {
-    await del(relativePath).catch(() => {});
+  if (USE_B2_STORAGE) {
+    await deleteObject(relativePath).catch(() => {});
     return;
   }
 
@@ -124,8 +157,8 @@ export async function deletePrivatePdf(relativePath: string): Promise<void> {
 }
 
 export async function deletePreviewPages(relativePaths: string[]): Promise<void> {
-  if (USE_BLOB_STORAGE) {
-    await Promise.all(relativePaths.map((relativePath) => del(relativePath).catch(() => {})));
+  if (USE_B2_STORAGE) {
+    await Promise.all(relativePaths.map((relativePath) => deleteObject(relativePath).catch(() => {})));
     return;
   }
 
@@ -147,17 +180,13 @@ export async function savePreviewPages(
   fileBuffers: Buffer[],
   baseName: string
 ): Promise<string[]> {
-  if (USE_BLOB_STORAGE) {
+  if (USE_B2_STORAGE) {
     const paths: string[] = [];
     for (let i = 0; i < fileBuffers.length; i++) {
       const filename = safeFilename(`${baseName}-page-${i + 1}`, ".jpg");
-      const pathname = `previews/${filename}`;
-      const blob = await put(pathname, fileBuffers[i], {
-        access: "private",
-        contentType: "image/jpeg",
-        addRandomSuffix: false,
-      });
-      paths.push(blob.pathname);
+      const key = `previews/${filename}`;
+      await putObject(key, fileBuffers[i], "image/jpeg");
+      paths.push(key);
     }
     return paths;
   }
@@ -174,8 +203,8 @@ export async function savePreviewPages(
 }
 
 export async function getPreviewPages(relativePaths: string[]): Promise<Buffer[]> {
-  if (USE_BLOB_STORAGE) {
-    return Promise.all(relativePaths.map((p) => getBlobBuffer(p)));
+  if (USE_B2_STORAGE) {
+    return Promise.all(relativePaths.map((p) => getObjectBuffer(p)));
   }
 
   return Promise.all(
@@ -196,17 +225,13 @@ export async function saveRentalPages(
   fileBuffers: Buffer[],
   baseName: string
 ): Promise<string[]> {
-  if (USE_BLOB_STORAGE) {
+  if (USE_B2_STORAGE) {
     const paths: string[] = [];
     for (let i = 0; i < fileBuffers.length; i++) {
       const filename = safeFilename(`${baseName}-page-${i + 1}`, ".jpg");
-      const pathname = `rentals/${filename}`;
-      const blob = await put(pathname, fileBuffers[i], {
-        access: "private",
-        contentType: "image/jpeg",
-        addRandomSuffix: false,
-      });
-      paths.push(blob.pathname);
+      const key = `rentals/${filename}`;
+      await putObject(key, fileBuffers[i], "image/jpeg");
+      paths.push(key);
     }
     return paths;
   }
@@ -223,16 +248,16 @@ export async function saveRentalPages(
 }
 
 export async function getRentalPage(relativePath: string): Promise<Buffer> {
-  if (USE_BLOB_STORAGE) {
-    return getBlobBuffer(relativePath);
+  if (USE_B2_STORAGE) {
+    return getObjectBuffer(relativePath);
   }
 
   return readFile(assertWithin(RENTALS_DIR, path.join(PRIVATE_ROOT, relativePath)));
 }
 
 export async function deleteRentalPages(relativePaths: string[]): Promise<void> {
-  if (USE_BLOB_STORAGE) {
-    await Promise.all(relativePaths.map((relativePath) => del(relativePath).catch(() => {})));
+  if (USE_B2_STORAGE) {
+    await Promise.all(relativePaths.map((relativePath) => deleteObject(relativePath).catch(() => {})));
     return;
   }
 
@@ -251,15 +276,11 @@ export async function deleteRentalPages(relativePaths: string[]): Promise<void> 
 // ---------------------------------------------------------------------------
 
 export async function saveCoverImage(fileBuffer: Buffer, originalName: string): Promise<string> {
-  if (USE_BLOB_STORAGE) {
+  if (USE_B2_STORAGE) {
     const ext = path.extname(originalName) || ".jpg";
-    const pathname = `covers/${safeFilename(originalName, ext)}`;
-    const blob = await put(pathname, fileBuffer, {
-      access: "private",
-      contentType: contentTypeFor(originalName, "image/jpeg"),
-      addRandomSuffix: false,
-    });
-    return blob.pathname;
+    const key = `covers/${safeFilename(originalName, ext)}`;
+    await putObject(key, fileBuffer, contentTypeFor(originalName, "image/jpeg"));
+    return key;
   }
 
   await mkdir(COVERS_DIR, { recursive: true });
@@ -271,8 +292,8 @@ export async function saveCoverImage(fileBuffer: Buffer, originalName: string): 
 }
 
 export async function getCoverImage(relativePath: string): Promise<Buffer> {
-  if (USE_BLOB_STORAGE) {
-    return getBlobBuffer(relativePath);
+  if (USE_B2_STORAGE) {
+    return getObjectBuffer(relativePath);
   }
 
   const fullPath = assertWithin(COVERS_DIR, path.join(PRIVATE_ROOT, relativePath));
@@ -282,8 +303,8 @@ export async function getCoverImage(relativePath: string): Promise<Buffer> {
 export async function deleteCoverImage(relativePath: string): Promise<void> {
   if (!relativePath.startsWith("covers/")) return;
 
-  if (USE_BLOB_STORAGE) {
-    await del(relativePath).catch(() => {});
+  if (USE_B2_STORAGE) {
+    await deleteObject(relativePath).catch(() => {});
     return;
   }
 
@@ -293,8 +314,6 @@ export async function deleteCoverImage(relativePath: string): Promise<void> {
 
 // ---------------------------------------------------------------------------
 // Storage usage reporting — read-only, for the admin storage-usage page.
-// Only meaningful on Vercel Blob (Hobby plan's 1GB cap is what this
-// exists to help diagnose); local disk fallback has no comparable quota.
 // ---------------------------------------------------------------------------
 
 export interface BlobStorageEntry {
@@ -303,36 +322,41 @@ export interface BlobStorageEntry {
   uploadedAt: string;
 }
 
-/** Deletes one blob by its exact pathname. Only for use after the caller
- * has independently verified the pathname is safe to remove (e.g. it's
+/** Deletes one object by its exact key. Only for use after the caller has
+ * independently verified the key is safe to remove (e.g. it's
  * unreferenced by any product) — this function does no such check
  * itself. No-op on the local-disk fallback, which has no orphan-cleanup
  * story of its own. */
 export async function deleteBlobByPathname(pathname: string): Promise<void> {
-  if (!USE_BLOB_STORAGE) return;
-  await del(pathname);
+  if (!USE_B2_STORAGE) return;
+  await deleteObject(pathname);
 }
 
-/** Lists every blob in the store, paginating through Vercel Blob's list()
- * API. Read-only — never deletes anything. Empty array when not using
- * Blob storage (local disk fallback). */
+/** Lists every object in the bucket, paginating through B2's
+ * ListObjectsV2 API. Read-only — never deletes anything. Empty array when
+ * not using B2 (local disk fallback). */
 export async function listAllBlobStorageEntries(): Promise<BlobStorageEntry[]> {
-  if (!USE_BLOB_STORAGE) return [];
+  if (!USE_B2_STORAGE) return [];
 
+  const client = getB2Client();
+  const bucket = getB2Bucket();
   const entries: BlobStorageEntry[] = [];
-  let cursor: string | undefined;
+  let continuationToken: string | undefined;
 
   do {
-    const result = await list({ cursor, limit: 1000 });
-    for (const blob of result.blobs) {
+    const result = await client.send(
+      new ListObjectsV2Command({ Bucket: bucket, ContinuationToken: continuationToken, MaxKeys: 1000 })
+    );
+    for (const object of result.Contents ?? []) {
+      if (!object.Key) continue;
       entries.push({
-        pathname: blob.pathname,
-        size: blob.size,
-        uploadedAt: blob.uploadedAt.toISOString(),
+        pathname: object.Key,
+        size: object.Size ?? 0,
+        uploadedAt: (object.LastModified ?? new Date()).toISOString(),
       });
     }
-    cursor = result.hasMore ? result.cursor : undefined;
-  } while (cursor);
+    continuationToken = result.IsTruncated ? result.NextContinuationToken : undefined;
+  } while (continuationToken);
 
   return entries;
 }

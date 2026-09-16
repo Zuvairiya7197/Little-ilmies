@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { uploadPresigned } from "@vercel/blob/client";
 import { Loader2, AlertTriangle, Upload, Trash2, ChevronDown, Check, Wand2, X } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import { booksMenuSections } from "@/lib/store-navigation";
@@ -1409,16 +1408,18 @@ async function uploadPdfToBlob(
   onProgress: (percentage: number) => void
 ) {
   try {
-    return await uploadPresigned(pdfPathname(productId, file.name), file, {
-      access: "private",
+    const key = pdfPathname(productId, file.name);
+    const { uploadUrl } = await getPresignedUploadUrl({
+      kind: "pdf",
+      productId,
+      key,
       contentType: "application/pdf",
-      handleUploadUrl: "/api/admin/products/client-upload",
-      clientPayload: JSON.stringify({ kind: "pdf", productId }),
-      multipart: true,
-      onUploadProgress: ({ percentage }) => onProgress(percentage),
+      fileSize: file.size,
     });
+    await uploadToPresignedUrl(uploadUrl, file, "application/pdf", onProgress);
+    return { pathname: key };
   } catch (error) {
-    throw new Error(`Could not upload PDF to Vercel Blob: ${blobUploadErrorMessage(error)}`);
+    throw new Error(`Could not upload PDF: ${blobUploadErrorMessage(error)}`);
   }
 }
 
@@ -1443,37 +1444,80 @@ async function uploadRentalPagesToBlob(
     const pathnames: string[] = [];
     for (let index = 0; index < files.length; index++) {
       const file = files[index];
-      const blob = await uploadPresigned(rentalPathname(productId, file.name, index), file, {
-        access: "private",
-        contentType: file.type || contentTypeForPreview(file.name),
-        handleUploadUrl: "/api/admin/products/client-upload",
-        clientPayload: JSON.stringify({ kind: "rental", productId, index }),
-        multipart: file.size > 5 * 1024 * 1024,
-        onUploadProgress: ({ percentage }) => {
-          onProgress(((index + percentage / 100) / files.length) * 100);
-        },
+      const key = rentalPathname(productId, file.name, index);
+      const contentType = file.type || contentTypeForPreview(file.name);
+      const { uploadUrl } = await getPresignedUploadUrl({
+        kind: "rental",
+        productId,
+        key,
+        contentType,
+        fileSize: file.size,
       });
-      pathnames.push(blob.pathname);
+      await uploadToPresignedUrl(uploadUrl, file, contentType, (percentage) => {
+        onProgress(((index + percentage / 100) / files.length) * 100);
+      });
+      pathnames.push(key);
       onProgress(((index + 1) / files.length) * 100);
     }
     return pathnames;
   } catch (error) {
-    throw new Error(`Could not upload rental pages to Vercel Blob: ${blobUploadErrorMessage(error)}`);
+    throw new Error(`Could not upload rental pages: ${blobUploadErrorMessage(error)}`);
   }
 }
 
+async function getPresignedUploadUrl(params: {
+  kind: "pdf" | "preview" | "rental";
+  productId: string;
+  key: string;
+  contentType: string;
+  fileSize: number;
+}): Promise<{ uploadUrl: string; key: string }> {
+  const res = await fetch("/api/admin/products/client-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error ?? "Failed to get an upload URL.");
+  }
+  return res.json();
+}
+
+/** Uploads a file directly to a presigned B2 URL via XHR (not fetch) so
+ * upload progress events are available for the progress bar UI. */
+function uploadToPresignedUrl(
+  uploadUrl: string,
+  file: File,
+  contentType: string,
+  onProgress: (percentage: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadUrl);
+    xhr.setRequestHeader("Content-Type", contentType);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress((event.loaded / event.total) * 100);
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed with status ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload."));
+    xhr.send(file);
+  });
+}
+
 /**
- * The Blob client SDK collapses almost any server-side failure from
- * handleUploadUrl into this exact generic string, discarding whatever
- * real error our own route returned — most commonly because
- * BLOB_READ_WRITE_TOKEN isn't set on this deployment (no Blob store
- * connected in the Vercel project). Surface that likely cause here since
- * the SDK won't tell us which failure actually happened.
+ * The presigned-upload flow can fail for a few reasons that all surface
+ * as a generic message — most commonly Backblaze B2 isn't configured yet
+ * on this deployment. Point at that likely cause since the raw error
+ * rarely names it directly.
  */
 function blobUploadErrorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : "Unknown Blob upload error";
-  if (message.includes("Failed to retrieve the presigned URL") || message.includes("Failed to retrieve the client token")) {
-    return `${message} — this usually means no Blob store is connected to this Vercel project (Storage → Connect a Blob store), or BLOB_READ_WRITE_TOKEN is missing/invalid. Check the server logs for the exact cause.`;
+  const message = error instanceof Error ? error.message : "Unknown upload error";
+  if (message.includes("not configured") || message.includes("Failed to get an upload URL")) {
+    return `${message} — check that B2_KEY_ID, B2_APP_KEY, B2_ENDPOINT, and B2_BUCKET_NAME are set for this deployment.`;
   }
   return message;
 }
