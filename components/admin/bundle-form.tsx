@@ -334,6 +334,7 @@ export function BundleForm({
                                 ? calculateCustomBundlePrice(
                                     regularPrices,
                                     customBundleDiscountPercentage,
+                                    currency,
                                   )
                                 : null;
 

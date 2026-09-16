@@ -45,7 +45,7 @@ function toProductSummary(
       .map((p) => ({
         currencyCode: p.currencyCode as CurrencyCode,
         regularPrice: p.regularPrice,
-        salePrice: calculateBookSalePrice(p.regularPrice, settings.bookSaleDiscountPercentage),
+        salePrice: calculateBookSalePrice(p.regularPrice, settings.bookSaleDiscountPercentage, p.currencyCode as CurrencyCode),
         saleStartDate: p.saleStartDate?.toISOString(),
         saleEndDate: p.saleEndDate?.toISOString(),
         isDefault: p.isDefault,
@@ -247,7 +247,7 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
       const sizedPrices = regularPrices.slice(0, price.quantity);
       const computed =
         sizedPrices.length === price.quantity
-          ? calculateCustomBundlePrice(sizedPrices, settings.customBundleDiscountPercentage)
+          ? calculateCustomBundlePrice(sizedPrices, settings.customBundleDiscountPercentage, currencyCode)
           : { salePrice: price.price, regularPrice: price.compareAtPrice ?? price.price };
 
       return {

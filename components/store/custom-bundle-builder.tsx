@@ -47,7 +47,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
   );
   const selectedPricing =
     selectedRegularPrices.length > 0
-      ? calculateCustomBundlePrice(selectedRegularPrices, bundle.customBundleDiscountPercentage)
+      ? calculateCustomBundlePrice(selectedRegularPrices, bundle.customBundleDiscountPercentage, currency)
       : null;
   const heroBooks = bundle.products.slice(0, 8);
 

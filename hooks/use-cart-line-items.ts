@@ -54,7 +54,7 @@ export function useCartLineItems() {
         });
         if (regularPrices.length !== item.bundleSize) return [];
 
-        const computed = calculateCustomBundlePrice(regularPrices, item.customBundleDiscountPercentage);
+        const computed = calculateCustomBundlePrice(regularPrices, item.customBundleDiscountPercentage, currency);
 
         return [
           {

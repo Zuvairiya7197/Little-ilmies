@@ -81,5 +81,5 @@ function activeSalePrice(
   const now = Date.now();
   if (price.saleStartDate && now < price.saleStartDate.getTime()) return null;
   if (price.saleEndDate && now > price.saleEndDate.getTime()) return null;
-  return calculateBookSalePrice(price.regularPrice, discountPercentage);
+  return calculateBookSalePrice(price.regularPrice, discountPercentage, price.currencyCode as CurrencyCode);
 }

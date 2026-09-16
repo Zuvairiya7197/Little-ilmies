@@ -382,7 +382,7 @@ export function ProductForm({
           const inrIndex = watchedPrices?.findIndex((p) => p?.currencyCode === "INR") ?? -1;
           const inrRegularRupees = inrIndex >= 0 ? Number(watchedPrices?.[inrIndex]?.regularPrice) || 0 : 0;
           const inrRegularMinor = Math.round(inrRegularRupees * 100);
-          const inrSaleMinor = calculateBookSalePrice(inrRegularMinor, BOOK_SALE_DISCOUNT_PERCENTAGE);
+          const inrSaleMinor = calculateBookSalePrice(inrRegularMinor, BOOK_SALE_DISCOUNT_PERCENTAGE, "INR");
           const rentalPriceMinor = calculateRentalPrice(inrSaleMinor);
 
           return (
@@ -722,7 +722,8 @@ export function ProductForm({
                   {formatPrice(
                     calculateBookSalePrice(
                       Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100),
-                      bookSaleDiscountPercentage
+                      bookSaleDiscountPercentage,
+                      watchedPrices?.[index]?.currencyCode ?? "INR"
                     ),
                     watchedPrices?.[index]?.currencyCode ?? "INR"
                   )}

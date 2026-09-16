@@ -86,7 +86,7 @@ function activeSalePrice(price: ProductSummary["prices"][number]) {
   const now = Date.now();
   if (price.saleStartDate && now < new Date(price.saleStartDate).getTime()) return undefined;
   if (price.saleEndDate && now > new Date(price.saleEndDate).getTime()) return undefined;
-  return calculateBookSalePrice(price.regularPrice);
+  return calculateBookSalePrice(price.regularPrice, undefined, price.currencyCode);
 }
 
 function findPrice(product: Pick<ProductSummary, "prices">, currency: CurrencyCode) {
