@@ -648,22 +648,56 @@ export function ProductForm({
           <h2 className="font-display text-lg font-semibold text-ink-700">Regional Prices</h2>
           <button
             type="button"
-            onClick={() => appendPrice({ currencyCode: "USD", regularPrice: 0, isActive: true })}
+            onClick={() =>
+              appendPrice({
+                currencyCode: "USD",
+                regularPrice: 0,
+                isActive: true,
+                saleStartDate: watchedPrices?.[0]?.saleStartDate,
+                saleEndDate: watchedPrices?.[0]?.saleEndDate,
+              })
+            }
             className="text-sm font-semibold text-sage-700 hover:underline"
           >
             + Add currency
           </button>
         </div>
-        <Field label="Base Currency" error={errors.baseCurrency?.message} hint="Shown when a requested regional price is unavailable" className="mb-4 max-w-xs">
-          <select {...register("baseCurrency")} className="admin-input">
-            {CURRENCY_OPTIONS.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <div className="flex flex-wrap items-end gap-4">
+          <Field label="Base Currency" error={errors.baseCurrency?.message} hint="Shown when a requested regional price is unavailable" className="max-w-xs">
+            <select {...register("baseCurrency")} className="admin-input">
+              {CURRENCY_OPTIONS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Sale Start" className="w-40">
+            <input
+              type="date"
+              value={watchedPrices?.[0]?.saleStartDate ?? ""}
+              onChange={(e) => {
+                priceFields.forEach((_, index) =>
+                  setValue(`prices.${index}.saleStartDate`, e.target.value, { shouldDirty: true })
+                );
+              }}
+              className="admin-input"
+            />
+          </Field>
+          <Field label="Sale End" className="w-40" hint="Applies to every currency below">
+            <input
+              type="date"
+              value={watchedPrices?.[0]?.saleEndDate ?? ""}
+              onChange={(e) => {
+                priceFields.forEach((_, index) =>
+                  setValue(`prices.${index}.saleEndDate`, e.target.value, { shouldDirty: true })
+                );
+              }}
+              className="admin-input"
+            />
+          </Field>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
           {priceFields.map((field, index) => (
             <div key={field.id} className="flex flex-wrap items-end gap-3 rounded-xl border border-ink-100 p-3">
               <Field label="Currency" className="w-28">
@@ -693,12 +727,6 @@ export function ProductForm({
                     watchedPrices?.[index]?.currencyCode ?? "INR"
                   )}
                 </div>
-              </Field>
-              <Field label="Sale Start" className="w-40">
-                <input type="date" {...register(`prices.${index}.saleStartDate`)} className="admin-input" />
-              </Field>
-              <Field label="Sale End" className="w-40">
-                <input type="date" {...register(`prices.${index}.saleEndDate`)} className="admin-input" />
               </Field>
               <Checkbox label="Active" {...register(`prices.${index}.isActive`)} />
               {priceFields.length > 1 && (
