@@ -3,11 +3,30 @@ import Link from "next/link";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import type { AgeRange } from "@/types/catalog";
 
-const ageBands: { range: AgeRange; label: string; tint: string; image?: string; imageScale?: string; imageWrapperClass?: string }[] = [
+const ageBands: {
+  range: AgeRange;
+  label: string;
+  tint: string;
+  image?: string;
+  imageScale?: string;
+  imageWrapperClass?: string;
+  mobileImageWrapperClass?: string;
+}[] = [
   // age-0-3.png has a wider aspect ratio than the other age illustrations, so
   // it renders visibly smaller under object-contain in the same box — scaled
-  // up here to match the others' apparent size.
-  { range: "0-3", label: "0–3 Years", tint: "bg-ink-600", image: "/images/age-0-3.png", imageScale: "scale-125", imageWrapperClass: "-translate-y-10" },
+  // up here to match the others' apparent size. The upward shift keeps it
+  // vertically centered against that scale-up; a smaller shift on mobile
+  // (shorter cards) keeps it level with the other cards in the row instead
+  // of floating noticeably higher.
+  {
+    range: "0-3",
+    label: "0–3 Years",
+    tint: "bg-ink-600",
+    image: "/images/age-0-3.png",
+    imageScale: "scale-125",
+    imageWrapperClass: "-translate-y-10",
+    mobileImageWrapperClass: "-translate-y-3",
+  },
   { range: "3-6", label: "3–6 Years", tint: "bg-sunny-500", image: "/images/age-3-6.png", imageWrapperClass: "-translate-y-2" },
   { range: "6-9", label: "6–9 Years", tint: "bg-lemon-600", image: "/images/age-6-9.png" },
   { range: "9-12", label: "9–12 Years", tint: "bg-teal-500", image: "/images/age-9-12.png" },
@@ -45,7 +64,7 @@ export function ShopByAge() {
 
         {/* Mobile & tablet: same saturated colors as desktop, compact size */}
         <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 no-scrollbar xs:-mx-5 xs:px-5 md:hidden">
-          {ageBands.map(({ range, label, tint, image, imageScale, imageWrapperClass }) => (
+          {ageBands.map(({ range, label, tint, image, imageScale, imageWrapperClass, mobileImageWrapperClass }) => (
             <li key={range} className="w-28 shrink-0 snap-start xs:w-32">
               <Link
                 href={`/shop?age=${encodeURIComponent(range)}`}
@@ -56,7 +75,7 @@ export function ShopByAge() {
                 </span>
 
                 {image ? (
-                  <div className={`relative mt-1 w-full flex-1 ${imageWrapperClass ?? ""}`}>
+                  <div className={`relative mt-1 w-full flex-1 ${mobileImageWrapperClass ?? imageWrapperClass ?? ""}`}>
                     <Image
                       src={image}
                       alt=""
