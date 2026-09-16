@@ -212,8 +212,8 @@ export function FilterPanel({
 
 function buildFilterCategoryGroups(categories: Category[]): { title: string; categories: Category[] }[] {
   const bySlug = new Map(categories.map((category) => [category.slug, category]));
-  const used = new Set<string>();
-  const groups: { title: string; categories: Category[] }[] = booksMenuSections
+  return booksMenuSections
+    .filter((section) => section.title !== "Shop by Age")
     .map((section) => {
       const categorySlugs = section.links
         .map((link) => slugFromHref(link.href))
@@ -221,17 +221,9 @@ function buildFilterCategoryGroups(categories: Category[]): { title: string; cat
       const groupCategories = categorySlugs
         .map((slug) => bySlug.get(slug))
         .filter((category): category is Category => Boolean(category));
-      groupCategories.forEach((category) => used.add(category.id));
       return { title: section.title, categories: groupCategories };
     })
     .filter((group) => group.categories.length > 0);
-
-  const otherCategories = categories.filter((category) => !used.has(category.id));
-  if (otherCategories.length > 0) {
-    groups.push({ title: "Other", categories: otherCategories });
-  }
-
-  return groups;
 }
 
 function slugFromHref(href: string) {
