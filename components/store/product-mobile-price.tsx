@@ -39,14 +39,14 @@ export function ProductMobilePrice({ product }: { product: ProductDetail }) {
         )}
       </div>
 
-      <div className="mt-7 flex flex-col gap-3">
+      <div className="mt-5 grid grid-cols-2 gap-2.5">
         {trustPoints.map(({ label, icon: Icon, iconColor }) => (
           <div
             key={label}
-            className="flex items-center gap-4 rounded-2xl bg-cream-50/95 px-5 py-3.5 text-base font-semibold text-ink-600 shadow-soft"
+            className="flex items-center gap-2 rounded-xl bg-cream-50/95 px-3 py-2.5 text-xs font-semibold text-ink-600 shadow-soft"
           >
-            <Icon className={`h-5 w-5 ${iconColor}`} aria-hidden="true" />
-            {label}
+            <Icon className={`h-4 w-4 shrink-0 ${iconColor}`} aria-hidden="true" />
+            <span className="truncate">{label}</span>
           </div>
         ))}
       </div>

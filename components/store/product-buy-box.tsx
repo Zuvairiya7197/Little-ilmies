@@ -108,19 +108,19 @@ export function ProductBuyBox({
         {owns ? (
           <Link
             href={`/api/download/${product.id}`}
-            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-ink-600 px-2 py-4 text-base font-semibold text-cream-50 shadow-clay-primary transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
+            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-ink-600 px-2 py-3 text-sm font-semibold text-cream-50 shadow-clay-primary transition-all active:scale-95 xs:text-base sm:gap-3 sm:py-4 sm:text-lg"
           >
-            <Download className="h-6 w-6" aria-hidden="true" />
-            You own this — Download
+            <Download className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <span className="truncate">You own this — Download</span>
           </Link>
         ) : (
           <button
             type="button"
             onClick={addToCart}
-            className="tap-target flex items-center justify-center gap-2 rounded-2xl bg-ink-600 px-2 py-4 text-base font-semibold text-cream-50 shadow-clay-primary transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
+            className="tap-target flex items-center justify-center gap-1.5 rounded-2xl bg-ink-600 px-2 py-3 text-sm font-semibold text-cream-50 shadow-clay-primary transition-all active:scale-95 xs:text-base sm:gap-2 sm:py-4 sm:text-lg"
           >
-            <ShoppingCart className="h-6 w-6" aria-hidden="true" />
-            Add to Cart
+            <ShoppingCart className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <span className="truncate">Add to Cart</span>
           </button>
         )}
         {!owns && (
@@ -135,21 +135,21 @@ export function ProductBuyBox({
               })
             }
             aria-pressed={isWishlisted}
-            className="tap-target flex items-center justify-center gap-2 rounded-2xl bg-cream-50 px-2 py-4 text-base font-semibold text-ink-600 shadow-soft transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
+            className="tap-target flex items-center justify-center gap-1.5 rounded-2xl bg-cream-50 px-2 py-3 text-sm font-semibold text-ink-600 shadow-soft transition-all active:scale-95 xs:text-base sm:gap-2 sm:py-4 sm:text-lg"
           >
             <Heart
-              className={cn("h-6 w-6", isWishlisted ? "fill-blossom-500 text-blossom-500" : "text-ink-500")}
+              className={cn("h-5 w-5 shrink-0", isWishlisted ? "fill-blossom-500 text-blossom-500" : "text-ink-500")}
               aria-hidden="true"
             />
-            {isWishlisted ? "Saved" : "Add to Wishlist"}
+            <span className="truncate">{isWishlisted ? "Saved" : "Add to Wishlist"}</span>
           </button>
         )}
         {isRenting && !owns && (
           <Link
             href={`/read/${product.id}`}
-            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-sage-50 px-2 py-4 text-base font-semibold text-sage-800 shadow-soft transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
+            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-sage-50 px-2 py-3 text-sm font-semibold text-sage-800 shadow-soft transition-all active:scale-95 xs:text-base sm:gap-3 sm:py-4 sm:text-lg"
           >
-            <BookOpen className="h-6 w-6" aria-hidden="true" />
+            <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
             Read Now
           </Link>
         )}
@@ -157,7 +157,7 @@ export function ProductBuyBox({
           <button
             type="button"
             onClick={rentNow}
-            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-sage-50 px-2 py-4 text-base font-semibold text-sage-800 shadow-soft transition-all active:scale-95 sm:gap-3 sm:py-5 sm:text-xl"
+            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-sage-50 px-2 py-3 text-sm font-semibold text-sage-800 shadow-soft transition-all active:scale-95 xs:text-base sm:gap-3 sm:py-4 sm:text-lg"
           >
             Rent & Read - {formatPrice(rentalPrice, RENTAL_CURRENCY_CODE)}
           </button>
