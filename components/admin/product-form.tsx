@@ -452,91 +452,6 @@ export function ProductForm({
       </div>
 
       <div className="card-surface p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink-700">Regional Prices</h2>
-          <button
-            type="button"
-            onClick={() => appendPrice({ currencyCode: "USD", regularPrice: 0, isActive: true })}
-            className="text-sm font-semibold text-sage-700 hover:underline"
-          >
-            + Add currency
-          </button>
-        </div>
-        <Field label="Base Currency" error={errors.baseCurrency?.message} hint="Shown when a requested regional price is unavailable" className="mb-4 max-w-xs">
-          <select {...register("baseCurrency")} className="admin-input">
-            {CURRENCY_OPTIONS.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-          {priceFields.map((field, index) => (
-            <div key={field.id} className="flex flex-wrap items-end gap-3 rounded-xl border border-ink-100 p-3">
-              <Field label="Currency" className="w-28">
-                <select {...register(`prices.${index}.currencyCode`)} className="admin-input">
-                  {CURRENCY_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Regular Price" className="w-32">
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register(`prices.${index}.regularPrice`)}
-                  className="admin-input"
-                />
-              </Field>
-              <Field label="Sale Price" className="w-40" hint={`Automatically calculated at ${bookSaleDiscountPercentage}% off`}>
-                <div className="rounded-xl bg-cream-100 px-3 py-2 text-sm font-semibold text-ink-600 shadow-clay-pressed">
-                  {formatPrice(
-                    calculateBookSalePrice(
-                      Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100),
-                      bookSaleDiscountPercentage
-                    ),
-                    watchedPrices?.[index]?.currencyCode ?? "INR"
-                  )}
-                </div>
-              </Field>
-              <Field label="Sale Start" className="w-40">
-                <input type="date" {...register(`prices.${index}.saleStartDate`)} className="admin-input" />
-              </Field>
-              <Field label="Sale End" className="w-40">
-                <input type="date" {...register(`prices.${index}.saleEndDate`)} className="admin-input" />
-              </Field>
-              <Checkbox label="Active" {...register(`prices.${index}.isActive`)} />
-              {priceFields.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removePrice(index)}
-                  aria-label="Remove this price"
-                  className="tap-target ml-auto flex items-center justify-center rounded-full text-ink-300 hover:bg-gold-50 hover:text-gold-700"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        {errors.prices && (
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-gold-700">
-            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-            {errors.prices.message ?? "Check your price entries"}
-          </p>
-        )}
-        {!priceFields.some((f) => f.currencyCode === "USD") && (
-          <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-gold-50 px-3 py-2 text-xs text-gold-700">
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            No USD price set. Customers outside India need an active USD/international price before checkout.
-          </p>
-        )}
-      </div>
-
-      <div className="card-surface p-5">
         <details open>
           <summary className="cursor-pointer list-none font-display text-lg font-semibold text-ink-700">
             Files & Preview
@@ -679,12 +594,97 @@ export function ProductForm({
               </div>
             )}
             <p className="rounded-xl bg-cream-50 px-3 py-2 text-xs text-ink-400">
-              Free preview pages are now set from the Rent &amp; Read card below — upload Rent &amp; Read
+              Free preview pages are now set from the Rent &amp; Read card above — upload Rent &amp; Read
               pages first, then use &quot;Use these pages as free preview&quot; to pick which ones go public.
             </p>
           </div>
         </div>
         </details>
+      </div>
+
+      <div className="card-surface p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink-700">Regional Prices</h2>
+          <button
+            type="button"
+            onClick={() => appendPrice({ currencyCode: "USD", regularPrice: 0, isActive: true })}
+            className="text-sm font-semibold text-sage-700 hover:underline"
+          >
+            + Add currency
+          </button>
+        </div>
+        <Field label="Base Currency" error={errors.baseCurrency?.message} hint="Shown when a requested regional price is unavailable" className="mb-4 max-w-xs">
+          <select {...register("baseCurrency")} className="admin-input">
+            {CURRENCY_OPTIONS.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {priceFields.map((field, index) => (
+            <div key={field.id} className="flex flex-wrap items-end gap-3 rounded-xl border border-ink-100 p-3">
+              <Field label="Currency" className="w-28">
+                <select {...register(`prices.${index}.currencyCode`)} className="admin-input">
+                  {CURRENCY_OPTIONS.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Regular Price" className="w-32">
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register(`prices.${index}.regularPrice`)}
+                  className="admin-input"
+                />
+              </Field>
+              <Field label="Sale Price" className="w-40" hint={`Automatically calculated at ${bookSaleDiscountPercentage}% off`}>
+                <div className="rounded-xl bg-cream-100 px-3 py-2 text-sm font-semibold text-ink-600 shadow-clay-pressed">
+                  {formatPrice(
+                    calculateBookSalePrice(
+                      Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100),
+                      bookSaleDiscountPercentage
+                    ),
+                    watchedPrices?.[index]?.currencyCode ?? "INR"
+                  )}
+                </div>
+              </Field>
+              <Field label="Sale Start" className="w-40">
+                <input type="date" {...register(`prices.${index}.saleStartDate`)} className="admin-input" />
+              </Field>
+              <Field label="Sale End" className="w-40">
+                <input type="date" {...register(`prices.${index}.saleEndDate`)} className="admin-input" />
+              </Field>
+              <Checkbox label="Active" {...register(`prices.${index}.isActive`)} />
+              {priceFields.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removePrice(index)}
+                  aria-label="Remove this price"
+                  className="tap-target ml-auto flex items-center justify-center rounded-full text-ink-300 hover:bg-gold-50 hover:text-gold-700"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        {errors.prices && (
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-gold-700">
+            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+            {errors.prices.message ?? "Check your price entries"}
+          </p>
+        )}
+        {!priceFields.some((f) => f.currencyCode === "USD") && (
+          <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-gold-50 px-3 py-2 text-xs text-gold-700">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            No USD price set. Customers outside India need an active USD/international price before checkout.
+          </p>
+        )}
       </div>
 
       <div className="card-surface p-5">
