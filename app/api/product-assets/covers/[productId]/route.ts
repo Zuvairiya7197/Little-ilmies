@@ -29,7 +29,16 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": contentTypeFor(product.coverImage),
-        "Cache-Control": "public, max-age=31536000, immutable",
+        // s-maxage lets Vercel's own edge cache this response and serve it
+        // to every subsequent visitor without re-running this route (and
+        // re-downloading from B2) at all — public max-age alone only
+        // caches in each individual visitor's own browser, so every new
+        // visitor's first load still had to hit B2 directly. Without this,
+        // real storefront traffic could burn through B2's daily download
+        // bandwidth cap fast, and once that cap is hit, B2 starts
+        // rejecting every image request until it resets, showing up as
+        // universally broken cover/preview images.
+        "Cache-Control": "public, max-age=31536000, immutable, s-maxage=31536000",
       },
     });
   } catch {
