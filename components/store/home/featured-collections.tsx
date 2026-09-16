@@ -6,7 +6,7 @@ export const collections = [
   {
     title: "Stories of the Prophets",
     description: "Authentic tales retold for young hearts.",
-    href: "/shop/islamic-studies",
+    href: "/shop/stories-of-the-prophets",
     icon: BookHeart,
     image: "/images/collection-stories-of-the-prophets.png",
     cardBg: "bg-ink-50",
@@ -17,7 +17,7 @@ export const collections = [
   {
     title: "Good Manners Collection",
     description: "Building akhlaq, one habit at a time.",
-    href: "/shop/character-building",
+    href: "/shop/good-manners",
     icon: Sparkles,
     image: "/images/collection-good-manners.png",
     cardBg: "bg-sunny-50",
@@ -28,7 +28,7 @@ export const collections = [
   {
     title: "Ramadan Collection",
     description: "Duas, stories, and activities for the blessed month.",
-    href: "/shop/seasonal-collections",
+    href: "/shop/ramadan",
     icon: Moon,
     image: "/images/collection-ramadan.png",
     cardBg: "bg-teal-50",
@@ -50,7 +50,7 @@ export const collections = [
   {
     title: "Printable Activities",
     description: "Coloring pages and activity books for quiet afternoons.",
-    href: "/shop/printables",
+    href: "/shop/activities-and-printables",
     icon: PenTool,
     image: "/images/collection-printable-activities.png",
     cardBg: "bg-sage-50",
