@@ -47,7 +47,7 @@ export default function DigitalDeliveryPolicyPage() {
       <h2>Trouble downloading?</h2>
       <p>
         If a download link isn&apos;t working, email us at{" "}
-        <a href="mailto:info@littleilmies.com">info@littleilmies.com</a> with your order number
+        <a href="mailto:contact@littleilmies.com">contact@littleilmies.com</a> with your order number
         and we&apos;ll help right away.
       </p>
     </LegalPageLayout>

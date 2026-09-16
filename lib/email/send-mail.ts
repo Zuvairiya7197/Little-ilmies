@@ -33,7 +33,7 @@ export async function sendMail({
 
   const { error } = await resend.emails.send({
     to,
-    from: process.env.EMAIL_FROM ?? "Little Ilmies <hello@littleilmies.com>",
+    from: process.env.EMAIL_FROM ?? "Little Ilmies <contact@littleilmies.com>",
     subject,
     text,
     html,

@@ -28,8 +28,8 @@ const otherWays = [
     bg: "bg-blossom-100",
     color: "text-blossom-500",
     labelColor: "text-blossom-500",
-    lines: ["hello@littleilmies.com", "We're here to help!"],
-    href: "mailto:hello@littleilmies.com",
+    lines: ["contact@littleilmies.com", "We're here to help!"],
+    href: "mailto:contact@littleilmies.com",
   },
   {
     label: "WhatsApp",

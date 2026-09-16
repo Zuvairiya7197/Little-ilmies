@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const { name, email, subject, message } = parsed.data;
 
   await sendMail({
-    to: process.env.EMAIL_FROM ?? "hello@littleilmies.com",
+    to: process.env.EMAIL_FROM ?? "contact@littleilmies.com",
     subject: subject ? `Contact form: ${subject}` : `New contact form message from ${name}`,
     text: `From: ${name} <${email}>\n\n${message}`,
     html: `<p><strong>From:</strong> ${name} &lt;${email}&gt;</p><p>${message.replace(/\n/g, "<br/>")}</p>`,

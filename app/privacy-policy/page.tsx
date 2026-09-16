@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
       <p>
         You can request a copy of your data, or ask us to delete your account and associated
         data, by contacting us at{" "}
-        <a href="mailto:info@littleilmies.com">info@littleilmies.com</a>.
+        <a href="mailto:contact@littleilmies.com">contact@littleilmies.com</a>.
       </p>
 
       <h2>Contact</h2>

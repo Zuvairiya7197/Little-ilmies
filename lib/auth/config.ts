@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
       // which we never actually invoke — sendVerificationRequest below
       // fully overrides delivery, so this is a required-but-unused stub.
       server: { host: "localhost", port: 25 },
-      from: process.env.EMAIL_FROM ?? "Little Ilmies <hello@littleilmies.com>",
+      from: process.env.EMAIL_FROM ?? "Little Ilmies <contact@littleilmies.com>",
       maxAge: 15 * 60, // magic link valid for 15 minutes
       async sendVerificationRequest({ identifier, url }) {
         if (!hasResendConfig) {
@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
 
         const { error } = await resend.emails.send({
           to: identifier,
-          from: process.env.EMAIL_FROM ?? "Little Ilmies <hello@littleilmies.com>",
+          from: process.env.EMAIL_FROM ?? "Little Ilmies <contact@littleilmies.com>",
           subject: "Your Little Ilmies sign-in link",
           text: `Sign in to Little Ilmies: ${url}`,
           html: `<p>Tap below to sign in to Little Ilmies:</p><p><a href="${url}">Sign in to Little Ilmies</a></p><p>This link expires in 15 minutes.</p>`,

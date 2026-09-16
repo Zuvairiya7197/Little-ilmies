@@ -19,7 +19,7 @@ export default function RefundPolicyPage() {
       <p>
         If you purchased a book by mistake and haven&apos;t yet downloaded it, contact us within
         24 hours of purchase at{" "}
-        <a href="mailto:info@littleilmies.com">info@littleilmies.com</a> with your order number,
+        <a href="mailto:contact@littleilmies.com">contact@littleilmies.com</a> with your order number,
         and we&apos;ll issue a full refund.
       </p>
 
@@ -51,7 +51,7 @@ export default function RefundPolicyPage() {
       <h2>Contact</h2>
       <p>
         For any refund request, reach out via our <a href="/contact">Contact page</a> or email{" "}
-        <a href="mailto:info@littleilmies.com">info@littleilmies.com</a>.
+        <a href="mailto:contact@littleilmies.com">contact@littleilmies.com</a>.
       </p>
     </LegalPageLayout>
   );

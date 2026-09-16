@@ -12,7 +12,7 @@ export function organizationSchema() {
     sameAs: ["https://instagram.com/littleilmies", "https://facebook.com/littleilmies"],
     contactPoint: {
       "@type": "ContactPoint",
-      email: "info@littleilmies.com",
+      email: "contact@littleilmies.com",
       contactType: "customer service",
     },
   };
