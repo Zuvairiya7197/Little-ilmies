@@ -1507,20 +1507,80 @@ function RentalPagesUploader({
   );
 }
 
+// The image URL (see productRentalPageUrls) is
+// /api/admin/product-assets/rentals/{productId}/{index}?v={encoded pathname}
+// — the pathname (e.g. rentals/{productId}/page-3-<uuid>-my-scan.jpg) is
+// never sent to the client any other way, so it's recovered from here for
+// both display (a human-readable page name) and reordering.
+function pathnameFromRentalUrl(src: string): string | null {
+  try {
+    const v = new URL(src, "http://x").searchParams.get("v");
+    return v ? decodeURIComponent(v) : null;
+  } catch {
+    return null;
+  }
+}
+
+function rentalPageDisplayName(src: string, index: number): string {
+  const pathname = pathnameFromRentalUrl(src);
+  const base = pathname?.split("/").pop();
+  // Strip the "page-{n}-{uuid}" prefix this app generates, leaving just the
+  // admin's original filename slug when one was captured; falls back to a
+  // plain page number for pages uploaded before that was tracked.
+  const match = base?.match(/^page-\d+-[0-9a-f-]{36}-(.+)\.[a-z0-9]+$/i);
+  return match ? match[1].replace(/-/g, " ") : `Page ${index + 1}`;
+}
+
 function RentalPageThumbs({
+  productId,
   images,
+  refresh,
+  setError,
 }: {
   productId: string;
   images: string[];
   refresh: () => void;
   setError: (message: string | null) => void;
 }) {
+  const [isSaving, setIsSaving] = useState(false);
+
   if (images.length === 0) return null;
+
+  async function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= images.length) return;
+
+    const pathnames = images.map((src) => pathnameFromRentalUrl(src));
+    if (pathnames.some((p) => !p)) {
+      setError("Can't reorder — one or more pages are missing path info. Try refreshing the page.");
+      return;
+    }
+    const reordered = [...(pathnames as string[])];
+    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/products/upload-rental-pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, order: reordered }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Could not reorder rental pages.");
+        return;
+      }
+      refresh();
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <ol className="flex max-w-full gap-2 overflow-x-auto pb-1">
       {images.map((src, index) => (
-        <li key={src} className="w-16 shrink-0 rounded-lg border border-ink-100 bg-cream-50 p-1">
+        <li key={src} className="w-20 shrink-0 rounded-lg border border-ink-100 bg-cream-50 p-1">
           <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
             {/* eslint-disable-next-line @next/next/no-img-element -- next/image's
                 optimizer fetches this URL server-side without our admin session
@@ -1528,7 +1588,29 @@ function RentalPageThumbs({
                 cacheable/optimizable by a third party anyway. */}
             <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
           </div>
-          <p className="mt-1 text-center text-[10px] font-semibold text-ink-400">Page {index + 1}</p>
+          <p className="mt-1 truncate text-center text-[10px] font-semibold text-ink-400" title={rentalPageDisplayName(src, index)}>
+            {rentalPageDisplayName(src, index)}
+          </p>
+          <div className="mt-1 flex items-center justify-center gap-1">
+            <button
+              type="button"
+              disabled={index === 0 || isSaving}
+              onClick={() => move(index, -1)}
+              aria-label="Move page earlier"
+              className="tap-target rounded bg-cream-100 px-1.5 py-0.5 text-[10px] font-bold text-ink-500 hover:bg-cream-200 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              disabled={index === images.length - 1 || isSaving}
+              onClick={() => move(index, 1)}
+              aria-label="Move page later"
+              className="tap-target rounded bg-cream-100 px-1.5 py-0.5 text-[10px] font-bold text-ink-500 hover:bg-cream-200 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              →
+            </button>
+          </div>
         </li>
       ))}
     </ol>
@@ -1791,7 +1873,15 @@ async function finalizeRentalPage(productId: string, key: string, append: boolea
 function rentalPathname(productId: string, filename: string, index: number) {
   const ext = filename.match(/\.(jpe?g|png|webp)$/i)?.[0]?.toLowerCase() ?? ".jpg";
   const normalizedExt = ext === ".jpeg" ? ".jpg" : ext;
-  return `rentals/${productId}/page-${index + 1}-${crypto.randomUUID()}${normalizedExt}`;
+  const base = filename.slice(0, filename.length - (filename.match(/\.(jpe?g|png|webp)$/i)?.[0]?.length ?? 0));
+  // Original filename slug embedded so RentalPageThumbs can show it — it's
+  // never used for path lookup (the uuid is unique enough on its own).
+  const nameSlug = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  return `rentals/${productId}/page-${index + 1}-${crypto.randomUUID()}${nameSlug ? `-${nameSlug}` : ""}${normalizedExt}`;
 }
 
 async function getPresignedUploadUrl(params: {

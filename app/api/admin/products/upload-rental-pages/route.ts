@@ -23,6 +23,13 @@ const attachedRentalPagesSchema = z.object({
   pathnames: z.array(z.string().min(1)).min(1).max(500),
 });
 const removeRentalPagesSchema = z.object({ productId: z.string().min(1) });
+// Reorders the existing pages in place — same set of keys, just a new
+// order, so (unlike attachedRentalPagesSchema below) nothing gets deleted
+// from storage.
+const reorderRentalPagesSchema = z.object({
+  productId: z.string().min(1),
+  order: z.array(z.string().min(1)).min(1).max(500),
+});
 // Finalizes a single page already uploaded directly to B2 via the
 // presigned client-upload flow: compresses it in place and attaches (or
 // appends) its path to the product. Bytes never pass through this route
@@ -93,6 +100,32 @@ export async function POST(request: NextRequest) {
       revalidateCatalogPaths(product.slug);
 
       return NextResponse.json({ rentalPageImagePaths: productRentalPageUrls(productId, storedPaths) });
+    }
+
+    if ("order" in body) {
+      const parsed = reorderRentalPagesSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: "Invalid reorder request" }, { status: 400 });
+      }
+      const { productId, order } = parsed.data;
+
+      const product = await prisma.product.findUnique({
+        where: { id: productId },
+        select: { id: true, slug: true, rentalPageImagePaths: true },
+      });
+      if (!product) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+
+      const current = new Set(product.rentalPageImagePaths);
+      const isSamePages = order.length === current.size && order.every((p) => current.has(p));
+      if (!isSamePages) {
+        return NextResponse.json({ error: "Reorder must include exactly the current set of pages." }, { status: 400 });
+      }
+
+      await prisma.product.update({ where: { id: productId }, data: { rentalPageImagePaths: order } });
+      revalidateCatalogPaths(product.slug);
+      return NextResponse.json({ rentalPageImagePaths: productRentalPageUrls(productId, order) });
     }
 
     const parsed = attachedRentalPagesSchema.safeParse(body);
