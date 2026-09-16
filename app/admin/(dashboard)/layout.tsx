@@ -14,8 +14,18 @@ export default async function AdminDashboardLayout({
   return (
     <div data-admin className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
       <AdminMobileNav />
-      <aside className="hidden w-64 shrink-0 border-r border-ink-100 bg-cream-50 lg:block">
-        <div className="sticky top-0">
+      {/* position: sticky silently breaks here because body has
+          overflow-x: hidden (site-wide, to stop storefront decorative
+          elements causing horizontal scroll) — any non-visible overflow
+          on an ancestor disables sticky for descendants. Fixed
+          positioning sidesteps that without touching the global style;
+          main gets a matching lg:pl-64 so content isn't hidden under it. */}
+      {/* This aside stays in normal flex flow purely to reserve a w-64
+          gap for main — its child (the actual sidebar) is fixed and so
+          no longer contributes to layout, but the wrapper's own width
+          still does. */}
+      <aside className="hidden w-64 shrink-0 border-r border-ink-100 bg-cream-50 lg:block" aria-hidden="true">
+        <div className="fixed top-0 h-screen w-64 overflow-y-auto border-r border-ink-100 bg-cream-50">
           <AdminSidebar />
         </div>
       </aside>

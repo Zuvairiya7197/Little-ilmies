@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useId, cloneElement } from "react";
+import { useEffect, useState, useId, cloneElement } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -166,7 +166,7 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-ink-400 p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Basic Info</h2>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Field label="Title" error={errors.title?.message}>
@@ -200,7 +200,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-sage-500 p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Catalog Details</h2>
         <div>
           <p className="mb-2 text-sm font-semibold text-ink-600">Categories</p>
@@ -262,7 +262,7 @@ export function ProductForm({
 
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-gold-500 p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Product Highlights</h2>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <ArrayField
@@ -289,7 +289,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-blossom-400 p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">License / Usage</h2>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
           <Field label="Usage License" error={errors.usageLicense?.message}>
@@ -310,7 +310,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-teal-500 p-5">
         <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Store Settings</h2>
         <div className="grid gap-3 rounded-2xl bg-cream-50 p-3 shadow-clay-pressed sm:grid-cols-2 lg:grid-cols-5">
           <Checkbox label="Bestseller" {...register("isBestseller")} />
@@ -331,7 +331,7 @@ export function ProductForm({
         <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-sunny-500 p-5">
         <h2 className="font-display text-lg font-semibold text-ink-700">Rent & Read</h2>
         <p className="mt-1 text-xs text-ink-400">
           India-only temporary online reading access. Rental price is automatically calculated — never entered
@@ -451,7 +451,7 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-lemon-500 p-5">
         <details open>
           <summary className="cursor-pointer list-none font-display text-lg font-semibold text-ink-700">
             Files & Preview
@@ -602,7 +602,7 @@ export function ProductForm({
         </details>
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-blossom-600 p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink-700">Regional Prices</h2>
           <button
@@ -687,7 +687,7 @@ export function ProductForm({
         )}
       </div>
 
-      <div className="card-surface p-5">
+      <div className="card-surface border-l-4 border-l-ink-200 p-5">
         <details open>
           <summary className="cursor-pointer list-none font-display text-lg font-semibold text-ink-700">
             SEO
@@ -1333,11 +1333,12 @@ interface RentalPageUploadItem {
 }
 
 /**
- * Rent & Read page uploader for an existing product — each selected page
- * uploads (and appends to the product) as soon as it's picked, rather
- * than waiting for the whole product form to be saved. Uploads run one
- * at a time in the background; each item shows its own progress and
- * settles into a "Done" state once the page is live.
+ * Rent & Read page uploader for an existing product. Selecting files
+ * stages them (no network call yet); each staged page gets its own
+ * "Add" button that uploads and appends just that page to the product,
+ * settling into a "Done" state once it's live — mirrors
+ * InstantFileUpload's Add/Done pattern instead of auto-uploading on
+ * selection.
  */
 function RentalPagesUploader({
   productId,
@@ -1351,54 +1352,9 @@ function RentalPagesUploader({
   setError: (message: string | null) => void;
 }) {
   const [items, setItems] = useState<RentalPageUploadItem[]>([]);
-  const queueRef = useRef(false);
 
   function updateItem(id: string, patch: Partial<RentalPageUploadItem>) {
     setItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
-  }
-
-  async function processQueue() {
-    if (queueRef.current) return;
-    queueRef.current = true;
-    try {
-      // Re-read latest items each iteration so files added mid-run are picked up.
-      let next = items.find((item) => item.status === "queued");
-      while (next) {
-        const item = next;
-        updateItem(item.id, { status: "uploading", progress: 0 });
-        try {
-          const key = rentalPathname(productId, item.file.name, 0);
-          const contentType = item.file.type || "image/jpeg";
-          const { uploadUrl } = await getPresignedUploadUrl({
-            kind: "rental",
-            productId,
-            key,
-            contentType,
-            fileSize: item.file.size,
-          });
-          await uploadToPresignedUrl(uploadUrl, item.file, contentType, (percentage) =>
-            updateItem(item.id, { progress: percentage })
-          );
-          await finalizeRentalPage(productId, key, true);
-          updateItem(item.id, { status: "done", progress: 100 });
-          onUploaded();
-        } catch (err) {
-          updateItem(item.id, {
-            status: "error",
-            error: err instanceof Error ? err.message : "Upload failed.",
-          });
-          setError(err instanceof Error ? err.message : "Could not upload a rental page.");
-        }
-        next = await new Promise<RentalPageUploadItem | undefined>((resolve) => {
-          setItems((current) => {
-            resolve(current.find((i) => i.status === "queued"));
-            return current;
-          });
-        });
-      }
-    } finally {
-      queueRef.current = false;
-    }
   }
 
   function addFiles(fileList: FileList | null) {
@@ -1410,9 +1366,34 @@ function RentalPagesUploader({
       progress: 0,
     }));
     setItems((current) => [...current, ...newItems]);
-    // processQueue reads from `items` state, so give React a tick to commit
-    // the addition above before kicking off the loop.
-    setTimeout(processQueue, 0);
+  }
+
+  async function uploadItem(id: string) {
+    const item = items.find((i) => i.id === id);
+    if (!item || item.status === "uploading" || item.status === "done") return;
+
+    updateItem(id, { status: "uploading", progress: 0, error: undefined });
+    try {
+      const key = rentalPathname(productId, item.file.name, 0);
+      const contentType = item.file.type || "image/jpeg";
+      const { uploadUrl } = await getPresignedUploadUrl({
+        kind: "rental",
+        productId,
+        key,
+        contentType,
+        fileSize: item.file.size,
+      });
+      await uploadToPresignedUrl(uploadUrl, item.file, contentType, (percentage) =>
+        updateItem(id, { progress: percentage })
+      );
+      await finalizeRentalPage(productId, key, true);
+      updateItem(id, { status: "done", progress: 100 });
+      onUploaded();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed.";
+      updateItem(id, { status: "error", error: message });
+      setError(message);
+    }
   }
 
   return (
@@ -1421,7 +1402,7 @@ function RentalPagesUploader({
         className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
       >
         <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
-        {disabled ? "Enable Rent & Read to upload reader pages" : "Add pages — each uploads immediately"}
+        {disabled ? "Enable Rent & Read to upload reader pages" : "Choose page images to add"}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -1443,7 +1424,15 @@ function RentalPagesUploader({
               className="flex items-center gap-3 rounded-lg bg-cream-100 px-3 py-2 text-xs text-ink-500"
             >
               <span className="min-w-0 flex-1 truncate">{item.file.name}</span>
-              {item.status === "queued" && <span className="shrink-0 text-ink-300">Queued</span>}
+              {item.status === "queued" && (
+                <button
+                  type="button"
+                  onClick={() => uploadItem(item.id)}
+                  className="tap-target shrink-0 rounded-full bg-sage-600 px-3 py-1 text-xs font-semibold text-cream-50 hover:bg-sage-700"
+                >
+                  Add
+                </button>
+              )}
               {item.status === "uploading" && (
                 <span className="flex shrink-0 items-center gap-1.5 font-semibold text-sage-700">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -1457,9 +1446,18 @@ function RentalPagesUploader({
                 </span>
               )}
               {item.status === "error" && (
-                <span className="shrink-0 font-semibold text-gold-700" title={item.error}>
-                  Failed
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="font-semibold text-gold-700" title={item.error}>
+                    Failed
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => uploadItem(item.id)}
+                    className="tap-target rounded-full bg-sage-600 px-3 py-1 text-xs font-semibold text-cream-50 hover:bg-sage-700"
+                  >
+                    Retry
+                  </button>
+                </div>
               )}
             </li>
           ))}
