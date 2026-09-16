@@ -12,7 +12,7 @@ export default async function AdminDashboardLayout({
   if (!session) redirect("/admin/login");
 
   return (
-    <div data-admin className="flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+    <div data-admin className="flex min-h-screen flex-col lg:flex-row">
       <AdminMobileNav />
       {/* position: sticky silently breaks here because body has
           overflow-x: hidden (site-wide, to stop storefront decorative
