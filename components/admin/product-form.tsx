@@ -465,6 +465,7 @@ export function ProductForm({
               </p>
               {currentFiles?.rentalPageCount ? (
                 <div className="mt-2">
+                  <p className="mb-2 text-xs text-ink-300">Drag a page to reorder it.</p>
                   <RentalPageThumbs
                     productId={productId}
                     images={currentFiles.rentalPageImages ?? []}
@@ -1544,12 +1545,14 @@ function RentalPageThumbs({
   setError: (message: string | null) => void;
 }) {
   const [isSaving, setIsSaving] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [failedIndexes, setFailedIndexes] = useState<Set<number>>(new Set());
 
   if (images.length === 0) return null;
 
-  async function move(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= images.length) return;
+  async function commitOrder(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return;
 
     const pathnames = images.map((src) => pathnameFromRentalUrl(src));
     if (pathnames.some((p) => !p)) {
@@ -1557,7 +1560,8 @@ function RentalPageThumbs({
       return;
     }
     const reordered = [...(pathnames as string[])];
-    [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
 
     setIsSaving(true);
     setError(null);
@@ -1579,39 +1583,57 @@ function RentalPageThumbs({
   }
 
   return (
-    <ol className="flex max-w-full gap-2 overflow-x-auto pb-1">
+    <ol className="grid grid-cols-4 gap-2.5 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
       {images.map((src, index) => (
-        <li key={src} className="w-20 shrink-0 rounded-lg border border-ink-100 bg-cream-50 p-1">
+        <li
+          key={src}
+          draggable={!isSaving}
+          onDragStart={() => setDragIndex(index)}
+          onDragEnter={() => {
+            if (dragIndex !== null && dragIndex !== index) setDragOverIndex(index);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (dragIndex !== null) commitOrder(dragIndex, index);
+            setDragIndex(null);
+            setDragOverIndex(null);
+          }}
+          onDragEnd={() => {
+            setDragIndex(null);
+            setDragOverIndex(null);
+          }}
+          className={`rounded-lg border p-1 transition-colors ${
+            dragOverIndex === index
+              ? "border-sage-500 bg-sage-50"
+              : dragIndex === index
+                ? "border-ink-200 bg-cream-100 opacity-50"
+                : "border-ink-100 bg-cream-50"
+          } ${isSaving ? "cursor-wait" : "cursor-grab active:cursor-grabbing"}`}
+        >
           <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
-            {/* eslint-disable-next-line @next/next/no-img-element -- next/image's
-                optimizer fetches this URL server-side without our admin session
-                cookie, so it 400s; this route is admin-authenticated and not
-                cacheable/optimizable by a third party anyway. */}
-            <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            {failedIndexes.has(index) ? (
+              <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-ink-300">
+                Failed to load
+              </div>
+            ) : (
+              // next/image's optimizer fetches this URL server-side without our
+              // admin session cookie, so it 400s; this route is admin-authenticated
+              // and not cacheable/optimizable by a third party anyway.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={src}
+                alt=""
+                loading="lazy"
+                draggable={false}
+                className="absolute inset-0 h-full w-full select-none object-cover"
+                onError={() => setFailedIndexes((current) => new Set(current).add(index))}
+              />
+            )}
           </div>
           <p className="mt-1 truncate text-center text-[10px] font-semibold text-ink-400" title={rentalPageDisplayName(src, index)}>
             {rentalPageDisplayName(src, index)}
           </p>
-          <div className="mt-1 flex items-center justify-center gap-1">
-            <button
-              type="button"
-              disabled={index === 0 || isSaving}
-              onClick={() => move(index, -1)}
-              aria-label="Move page earlier"
-              className="tap-target rounded bg-cream-100 px-1.5 py-0.5 text-[10px] font-bold text-ink-500 hover:bg-cream-200 disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              ←
-            </button>
-            <button
-              type="button"
-              disabled={index === images.length - 1 || isSaving}
-              onClick={() => move(index, 1)}
-              aria-label="Move page later"
-              className="tap-target rounded bg-cream-100 px-1.5 py-0.5 text-[10px] font-bold text-ink-500 hover:bg-cream-200 disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              →
-            </button>
-          </div>
         </li>
       ))}
     </ol>
