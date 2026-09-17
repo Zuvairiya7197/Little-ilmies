@@ -53,6 +53,11 @@
     max-width: 100%;
     overflow-x: hidden;
     font-feature-settings: "kern" 1, "liga" 1;
+    /* Removes the default gray/blue flash mobile browsers draw on tap —
+       our own :active press styles (tap-target below) replace it, so the
+       two don't fight and the built-in one doesn't look like a stray
+       flicker before our styling kicks in. */
+    -webkit-tap-highlight-color: transparent;
   }
 
   @supports (width: 100dvw) {
@@ -119,9 +124,14 @@
     @apply mx-auto w-full max-w-content px-4 xs:px-5 sm:px-6 lg:px-8;
   }
 
-  /* Minimum comfortable tap target on touch devices */
+  /* Minimum comfortable tap target on touch devices, plus a fast,
+     consistent "this registered" press-down feedback for every tappable
+     element that uses it — not just buttons with their own btn-* active
+     styles. duration-100 (rather than the ~200ms used for hover
+     transitions elsewhere) is deliberate: a press needs to feel instant,
+     while a hover effect can afford to ease in. */
   .tap-target {
-    @apply min-h-[44px] min-w-[44px];
+    @apply min-h-[44px] min-w-[44px] transition-transform duration-100 active:scale-95;
   }
 
   .btn-primary {

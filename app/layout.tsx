@@ -3,6 +3,7 @@ import { Baloo_2, Nunito } from "next/font/google";
 import "@/styles/globals.css";
 import { StorefrontChrome } from "@/components/store/storefront-chrome";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
+import { ActiveStateFix } from "@/components/providers/active-state-fix";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
 import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
@@ -75,6 +76,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${baloo.variable} ${nunito.variable}`}>
       <body className="flex min-h-screen flex-col bg-cream font-sans text-ink-500">
+        <ActiveStateFix />
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
         <a

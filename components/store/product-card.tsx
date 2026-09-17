@@ -28,7 +28,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
   const previewAvailable = product.hasFreePreview && previewImages.length > 0;
 
   return (
-    <div className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1">
+    <div className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-cream-50 shadow-clay transition-transform duration-300 hover:-translate-y-1 has-[a:active]:scale-[0.97] has-[a:active]:duration-100">
       <Link
         href={`/product/${product.slug}`}
         className="absolute inset-0 z-[1]"
