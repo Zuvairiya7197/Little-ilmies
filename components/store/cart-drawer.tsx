@@ -123,7 +123,7 @@ export function CartDrawer() {
                   ))}
                 </ul>
 
-                <div className="safe-bottom border-t border-ink-100 px-5 py-5">
+                <div className="shrink-0 border-t border-ink-100 px-5 pb-[max(env(safe-area-inset-bottom),var(--mobile-nav-height))] pt-5 xl:pb-5">
                   <div className="mb-4 flex items-center justify-between">
                     <span className="text-sm font-medium text-ink-400">Subtotal</span>
                     <span className="font-display text-lg font-semibold text-ink-600">

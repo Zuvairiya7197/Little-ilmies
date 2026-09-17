@@ -77,7 +77,7 @@ export function FilterDrawer({
               <FilterPanel categories={categories} showHeading={false} />
             </div>
 
-            <div className="safe-bottom flex gap-3 border-t border-ink-100 p-5">
+            <div className="flex shrink-0 gap-3 border-t border-ink-100 px-5 pb-[max(env(safe-area-inset-bottom),var(--mobile-nav-height))] pt-5">
               <button type="button" onClick={clearAll} className="btn-secondary flex-1">
                 Clear
               </button>

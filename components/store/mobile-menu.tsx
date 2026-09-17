@@ -162,7 +162,7 @@ export function MobileMenu({
               </ul>
             </nav>
 
-            <div className="safe-bottom flex flex-col gap-2 border-t border-ink-100 p-5">
+            <div className="flex shrink-0 flex-col gap-2 border-t border-ink-100 px-5 pb-[max(env(safe-area-inset-bottom),var(--mobile-nav-height))] pt-5">
               <Link href="/wishlist" onClick={onClose} className="btn-secondary w-full">
                 <Heart className="h-4 w-4" aria-hidden="true" />
                 Wishlist
