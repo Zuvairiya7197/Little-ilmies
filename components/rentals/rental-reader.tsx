@@ -287,7 +287,9 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
               key={pageSrc}
               src={pageSrc}
               alt={`${title} — page ${pageIndex + 1}`}
-              className="pointer-events-none block h-full w-full select-none object-contain"
+              className={`pointer-events-none block select-none object-contain ${
+                zoom === 1 ? "h-full w-full" : "h-auto w-full"
+              }`}
               draggable={false}
             />
             <div
