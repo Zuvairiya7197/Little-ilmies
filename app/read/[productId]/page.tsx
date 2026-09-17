@@ -54,7 +54,10 @@ export default async function RentalReaderPage({ params }: PageProps) {
     );
   }
 
-  const watermarkLabel = `Licensed to ${session.user.email ?? session.user.name ?? "you"} • Order #${rental.orderId.slice(-8).toUpperCase()}`;
+  // Order ID alone is enough to trace a leaked page back to the rental it
+  // came from — the customer's email doesn't need to be embedded in every
+  // page image just for that, and showing it was needlessly identifying.
+  const watermarkLabel = `Little Ilmies • Order #${rental.orderId.slice(-8).toUpperCase()}`;
 
   return (
     <RentalReader

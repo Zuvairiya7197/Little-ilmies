@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Maximize, Minimize, ZoomIn, ZoomOut } from "lucide-react";
 
@@ -22,11 +22,14 @@ function formatDaysRemaining(expiresAt: string) {
   return `${daysRemaining} days remaining`;
 }
 
+const SWIPE_THRESHOLD_PX = 50;
+
 export function RentalReader({ productId, title, pageCount, expiresAt, watermarkLabel }: RentalReaderProps) {
   const [pageIndex, setPageIndex] = useState(0);
   const [zoomStep, setZoomStep] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [remainingLabel, setRemainingLabel] = useState(() => formatDaysRemaining(expiresAt));
+  const touchStartX = useRef<number | null>(null);
 
   const zoom = ZOOM_STEPS[zoomStep];
 
@@ -36,6 +39,22 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
     },
     [pageCount]
   );
+
+  function onTouchStart(event: React.TouchEvent) {
+    // Swiping to change pages only makes sense at 1x zoom — zoomed in, a
+    // horizontal drag needs to pan/scroll across the image instead, so
+    // it'd fight with page navigation otherwise.
+    touchStartX.current = zoom === 1 ? event.touches[0].clientX : null;
+  }
+
+  function onTouchEnd(event: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const deltaX = event.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return;
+    if (deltaX < 0) goToPage(pageIndex + 1);
+    else goToPage(pageIndex - 1);
+  }
 
   useEffect(() => {
     const interval = setInterval(() => setRemainingLabel(formatDaysRemaining(expiresAt)), 60_000);
@@ -80,8 +99,6 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
 
   const pageSrc = useMemo(() => `/api/rentals/${productId}/pages/${pageIndex}`, [productId, pageIndex]);
 
-  const watermarkTiles = useMemo(() => Array.from({ length: 12 }, (_, i) => i), []);
-
   return (
     <main className="flex h-screen flex-col bg-ink-700">
       <div className="flex flex-wrap items-center justify-between gap-3 bg-cream-50 px-4 py-3 shadow-soft">
@@ -105,11 +122,13 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
       <div
         className="relative flex-1 select-none overflow-auto bg-ink-700"
         onContextMenu={(event) => event.preventDefault()}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
-        <div className="flex min-h-full items-center justify-center p-4">
+        <div className="flex min-h-full w-fit min-w-full items-center justify-center p-4">
           <div
             className="relative overflow-hidden rounded-lg bg-cream-50 shadow-clay"
-            style={{ width: `${zoom * 100}%`, maxWidth: zoom === 1 ? "48rem" : "none" }}
+            style={{ width: `min(48rem, ${zoom * 100}vw - 2rem)` }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- intentionally bypassing next/image's optimizer/proxy for protected rental content */}
             <img
@@ -121,16 +140,11 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex flex-wrap content-around justify-around overflow-hidden opacity-[0.12]"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-[0.07]"
             >
-              {watermarkTiles.map((i) => (
-                <span
-                  key={i}
-                  className="-rotate-[30deg] whitespace-nowrap text-xs font-semibold text-ink-900 sm:text-sm"
-                >
-                  {watermarkLabel}
-                </span>
-              ))}
+              <span className="-rotate-[30deg] whitespace-nowrap text-2xl font-bold text-ink-900 sm:text-4xl">
+                {watermarkLabel}
+              </span>
             </div>
           </div>
         </div>
@@ -160,7 +174,7 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
             type="button"
             onClick={toggleFullscreen}
             aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            className="tap-target hidden h-9 w-9 items-center justify-center rounded-full text-ink-500 hover:bg-ink-50 sm:flex"
+            className="tap-target flex h-9 w-9 items-center justify-center rounded-full text-ink-500 hover:bg-ink-50"
           >
             {isFullscreen ? <Minimize className="h-4 w-4" aria-hidden="true" /> : <Maximize className="h-4 w-4" aria-hidden="true" />}
           </button>
