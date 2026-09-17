@@ -199,16 +199,16 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
               </Link>
 
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold uppercase tracking-wide text-blossom-500 sm:text-base xl:text-[10px]">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-blossom-500 sm:text-base xl:text-[10px]">
                   {item.categoryName}
                 </p>
                 <Link href={`/product/${item.slug}`}>
-                  <h3 className="mt-2 line-clamp-2 font-display text-base font-bold leading-snug text-ink-700 hover:text-blossom-600 xl:mt-0.5 xl:line-clamp-1 xl:text-sm">
+                  <h3 className="mt-1.5 line-clamp-2 font-display text-sm font-bold leading-snug text-ink-700 hover:text-blossom-600 sm:text-base xl:mt-0.5 xl:line-clamp-1 xl:text-sm">
                     {item.title}
                   </h3>
                 </Link>
-                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-400 sm:mt-4 sm:text-sm xl:mt-1 xl:line-clamp-1 xl:text-xs">{item.shortDescription}</p>
-                <div className="mt-3 flex flex-wrap gap-2 text-sm font-medium text-ink-400 sm:mt-5 sm:gap-4 sm:text-sm xl:mt-1.5 xl:gap-3 xl:text-[11px]">
+                <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-ink-400 sm:mt-4 sm:text-sm xl:mt-1 xl:line-clamp-1 xl:text-xs">{item.shortDescription}</p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs font-medium text-ink-400 sm:mt-5 sm:gap-4 sm:text-sm xl:mt-1.5 xl:gap-3 xl:text-[11px]">
                   <span>{item.pageCount} pages</span>
                   <span aria-hidden="true">•</span>
                   <span>Ages {item.ageRange}</span>
@@ -236,7 +236,7 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
                 </button>
                 <Link
                   href={`/product/${item.slug}`}
-                  className="tap-target flex items-center justify-center rounded-full bg-ink-600 px-5 py-2.5 text-base font-bold text-cream-50 shadow-clay-primary sm:px-9 sm:py-3 sm:text-sm xl:px-4 xl:py-0 xl:text-xs"
+                  className="tap-target flex items-center justify-center rounded-full bg-ink-600 px-5 py-2.5 text-sm font-bold text-cream-50 shadow-clay-primary sm:px-9 sm:py-3 xl:px-4 xl:py-2 xl:text-xs"
                 >
                   View
                 </Link>
@@ -282,12 +282,12 @@ function AvailableBooks({
     <section className="mt-12 xl:mt-4 xl:rounded-3xl xl:bg-cream-50/95 xl:p-4 xl:shadow-clay-sm">
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink-700 xl:gap-2 xl:text-base">
-          <Star className="h-6 w-6 fill-lemon-400 text-lemon-400 sm:h-8 sm:w-8 xl:h-4 xl:w-4" aria-hidden="true" />
+          <Star className="h-4 w-4 shrink-0 fill-lemon-400 text-lemon-400 sm:h-8 sm:w-8 xl:h-4 xl:w-4" aria-hidden="true" />
           {title}
         </h2>
-        <Link href="/shop" className="flex items-center gap-1 text-base font-bold text-violet-700 hover:text-blossom-600 sm:gap-2 sm:text-sm xl:gap-1 xl:text-xs xl:text-ink-600">
+        <Link href="/shop" className="flex items-center gap-1 text-sm font-bold text-violet-700 hover:text-blossom-600 sm:gap-2 xl:gap-1 xl:text-xs xl:text-ink-600">
           View all books
-          <ChevronRight className="h-5 w-5 xl:h-3.5 xl:w-3.5" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 xl:h-3.5 xl:w-3.5" aria-hidden="true" />
         </Link>
       </div>
       <div className="mt-7 xl:mt-3">
@@ -299,15 +299,15 @@ function AvailableBooks({
 
 function TrustStrip() {
   return (
-    <section className="mx-auto mt-10 grid max-w-[48rem] grid-cols-2 gap-y-6 rounded-3xl bg-cream-50/90 px-4 py-7 shadow-soft sm:grid-cols-4 sm:gap-y-0 xl:mt-5 xl:max-w-6xl xl:grid-cols-4 xl:gap-3 xl:p-3">
+    <section className="mx-auto mt-8 grid max-w-[48rem] grid-cols-2 gap-4 rounded-2xl bg-cream-50/90 p-4 shadow-soft sm:grid-cols-4 sm:gap-y-0 sm:rounded-3xl sm:px-4 sm:py-7 xl:mt-5 xl:max-w-6xl xl:grid-cols-4 xl:gap-3 xl:p-3">
       {wishlistTrustPoints.map(({ label, description, icon: Icon, tint }) => (
-        <div key={label} className="flex flex-col items-center gap-3 border-r border-ink-100 px-3 text-center even:border-r-0 sm:even:border-r sm:last:border-r-0 xl:flex-row xl:gap-3 xl:border-r-0 xl:px-0 xl:text-left">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cream-100 shadow-clay-sm sm:h-14 sm:w-14 xl:h-10 xl:w-10">
-            <Icon className={`h-7 w-7 sm:h-8 sm:w-8 xl:h-5 xl:w-5 ${tint}`} aria-hidden="true" />
+        <div key={label} className="flex flex-col items-center gap-2 text-center sm:gap-3 sm:border-r sm:border-ink-100 sm:px-3 sm:even:border-r sm:last:border-r-0 xl:flex-row xl:gap-3 xl:border-r-0 xl:px-0 xl:text-left">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream-100 shadow-clay-sm sm:h-14 sm:w-14 sm:rounded-2xl xl:h-10 xl:w-10">
+            <Icon className={`h-5 w-5 sm:h-8 sm:w-8 xl:h-5 xl:w-5 ${tint}`} aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold leading-tight text-ink-700 sm:text-base xl:text-xs">{label}</h2>
-            <p className="mt-2 text-sm leading-snug text-ink-500 sm:text-base xl:mt-0.5 xl:text-xs xl:leading-tight xl:text-ink-400">{description}</p>
+            <h2 className="text-xs font-bold leading-tight text-ink-700 sm:text-base xl:text-xs">{label}</h2>
+            <p className="mt-1 text-[11px] leading-snug text-ink-500 sm:mt-2 sm:text-base xl:mt-0.5 xl:text-xs xl:leading-tight xl:text-ink-400">{description}</p>
           </div>
         </div>
       ))}
