@@ -568,6 +568,7 @@ export function ProductForm({
                     </button>
                   </div>
                 ) : null}
+                <DirectPreviewUploader productId={productId} refresh={router.refresh} setError={setSubmitError} />
               </CurrentFileStatus>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-ink-300">
@@ -635,8 +636,9 @@ export function ProductForm({
               </div>
             )}
             <p className="rounded-xl bg-cream-50 px-3 py-2 text-xs text-ink-400">
-              Free preview pages are now set from the Rent &amp; Read card above — upload Rent &amp; Read
-              pages first, then use &quot;Use these pages as free preview&quot; to pick which ones go public.
+              For Rent &amp; Read books, upload rental pages above and use &quot;Use these pages as free
+              preview&quot; to pick which ones go public. For books without Rent &amp; Read, upload preview
+              pages directly above instead.
             </p>
           </div>
         </div>
@@ -1391,6 +1393,62 @@ function PreviewThumbs({
         </li>
       ))}
     </ol>
+  );
+}
+
+/**
+ * Direct free-preview page uploader — for books that aren't Rent & Read
+ * enabled (no rental pages to copy from via "Use these pages as free
+ * preview" above), so there was otherwise no way to set a preview at
+ * all. Selecting files uploads and replaces the full preview set in one
+ * request via the existing FormData path on /api/admin/products/upload-preview.
+ */
+function DirectPreviewUploader({
+  productId,
+  refresh,
+  setError,
+}: {
+  productId: string;
+  refresh: () => void;
+  setError: (message: string | null) => void;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+
+  async function handleFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    setIsUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      Array.from(fileList).forEach((file) => fd.append("files", file));
+      fd.append("productId", productId);
+      await uploadFile("/api/admin/products/upload-preview", fd, "preview pages");
+      refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not upload preview pages.");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  return (
+    <label
+      className={`tap-target mt-3 flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${isUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+    >
+      {isUploading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />}
+      {isUploading ? "Uploading…" : "Upload preview pages (replaces current set)"}
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        disabled={isUploading}
+        className="sr-only"
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+    </label>
   );
 }
 
