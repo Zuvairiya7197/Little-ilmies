@@ -7,8 +7,11 @@ import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
 
 /**
  * Wraps every page in the storefront header/footer/mobile nav, except
- * /admin — the admin panel has its own sidebar/layout and must never show
- * the customer-facing chrome around it. usePathname() (client-side) is
+ * /admin and /read/[productId] — the admin panel has its own sidebar/
+ * layout, and the Rent & Read reader is a deliberately full-screen,
+ * distraction-free view (RentalReader renders its own h-screen main
+ * with its own header/toolbar) — neither should show the customer-
+ * facing storefront chrome around it. usePathname() (client-side) is
  * used instead of reading the route server-side in the root layout,
  * since that requires forwarding a custom header through middleware,
  * which proved unreliable in production behind this site's Cloudflare
@@ -22,9 +25,9 @@ export function StorefrontChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith("/admin") ?? false;
+  const isChromeless = pathname?.startsWith("/admin") || pathname?.startsWith("/read/");
 
-  if (isAdminRoute) {
+  if (isChromeless) {
     return (
       <main id="main-content" className="flex-1">
         {children}

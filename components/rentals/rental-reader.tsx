@@ -101,13 +101,14 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
 
   return (
     <main className="flex h-screen flex-col bg-ink-700">
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-cream-50 px-4 py-3 shadow-soft">
-        <Link href="/account/rentals" className="tap-target inline-flex items-center gap-2 text-sm font-bold text-ink-600">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-cream-50 px-4 py-2.5 shadow-soft">
+        <Link href="/account/rentals" className="tap-target inline-flex shrink-0 items-center gap-2 text-sm font-bold text-ink-600">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          My rentals
+          <span className="hidden xs:inline">My rentals</span>
         </Link>
-        <div className="min-w-0 text-center">
-          <h1 className="line-clamp-1 font-display text-lg font-bold text-ink-700">{title}</h1>
+
+        <div className="order-3 min-w-0 basis-full text-center sm:order-none sm:basis-auto sm:flex-1">
+          <h1 className="line-clamp-1 font-display text-base font-bold text-ink-700 sm:text-lg">{title}</h1>
           <p
             className="mt-0.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-ink-400"
             role="status"
@@ -116,42 +117,8 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
             {remainingLabel}
           </p>
         </div>
-        <span className="hidden w-24 lg:block" aria-hidden="true" />
-      </div>
 
-      <div
-        className="relative flex-1 select-none overflow-auto bg-ink-700"
-        onContextMenu={(event) => event.preventDefault()}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-        <div className="flex min-h-full w-fit min-w-full items-center justify-center p-4">
-          <div
-            className="relative overflow-hidden rounded-lg bg-cream-50 shadow-clay"
-            style={{ width: `min(48rem, ${zoom * 100}vw - 2rem)` }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- intentionally bypassing next/image's optimizer/proxy for protected rental content */}
-            <img
-              key={pageSrc}
-              src={pageSrc}
-              alt={`${title} — page ${pageIndex + 1}`}
-              className="pointer-events-none block w-full select-none"
-              draggable={false}
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-[0.07]"
-            >
-              <span className="-rotate-[30deg] whitespace-nowrap text-2xl font-bold text-ink-900 sm:text-4xl">
-                {watermarkLabel}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-cream-50 px-4 py-3 shadow-soft">
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => setZoomStep((s) => Math.max(s - 1, 0))}
@@ -178,33 +145,93 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
           >
             {isFullscreen ? <Minimize className="h-4 w-4" aria-hidden="true" /> : <Maximize className="h-4 w-4" aria-hidden="true" />}
           </button>
-        </div>
-
-        <div className="flex items-center gap-3">
+          <span className="mx-1 h-6 w-px bg-ink-100" aria-hidden="true" />
           <button
             type="button"
             onClick={() => goToPage(pageIndex - 1)}
             disabled={pageIndex === 0}
-            className="tap-target flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-ink-600 hover:bg-ink-50 disabled:opacity-30"
+            aria-label="Previous page"
+            className="tap-target flex h-9 w-9 items-center justify-center rounded-full text-ink-500 hover:bg-ink-50 disabled:opacity-30"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            Previous
           </button>
-          <span className="text-sm font-bold text-ink-500" aria-live="polite">
+          <span className="whitespace-nowrap text-xs font-bold text-ink-500 sm:text-sm" aria-live="polite">
             {pageIndex + 1} / {pageCount}
           </span>
           <button
             type="button"
             onClick={() => goToPage(pageIndex + 1)}
             disabled={pageIndex === pageCount - 1}
-            className="tap-target flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-ink-600 hover:bg-ink-50 disabled:opacity-30"
+            aria-label="Next page"
+            className="tap-target flex h-9 w-9 items-center justify-center rounded-full text-ink-500 hover:bg-ink-50 disabled:opacity-30"
           >
-            Next
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
+      </div>
 
-        <span className="hidden w-24 sm:block" aria-hidden="true" />
+      <div
+        className="relative flex-1 select-none overflow-auto bg-ink-700"
+        onContextMenu={(event) => event.preventDefault()}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Side arrow buttons — desktop/tablet only (a touch device already
+            has swipe, and these would just sit awkwardly on a narrow phone
+            screen next to a full-width page). Hidden once zoomed in, since
+            the page itself becomes horizontally scrollable at that point
+            and a fixed side button would float over the content instead of
+            beside it. */}
+        {zoom === 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => goToPage(pageIndex - 1)}
+              disabled={pageIndex === 0}
+              aria-label="Previous page"
+              className="tap-target absolute left-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-cream-50/90 text-ink-600 shadow-clay hover:bg-cream-50 disabled:pointer-events-none disabled:opacity-0 sm:flex"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => goToPage(pageIndex + 1)}
+              disabled={pageIndex === pageCount - 1}
+              aria-label="Next page"
+              className="tap-target absolute right-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-cream-50/90 text-ink-600 shadow-clay hover:bg-cream-50 disabled:pointer-events-none disabled:opacity-0 sm:flex"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </>
+        )}
+
+        <div className="flex min-h-full w-fit min-w-full items-center justify-center p-4">
+          <div
+            className="relative overflow-hidden rounded-lg bg-cream-50 shadow-clay"
+            style={{
+              width: zoom === 1 ? "auto" : `min(48rem, ${zoom * 100}vw - 2rem)`,
+              height: zoom === 1 ? "100%" : "auto",
+              maxWidth: zoom === 1 ? "min(48rem, 100%)" : "none",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- intentionally bypassing next/image's optimizer/proxy for protected rental content */}
+            <img
+              key={pageSrc}
+              src={pageSrc}
+              alt={`${title} — page ${pageIndex + 1}`}
+              className="pointer-events-none block h-full w-full select-none object-contain"
+              draggable={false}
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-[0.07]"
+            >
+              <span className="-rotate-[30deg] whitespace-nowrap text-2xl font-bold text-ink-900 sm:text-4xl">
+                {watermarkLabel}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );
