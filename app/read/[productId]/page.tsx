@@ -3,7 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getActiveRentalEntitlement } from "@/lib/rentals/entitlement";
-import { RentalReader } from "@/components/rentals/rental-reader";
+import { getPublishedProductBySlug } from "@/lib/db/catalog";
+import { resolveProductPrice } from "@/lib/pricing/resolve-price";
+import { calculateRentalPrice } from "@/lib/rentals/pricing";
+import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
+import { RentalReader, type RentalUpgradeInfo } from "@/components/rentals/rental-reader";
 
 interface PageProps {
   params: Promise<{ productId: string }>;
@@ -59,6 +63,28 @@ export default async function RentalReaderPage({ params }: PageProps) {
   // page image just for that, and showing it was needlessly identifying.
   const watermarkLabel = `Little Ilmies • Order #${rental.orderId.slice(-8).toUpperCase()}`;
 
+  // Same upgrade-credit calculation as ProductBuyBox on the product page —
+  // display-only, so it's fine to compute here too; /checkout re-derives
+  // the real charge itself from the paid rental order regardless of what
+  // the client shows.
+  const product = await getPublishedProductBySlug(rental.product.slug);
+  let upgrade: RentalUpgradeInfo | null = null;
+  if (product) {
+    const resolvedPrice = resolveProductPrice(product, RENTAL_CURRENCY_CODE);
+    const rentalPricePaid = calculateRentalPrice(resolvedPrice.salePrice ?? resolvedPrice.regularPrice);
+    upgrade = {
+      price: Math.max(0, (resolvedPrice.salePrice ?? resolvedPrice.regularPrice) - rentalPricePaid),
+      rentalPricePaid,
+      productSlug: product.slug,
+      coverImage: product.coverImage,
+      prices: product.prices,
+      ageRange: product.ageRange,
+      pageCount: product.pageCount,
+      isBestseller: product.isBestseller,
+      isNewArrival: product.isNewArrival,
+    };
+  }
+
   return (
     <RentalReader
       productId={productId}
@@ -66,6 +92,7 @@ export default async function RentalReaderPage({ params }: PageProps) {
       pageCount={pageCount}
       expiresAt={rental.rentalExpiresAt.toISOString()}
       watermarkLabel={watermarkLabel}
+      upgrade={upgrade}
     />
   );
 }

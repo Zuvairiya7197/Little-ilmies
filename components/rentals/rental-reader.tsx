@@ -2,7 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Maximize, Minimize, ZoomIn, ZoomOut } from "lucide-react";
+import { useCartStore } from "@/lib/store/use-cart-store";
+import { formatPrice } from "@/lib/utils/format";
+import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
+import type { ProductSummary } from "@/types/catalog";
+
+export interface RentalUpgradeInfo {
+  price: number;
+  rentalPricePaid: number;
+  productSlug: string;
+  coverImage: string;
+  prices: ProductSummary["prices"];
+  ageRange: ProductSummary["ageRange"];
+  pageCount: number;
+  isBestseller?: boolean;
+  isNewArrival?: boolean;
+}
 
 interface RentalReaderProps {
   productId: string;
@@ -10,6 +27,7 @@ interface RentalReaderProps {
   pageCount: number;
   expiresAt: string; // ISO
   watermarkLabel: string;
+  upgrade: RentalUpgradeInfo | null;
 }
 
 const ZOOM_STEPS = [1, 1.25, 1.5, 1.75, 2];
@@ -24,12 +42,33 @@ function formatDaysRemaining(expiresAt: string) {
 
 const SWIPE_THRESHOLD_PX = 50;
 
-export function RentalReader({ productId, title, pageCount, expiresAt, watermarkLabel }: RentalReaderProps) {
+export function RentalReader({ productId, title, pageCount, expiresAt, watermarkLabel, upgrade }: RentalReaderProps) {
+  const router = useRouter();
+  const addItem = useCartStore((s) => s.addItem);
   const [pageIndex, setPageIndex] = useState(0);
   const [zoomStep, setZoomStep] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [remainingLabel, setRemainingLabel] = useState(() => formatDaysRemaining(expiresAt));
+  const [showUpgradeBanner, setShowUpgradeBanner] = useState(true);
   const touchStartX = useRef<number | null>(null);
+
+  function upgradeNow() {
+    if (!upgrade) return;
+    addItem({
+      type: "UPGRADE",
+      cartItemId: `upgrade:${productId}`,
+      productId,
+      slug: upgrade.productSlug,
+      title,
+      coverImage: upgrade.coverImage,
+      prices: upgrade.prices,
+      ageRange: upgrade.ageRange,
+      pageCount: upgrade.pageCount,
+      isBestseller: upgrade.isBestseller,
+      isNewArrival: upgrade.isNewArrival,
+    });
+    router.push("/checkout");
+  }
 
   const zoom = ZOOM_STEPS[zoomStep];
 
@@ -169,6 +208,35 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
           </button>
         </div>
       </div>
+
+      {upgrade && showUpgradeBanner && (
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-sage-50 px-4 py-2.5 text-sm">
+          <p className="text-ink-700">
+            <span className="font-semibold">Want to keep this book?</span>{" "}
+            <span className="text-ink-500">
+              Buy the ebook and keep permanent download access. The {formatPrice(upgrade.rentalPricePaid, RENTAL_CURRENCY_CODE)}{" "}
+              you already paid is credited toward the purchase.
+            </span>
+          </p>
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={upgradeNow}
+              className="tap-target rounded-full bg-sage-600 px-4 py-2 text-xs font-bold text-cream-50 hover:bg-sage-700"
+            >
+              Buy for {formatPrice(upgrade.price, RENTAL_CURRENCY_CODE)}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowUpgradeBanner(false)}
+              aria-label="Dismiss"
+              className="tap-target flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-sage-100"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div
         className="relative flex-1 select-none overflow-auto bg-ink-700"
