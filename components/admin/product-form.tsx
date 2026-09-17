@@ -523,6 +523,23 @@ export function ProductForm({
                     </button>
                   </>
                 )}
+                <div className="mt-3">
+                  <InstantFileUpload
+                    key={`cover-${productId}`}
+                    label="Replace cover image"
+                    hideLabel
+                    accept="image/jpeg,image/png,image/webp"
+                    onUpload={async (file, onProgress) => {
+                      onProgress(0);
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      fd.append("productId", productId);
+                      await uploadFile("/api/admin/products/upload-cover", fd, "cover image");
+                      onProgress(100);
+                    }}
+                    onDone={router.refresh}
+                  />
+                </div>
               </CurrentFileStatus>
               <CurrentFileStatus
                 label="Main Product PDF"
@@ -542,6 +559,19 @@ export function ProductForm({
                     </button>
                   </>
                 )}
+                <div className="mt-3">
+                  <InstantFileUpload
+                    key={`pdf-${productId}`}
+                    label="Replace main product PDF"
+                    hideLabel
+                    accept="application/pdf"
+                    onUpload={async (file, onProgress) => {
+                      const blob = await uploadPdfToBlob(productId, file, onProgress);
+                      await attachUploadedPdf(productId, blob.pathname, file);
+                    }}
+                    onDone={router.refresh}
+                  />
+                </div>
               </CurrentFileStatus>
               <CurrentFileStatus
                 label="Free Preview"
@@ -572,75 +602,46 @@ export function ProductForm({
               </CurrentFileStatus>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-ink-300">
-              Choosing a new file below replaces the current upload when you save changes.
+              For Rent &amp; Read books, upload rental pages above and use &quot;Use these pages as free
+              preview&quot; to pick which ones go public instead of uploading preview pages separately here.
             </p>
           </div>
           )}
 
-          <div className={productId ? "flex flex-col gap-4" : "flex flex-col gap-4 xl:col-span-2"}>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {productId ? (
-                <InstantFileUpload
-                  key={`cover-${productId}`}
-                  label="Replace Cover Image"
-                  accept="image/jpeg,image/png,image/webp"
-                  onUpload={async (file, onProgress) => {
-                    onProgress(0);
-                    const fd = new FormData();
-                    fd.append("file", file);
-                    fd.append("productId", productId);
-                    await uploadFile("/api/admin/products/upload-cover", fd, "cover image");
-                    onProgress(100);
-                  }}
-                  onDone={router.refresh}
-                />
-              ) : (
+          {!productId && (
+            <div className="flex flex-col gap-4 xl:col-span-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FileField
                   label="Cover Image"
                   accept="image/jpeg,image/png,image/webp"
                   file={coverFile}
                   onChange={setCoverFile}
                 />
-              )}
-              {productId ? (
-                <InstantFileUpload
-                  key={`pdf-${productId}`}
-                  label="Replace Main Product PDF"
-                  accept="application/pdf"
-                  onUpload={async (file, onProgress) => {
-                    const blob = await uploadPdfToBlob(productId, file, onProgress);
-                    await attachUploadedPdf(productId, blob.pathname, file);
-                  }}
-                  onDone={router.refresh}
-                />
-              ) : (
                 <FileField
                   label="Main Product PDF"
                   accept="application/pdf"
                   file={pdfFile}
                   onChange={setPdfFile}
                 />
-              )}
-            </div>
-            {!productId && pdfUploadProgress !== null && (
-              <div className="rounded-xl bg-cream-50 px-3 py-2">
-                <div className="h-2 overflow-hidden rounded-full bg-ink-100">
-                  <div
-                    className="h-full rounded-full bg-sage-500 transition-all"
-                    style={{ width: `${pdfUploadProgress}%` }}
-                  />
-                </div>
-                <p className="mt-1.5 text-xs font-semibold text-ink-400">
-                  Uploading PDF {Math.round(pdfUploadProgress)}%
-                </p>
               </div>
-            )}
-            <p className="rounded-xl bg-cream-50 px-3 py-2 text-xs text-ink-400">
-              For Rent &amp; Read books, upload rental pages above and use &quot;Use these pages as free
-              preview&quot; to pick which ones go public. For books without Rent &amp; Read, upload preview
-              pages directly above instead.
-            </p>
-          </div>
+              {pdfUploadProgress !== null && (
+                <div className="rounded-xl bg-cream-50 px-3 py-2">
+                  <div className="h-2 overflow-hidden rounded-full bg-ink-100">
+                    <div
+                      className="h-full rounded-full bg-sage-500 transition-all"
+                      style={{ width: `${pdfUploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs font-semibold text-ink-400">
+                    Uploading PDF {Math.round(pdfUploadProgress)}%
+                  </p>
+                </div>
+              )}
+              <p className="rounded-xl bg-cream-50 px-3 py-2 text-xs text-ink-400">
+                Free preview pages and Rent &amp; Read pages can be uploaded once this product is saved.
+              </p>
+            </div>
+          )}
         </div>
         </details>
       </div>
@@ -1134,11 +1135,13 @@ function InstantFileUpload({
   accept,
   onUpload,
   onDone,
+  hideLabel = false,
 }: {
   label: string;
   accept: string;
   onUpload: (file: File, onProgress: (percentage: number) => void) => Promise<void>;
   onDone?: () => void;
+  hideLabel?: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
@@ -1162,7 +1165,7 @@ function InstantFileUpload({
 
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-ink-600">{label}</label>
+      {!hideLabel && <label className="mb-1.5 block text-sm font-semibold text-ink-600">{label}</label>}
       <div className="flex gap-2">
         <label
           className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${status === "uploading" ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
@@ -1400,8 +1403,12 @@ function PreviewThumbs({
  * Direct free-preview page uploader — for books that aren't Rent & Read
  * enabled (no rental pages to copy from via "Use these pages as free
  * preview" above), so there was otherwise no way to set a preview at
- * all. Selecting files uploads and replaces the full preview set in one
- * request via the existing FormData path on /api/admin/products/upload-preview.
+ * all. Uses the same presigned direct-to-B2 upload flow as rental pages
+ * (see RentalPagesUploader) rather than sending files through this
+ * Next.js route as a request body, which hit Vercel's inbound body-size
+ * limit (413) for anything beyond a few pages. Once every file is
+ * uploaded, a single JSON call replaces the product's full preview set
+ * with the new keys via the existing attachedPreviewSchema path.
  */
 function DirectPreviewUploader({
   productId,
@@ -1413,21 +1420,47 @@ function DirectPreviewUploader({
   setError: (message: string | null) => void;
 }) {
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   async function handleFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
     setIsUploading(true);
+    setProgress({ done: 0, total: files.length });
     setError(null);
     try {
-      const fd = new FormData();
-      Array.from(fileList).forEach((file) => fd.append("files", file));
-      fd.append("productId", productId);
-      await uploadFile("/api/admin/products/upload-preview", fd, "preview pages");
+      const pathnames: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const compressed = await compressImageInBrowser(files[i]);
+        const key = previewPathname(productId, files[i].name, i);
+        const contentType = compressed.type || "image/jpeg";
+        const { uploadUrl } = await getPresignedUploadUrl({
+          kind: "preview",
+          productId,
+          key,
+          contentType,
+          fileSize: compressed.size,
+        });
+        await uploadToPresignedUrl(uploadUrl, compressed, contentType, () => {});
+        pathnames.push(key);
+        setProgress({ done: i + 1, total: files.length });
+      }
+
+      const res = await fetch("/api/admin/products/upload-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, pathnames }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Could not save uploaded preview pages.");
+      }
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not upload preview pages.");
     } finally {
       setIsUploading(false);
+      setProgress(null);
     }
   }
 
@@ -1436,7 +1469,9 @@ function DirectPreviewUploader({
       className={`tap-target mt-3 flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${isUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
     >
       {isUploading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />}
-      {isUploading ? "Uploading…" : "Upload preview pages (replaces current set)"}
+      {isUploading
+        ? `Uploading ${progress?.done ?? 0}/${progress?.total ?? 0}…`
+        : "Upload preview pages (replaces current set)"}
       <input
         type="file"
         accept="image/jpeg,image/png,image/webp"
@@ -1450,6 +1485,12 @@ function DirectPreviewUploader({
       />
     </label>
   );
+}
+
+function previewPathname(productId: string, filename: string, index: number) {
+  const ext = filename.match(/\.(jpe?g|png|webp)$/i)?.[0]?.toLowerCase() ?? ".jpg";
+  const normalizedExt = ext === ".jpeg" ? ".jpg" : ext;
+  return `previews/${productId}/page-${index + 1}-${crypto.randomUUID()}${normalizedExt}`;
 }
 
 interface RentalPageUploadItem {
