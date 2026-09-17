@@ -67,22 +67,22 @@ function AccountActionCard({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-7 rounded-[1.4rem] bg-cream-50 px-8 py-6 shadow-clay-sm transition-transform hover:-translate-y-0.5 xl:gap-4 xl:rounded-2xl xl:p-3.5"
+      className="group flex items-center gap-3 rounded-2xl bg-cream-50 px-4 py-3.5 shadow-clay-sm transition-transform hover:-translate-y-0.5 xs:gap-4 xl:gap-4 xl:rounded-2xl xl:p-3.5"
     >
-      <span className={`relative flex h-[5.25rem] w-[5.25rem] shrink-0 items-center justify-center rounded-3xl shadow-soft xl:h-14 xl:w-14 xl:rounded-2xl ${tint}`}>
-        <Icon className="h-11 w-11 xl:h-7 xl:w-7" aria-hidden="true" />
+      <span className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-soft xs:h-14 xs:w-14 xl:h-14 xl:w-14 ${tint}`}>
+        <Icon className="h-5 w-5 xs:h-7 xs:w-7 xl:h-7 xl:w-7" aria-hidden="true" />
         {badge !== undefined && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blossom-500 px-1 text-[10px] font-bold text-cream-50">
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blossom-500 px-1 text-[9px] font-bold text-cream-50 xs:h-5 xs:min-w-5 xs:text-[10px]">
             {badge}
           </span>
         )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block font-display text-sm font-bold leading-tight text-ink-700">{title}</span>
-        <span className="mt-1.5 block text-[1.35rem] font-medium leading-snug text-ink-400 xl:mt-0.5 xl:text-xs">{description}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-ink-400 xl:mt-0.5 xl:text-xs">{description}</span>
       </span>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-blossom-600 transition-colors group-hover:bg-ink-600 group-hover:text-cream-50 xl:h-8 xl:w-8 xl:bg-blossom-50 xl:shadow-soft">
-        <ChevronRight className="h-8 w-8 xl:h-4 xl:w-4" aria-hidden="true" />
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-blossom-600 transition-colors group-hover:bg-ink-600 group-hover:text-cream-50 xs:h-8 xs:w-8 xl:h-8 xl:w-8 xl:bg-blossom-50 xl:shadow-soft">
+        <ChevronRight className="h-4 w-4 xs:h-4 xs:w-4 xl:h-4 xl:w-4" aria-hidden="true" />
       </span>
     </Link>
   );
@@ -132,19 +132,19 @@ export default async function AccountPage() {
 
       <div className="container-content relative">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-display text-[1.7rem] font-bold text-ink-700 xl:text-4xl">
+          <h1 className="font-display text-xl font-bold text-ink-700 xs:text-2xl xl:text-4xl">
             My Account <span className="text-blossom-400">⌁</span>
           </h1>
-          <p className="mt-5 text-sm font-semibold leading-relaxed text-ink-400 xl:mt-3 xl:text-sm">
-            Signed in as <br className="xl:hidden" />
+          <p className="mt-3 break-all text-xs font-semibold leading-relaxed text-ink-400 xs:text-sm xl:mt-3 xl:break-normal xl:text-sm">
+            Signed in as{" "}
             <span className="text-ink-700">{session.user.email}</span>{" "}
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink-600 align-middle text-cream-50 xl:h-5 xl:w-5">
-              <Heart className="h-4 w-4 fill-cream-50 xl:h-3 xl:w-3" aria-hidden="true" />
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-ink-600 align-middle text-cream-50">
+              <Heart className="h-3 w-3 fill-cream-50" aria-hidden="true" />
             </span>
           </p>
         </div>
 
-        <div className="mx-auto mt-10 flex max-w-[42rem] flex-col gap-4 xl:mt-5 xl:max-w-xl xl:gap-3">
+        <div className="mx-auto mt-6 flex max-w-[42rem] flex-col gap-3 xs:mt-8 xs:gap-4 xl:mt-5 xl:max-w-xl xl:gap-3">
           <AccountActionCard
             href="/account/purchase-history"
             icon={Receipt}
@@ -183,19 +183,19 @@ export default async function AccountPage() {
           />
         </div>
 
-        <div className="mx-auto mt-6 max-w-[42rem] xl:mt-4 xl:max-w-xl">
-          <LogoutButton className="tap-target flex w-full items-center justify-center gap-4 rounded-2xl bg-blossom-50/70 py-5 text-sm font-bold text-blossom-600 shadow-clay-sm transition-colors hover:bg-blossom-100 [&_svg]:h-7 [&_svg]:w-7 xl:gap-2 xl:py-3 xl:text-sm xl:[&_svg]:h-4 xl:[&_svg]:w-4" />
+        <div className="mx-auto mt-4 max-w-[42rem] xs:mt-6 xl:mt-4 xl:max-w-xl">
+          <LogoutButton className="tap-target flex w-full items-center justify-center gap-2 rounded-2xl bg-blossom-50/70 py-3 text-sm font-bold text-blossom-600 shadow-clay-sm transition-colors hover:bg-blossom-100 [&_svg]:h-4 [&_svg]:w-4 xs:py-4 xl:py-3 xl:text-sm" />
         </div>
 
-        <section className="mx-auto mt-9 grid max-w-[48rem] grid-cols-4 gap-0 rounded-3xl bg-cream-50/90 px-4 py-7 shadow-soft xl:mt-5 xl:max-w-5xl xl:grid-cols-4 xl:gap-3 xl:p-3">
+        <section className="mx-auto mt-6 grid max-w-[48rem] grid-cols-2 gap-4 rounded-2xl bg-cream-50/90 p-4 shadow-soft xs:grid-cols-4 xs:gap-0 xs:rounded-3xl xs:px-4 xs:py-7 xl:mt-5 xl:max-w-5xl xl:grid-cols-4 xl:gap-3 xl:p-3">
           {trustItems.map(({ icon: Icon, title, body, tint }) => (
-            <div key={title} className="flex flex-col items-center gap-3 border-r border-ink-100 px-3 text-center last:border-r-0 xl:flex-row xl:gap-3 xl:px-0 xl:pr-3 xl:text-left">
-              <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-soft xl:h-12 xl:w-12 ${tint}`}>
-                <Icon className="h-8 w-8 xl:h-6 xl:w-6" aria-hidden="true" />
+            <div key={title} className="flex flex-col items-center gap-2 text-center xs:gap-3 xs:border-r xs:border-ink-100 xs:px-3 xs:last:border-r-0 xl:flex-row xl:gap-3 xl:px-0 xl:pr-3 xl:text-left">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-soft xs:h-14 xs:w-14 xs:rounded-2xl xl:h-12 xl:w-12 ${tint}`}>
+                <Icon className="h-5 w-5 xs:h-8 xs:w-8 xl:h-6 xl:w-6" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <h2 className="text-xs font-bold leading-tight text-ink-700">{title}</h2>
-                <p className="mt-1 text-xs leading-snug text-ink-500 xl:mt-0.5 xl:text-[11px] xl:leading-tight xl:text-ink-400">{body}</p>
+                <h2 className="text-[11px] font-bold leading-tight text-ink-700 xs:text-xs">{title}</h2>
+                <p className="mt-1 text-[11px] leading-snug text-ink-500 xs:text-xs xl:mt-0.5 xl:text-[11px] xl:leading-tight xl:text-ink-400">{body}</p>
               </div>
             </div>
           ))}
