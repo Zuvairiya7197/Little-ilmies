@@ -153,16 +153,27 @@ export function ProductBuyBox({
             Read Now
           </Link>
         )}
-        {showRentalOffer && (
-          <button
-            type="button"
-            onClick={rentNow}
-            className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-sage-50 px-2 py-3 text-sm font-semibold text-sage-800 shadow-soft transition-all active:scale-95 xs:text-base sm:gap-3 sm:py-4 sm:text-lg"
-          >
-            Rent & Read - {formatPrice(rentalPrice, RENTAL_CURRENCY_CODE)}
-          </button>
-        )}
       </div>
+
+      {showRentalOffer && (
+        <div className="mt-5 rounded-2xl border border-sage-200 bg-sage-50 p-4 lg:hidden">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-display text-lg font-semibold text-ink-700">Rent & Read</p>
+              <p className="mt-1 text-sm text-ink-500">
+                Read online for {RENTAL_DURATION_DAYS} days. Online reading only — downloading and printing are
+                not supported.
+              </p>
+            </div>
+            <span className="shrink-0 font-display text-xl font-semibold text-sage-700">
+              {formatPrice(rentalPrice, RENTAL_CURRENCY_CODE)}
+            </span>
+          </div>
+          <button type="button" onClick={rentNow} className="btn-secondary mt-4 w-full justify-center">
+            Rent & Read
+          </button>
+        </div>
+      )}
 
       <div className="hidden rounded-3xl bg-cream-50 p-6 shadow-clay lg:block">
       {owns ? (
