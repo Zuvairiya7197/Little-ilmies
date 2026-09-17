@@ -51,7 +51,7 @@ export function CartDrawer() {
             role="dialog"
             aria-modal="true"
             aria-label="Shopping cart"
-            className="fixed inset-y-0 right-0 z-[90] flex w-full max-w-md flex-col bg-cream-50 shadow-lifted"
+            className="fixed inset-y-0 right-0 z-[90] flex h-[100dvh] w-full max-w-md flex-col bg-cream-50 shadow-lifted"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}

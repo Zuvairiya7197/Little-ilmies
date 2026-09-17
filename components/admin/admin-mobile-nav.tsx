@@ -39,7 +39,7 @@ export function AdminMobileNav() {
               role="dialog"
               aria-modal="true"
               aria-label="Admin menu"
-              className="fixed inset-y-0 left-0 z-[90] w-[80%] max-w-xs bg-cream-50 shadow-lifted lg:hidden"
+              className="fixed inset-y-0 left-0 z-[90] h-[100dvh] w-[80%] max-w-xs bg-cream-50 shadow-lifted lg:hidden"
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}

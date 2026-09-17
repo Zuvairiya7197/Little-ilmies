@@ -53,7 +53,7 @@ export function FilterDrawer({
             role="dialog"
             aria-modal="true"
             aria-label="Filter books"
-            className="fixed inset-y-0 left-0 z-[90] flex w-[88%] max-w-sm flex-col bg-cream-50 shadow-lifted md:hidden"
+            className="fixed inset-y-0 left-0 z-[90] flex h-[100dvh] w-[88%] max-w-sm flex-col bg-cream-50 shadow-lifted md:hidden"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}

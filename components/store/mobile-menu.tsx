@@ -52,7 +52,7 @@ export function MobileMenu({
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
-            className="fixed inset-y-0 left-0 z-[90] flex w-[85%] max-w-sm flex-col bg-cream-50 shadow-lifted md:hidden"
+            className="fixed inset-y-0 left-0 z-[90] flex h-[100dvh] w-[85%] max-w-sm flex-col bg-cream-50 shadow-lifted md:hidden"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
