@@ -190,77 +190,91 @@ export default async function PurchaseHistoryPage() {
                         year: "numeric",
                       })
                     : null;
+                  const statusBadge = isRental ? (
+                    rentalExpired ? (
+                      <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-ink-50 px-2.5 py-1 text-[11px] font-bold text-ink-400 xl:gap-2 xl:px-4 xl:py-2 xl:text-sm">
+                        Expired
+                        <Clock className="h-3 w-3 xl:h-4 xl:w-4" aria-hidden="true" />
+                      </span>
+                    ) : (
+                      <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-sage-50 px-2.5 py-1 text-[11px] font-bold text-sage-700 xl:gap-2 xl:px-4 xl:py-2 xl:text-sm">
+                        Active Rental
+                        <Clock className="h-3 w-3 xl:h-4 xl:w-4" aria-hidden="true" />
+                      </span>
+                    )
+                  ) : (
+                    <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-sage-50 px-2.5 py-1 text-[11px] font-bold text-sage-700 xl:gap-2 xl:px-4 xl:py-2 xl:text-sm">
+                      Completed
+                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sage-500 text-cream-50 xl:h-5 xl:w-5">
+                        <Check className="h-2.5 w-2.5 xl:h-3.5 xl:w-3.5" aria-hidden="true" />
+                      </span>
+                    </span>
+                  );
+
+                  const actionButton = isRental ? (
+                    rentalExpired ? (
+                      <Link
+                        href={firstItem.slug ? `/product/${firstItem.slug}` : "/account/rentals"}
+                        className="tap-target inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gold-200 px-3 py-1.5 text-xs font-bold text-ink-600 hover:bg-gold-50 xl:gap-2 xl:px-4 xl:py-2 xl:text-sm"
+                      >
+                        <ShoppingBag className="h-3.5 w-3.5 xl:h-4 xl:w-4" aria-hidden="true" />
+                        Buy &amp; Download
+                      </Link>
+                    ) : (
+                      <Link
+                        href={firstItem.productId ? `/read/${firstItem.productId}` : "/account/rentals"}
+                        className="tap-target inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gold-200 px-3 py-1.5 text-xs font-bold text-ink-600 hover:bg-gold-50 xl:gap-2 xl:px-4 xl:py-2 xl:text-sm"
+                      >
+                        <BookOpen className="h-3.5 w-3.5 xl:h-4 xl:w-4" aria-hidden="true" />
+                        Read
+                      </Link>
+                    )
+                  ) : (
+                    <Link
+                      href="/account/downloads"
+                      className="tap-target inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gold-200 px-3 py-1.5 text-xs font-bold text-ink-600 hover:bg-gold-50 xl:gap-2 xl:px-4 xl:py-2 xl:text-sm"
+                    >
+                      <Download className="h-3.5 w-3.5 xl:h-4 xl:w-4" aria-hidden="true" />
+                      Download
+                    </Link>
+                  );
+
                   return (
                     <div
                       key={order.id}
-                      className="grid gap-4 rounded-2xl border border-ink-100 bg-cream-50 p-3 shadow-soft xl:grid-cols-[1fr_1.4fr_2.2fr_1.1fr_1.4fr_1.7fr] xl:items-center xl:px-5"
+                      className="rounded-xl border border-ink-100 bg-cream-50 p-3 shadow-soft xl:grid xl:grid-cols-[1fr_1.4fr_2.2fr_1.1fr_1.4fr_1.7fr] xl:items-center xl:gap-4 xl:rounded-2xl xl:px-5 xl:py-3"
                     >
-                      <p className="font-semibold text-ink-500">#ILM-{String(index + 1).padStart(4, "0")}</p>
-                      <p className="font-medium text-ink-500">{date}</p>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between gap-2 xl:contents">
+                        <p className="text-xs font-semibold text-ink-500 xl:text-base">#ILM-{String(index + 1).padStart(4, "0")}</p>
+                        <p className="text-xs font-medium text-ink-400 xl:text-base xl:text-ink-500">{date}</p>
+                      </div>
+
+                      <div className="mt-2 flex items-center gap-2.5 xl:mt-0">
                         {firstItem && (
-                          <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-lg bg-blossom-50">
+                          <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded-md bg-blossom-50 xl:h-14 xl:w-11 xl:rounded-lg">
                             <Image src={firstItem.coverImage} alt="" fill sizes="44px" className="object-contain p-1" />
                           </div>
                         )}
-                        <div className="min-w-0">
-                          <p className="line-clamp-1 font-semibold text-ink-600">{firstItem?.title ?? "Order items"}</p>
-                          <p className="text-sm text-ink-400">
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-1 text-xs font-semibold text-ink-600 xl:text-base">{firstItem?.title ?? "Order items"}</p>
+                          <p className="text-[11px] text-ink-400 xl:text-sm">
                             {isRental
                               ? `Rent & Read${expiresAtLabel ? ` · ${rentalExpired ? "Expired" : "Expires"} ${expiresAtLabel}` : ""}`
                               : `${order.items.length} e-book`}
                           </p>
                         </div>
                       </div>
-                      <p className="font-semibold text-ink-600">{formatPrice(order.totalAmount, order.currencyCode)}</p>
-                      {isRental ? (
-                        rentalExpired ? (
-                          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-ink-50 px-4 py-2 text-sm font-bold text-ink-400">
-                            Expired
-                            <Clock className="h-4 w-4" aria-hidden="true" />
-                          </span>
-                        ) : (
-                          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sage-50 px-4 py-2 text-sm font-bold text-sage-700">
-                            Active Rental
-                            <Clock className="h-4 w-4" aria-hidden="true" />
-                          </span>
-                        )
-                      ) : (
-                        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-sage-50 px-4 py-2 text-sm font-bold text-sage-700">
-                          Completed
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sage-500 text-cream-50">
-                            <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                          </span>
-                        </span>
-                      )}
-                      <div className="flex items-center gap-4">
-                        {isRental ? (
-                          rentalExpired ? (
-                            <Link
-                              href={firstItem.slug ? `/product/${firstItem.slug}` : "/account/rentals"}
-                              className="tap-target inline-flex items-center gap-2 rounded-xl border border-gold-200 px-4 py-2 text-sm font-bold text-ink-600 hover:bg-gold-50"
-                            >
-                              <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-                              Buy &amp; Download
-                            </Link>
-                          ) : (
-                            <Link
-                              href={firstItem.productId ? `/read/${firstItem.productId}` : "/account/rentals"}
-                              className="tap-target inline-flex items-center gap-2 rounded-xl border border-gold-200 px-4 py-2 text-sm font-bold text-ink-600 hover:bg-gold-50"
-                            >
-                              <BookOpen className="h-4 w-4" aria-hidden="true" />
-                              Read
-                            </Link>
-                          )
-                        ) : (
-                          <Link
-                            href="/account/downloads"
-                            className="tap-target inline-flex items-center gap-2 rounded-xl border border-gold-200 px-4 py-2 text-sm font-bold text-ink-600 hover:bg-gold-50"
-                          >
-                            <Download className="h-4 w-4" aria-hidden="true" />
-                            Download
-                          </Link>
-                        )}
+
+                      <p className="hidden xl:block xl:font-semibold xl:text-ink-600">{formatPrice(order.totalAmount, order.currencyCode)}</p>
+                      <div className="hidden xl:block">{statusBadge}</div>
+                      <div className="hidden xl:flex xl:items-center xl:gap-4">{actionButton}</div>
+
+                      <div className="mt-2.5 flex items-center justify-between gap-2 xl:hidden">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-semibold text-ink-600">{formatPrice(order.totalAmount, order.currencyCode)}</p>
+                          {statusBadge}
+                        </div>
+                        {actionButton}
                       </div>
                     </div>
                   );

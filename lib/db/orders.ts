@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { CurrencyCode } from "@/types/pricing";
 import type { OrderRecord, DownloadRecord, OrderSummaryItem, RentalRecord } from "@/types/account";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
+import { productCoverUrl } from "@/lib/catalog-assets";
 
 /**
  * Purchase history and downloads must only ever be looked up by verified
@@ -55,7 +56,7 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
         productId: item.productId ?? undefined,
         slug: item.product.slug,
         title: item.product.title,
-        coverImage: item.product.coverImage,
+        coverImage: productCoverUrl(item.product.id, item.product.coverImage),
         unitPrice: item.unitPrice,
         rentalExpiresAt: rental?.rentalExpiresAt.toISOString(),
         rentalIsActive: rental ? rental.rentalExpiresAt > now : undefined,
@@ -77,7 +78,7 @@ export async function getRentalsForUser(userId: string): Promise<RentalRecord[]>
     productId: rental.productId,
     slug: rental.product.slug,
     title: rental.product.title,
-    coverImage: rental.product.coverImage,
+    coverImage: productCoverUrl(rental.product.id, rental.product.coverImage),
     startedAt: rental.rentalStartedAt.toISOString(),
     expiresAt: rental.rentalExpiresAt.toISOString(),
     isActive: rental.rentalExpiresAt > now,
@@ -117,7 +118,7 @@ export async function getDownloadsForUser(userId: string): Promise<DownloadRecor
     productId: download.productId,
     slug: download.product.slug,
     title: download.product.title,
-    coverImage: download.product.coverImage,
+    coverImage: productCoverUrl(download.product.id, download.product.coverImage),
     fileType: download.product.format as DownloadRecord["fileType"],
     purchasedAt: download.order.createdAt.toISOString(),
     downloadCount: download.downloadCount,
