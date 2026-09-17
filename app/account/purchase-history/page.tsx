@@ -74,10 +74,10 @@ export default async function PurchaseHistoryPage() {
       <div className="container-content relative">
         <div className={`relative min-h-0 text-center xl:text-left ${orders.length > 0 ? "xl:min-h-40" : ""}`}>
           <div className="xl:flex xl:flex-wrap xl:items-baseline xl:gap-4">
-            <h1 className="font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:text-4xl">
+            <h1 className="font-display text-xl font-bold leading-tight text-ink-700 xs:text-2xl xl:text-4xl">
               Purchase History <span className="text-blossom-400">♥</span>
             </h1>
-            <p className="mt-4 flex flex-col items-center gap-1 text-sm font-medium leading-snug text-ink-400 xl:mt-0 xl:flex-row xl:flex-wrap xl:items-center xl:gap-2 xl:text-base">
+            <p className="mt-2 break-all text-xs font-medium leading-snug text-ink-400 xs:text-sm xl:mt-0 xl:flex xl:flex-wrap xl:items-center xl:gap-2 xl:break-normal xl:text-base">
               {orders.length === 0 ? "Signed in as" : "Orders linked to"}{" "}
               <span className="font-bold text-ink-600">{session.user.email}</span>
               {orders.length === 0 && (
@@ -105,8 +105,8 @@ export default async function PurchaseHistoryPage() {
 
         {orders.length === 0 ? (
           <>
-          <div className="mx-auto mt-14 flex max-w-[47.5rem] flex-col items-center rounded-[2rem] bg-cream-50 px-8 pb-16 pt-12 text-center shadow-clay-sm xl:mt-0 xl:max-w-md xl:bg-transparent xl:p-0 xl:shadow-none">
-            <div className="relative aspect-[4/3] w-full max-w-[27rem] xl:max-w-xs">
+          <div className="mx-auto mt-8 flex max-w-[47.5rem] flex-col items-center rounded-2xl bg-cream-50 px-5 pb-8 pt-6 text-center shadow-clay-sm xs:mt-14 xs:px-8 xs:pb-16 xs:pt-12 xl:mt-0 xl:max-w-md xl:bg-transparent xl:p-0 xl:shadow-none">
+            <div className="relative aspect-[4/3] w-full max-w-[16rem] xs:max-w-[27rem] xl:max-w-xs">
               <Image
                 src="/images/no purchase yet.png"
                 alt="Clipboard illustration for no purchases yet"
@@ -116,31 +116,27 @@ export default async function PurchaseHistoryPage() {
                 priority
               />
             </div>
-            <h2 className="mt-5 font-display text-[1.7rem] font-bold leading-tight text-ink-700 xl:-mt-5 xl:text-3xl">
+            <h2 className="mt-3 font-display text-lg font-bold leading-tight text-ink-700 xs:mt-5 xs:text-2xl xl:-mt-5 xl:text-3xl">
               No purchases yet
             </h2>
-            <p className="mt-6 max-w-[34rem] text-sm font-medium leading-relaxed text-ink-500 xl:mt-1.5 xl:max-w-sm xl:text-base xl:text-ink-400">
-              Once you buy a book,
-              <br />
-              your orders and receipts
-              <br className="hidden xl:block" />
-              will show up here.
+            <p className="mt-3 max-w-xs text-sm font-medium leading-relaxed text-ink-500 xs:mt-6 xs:max-w-[34rem] xl:mt-1.5 xl:max-w-sm xl:text-base xl:text-ink-400">
+              Once you buy a book, your orders and receipts will show up here.
             </p>
-            <Link href="/shop" className="btn-primary mt-9 rounded-3xl px-11 py-5 text-sm xl:mt-3 xl:px-7 xl:py-2.5 xl:text-base">
-              <ShoppingBag className="h-8 w-8 xl:h-5 xl:w-5" aria-hidden="true" />
+            <Link href="/shop" className="btn-primary mt-6 rounded-3xl px-6 py-3 text-sm xl:mt-3 xl:px-7 xl:py-2.5 xl:text-base">
+              <ShoppingBag className="h-4 w-4 xl:h-5 xl:w-5" aria-hidden="true" />
               Browse Books
             </Link>
           </div>
 
-          <section className="mx-auto mt-11 grid max-w-[48rem] grid-cols-4 gap-0 rounded-3xl bg-cream-50/90 px-4 py-7 shadow-soft xl:hidden">
+          <section className="mx-auto mt-6 grid max-w-[48rem] grid-cols-2 gap-4 rounded-2xl bg-cream-50/90 p-4 shadow-soft xs:mt-11 xs:grid-cols-4 xs:gap-0 xs:rounded-3xl xs:px-4 xs:py-7 xl:hidden">
             {trustItems.map(({ icon: Icon, title, body, tint }) => (
-              <div key={title} className="flex flex-col items-center gap-3 border-r border-ink-100 px-3 text-center last:border-r-0">
-                <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-soft ${tint}`}>
-                  <Icon className="h-8 w-8" aria-hidden="true" />
+              <div key={title} className="flex flex-col items-center gap-2 text-center xs:gap-3 xs:border-r xs:border-ink-100 xs:px-3 xs:last:border-r-0">
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-soft xs:h-14 xs:w-14 xs:rounded-2xl ${tint}`}>
+                  <Icon className="h-5 w-5 xs:h-8 xs:w-8" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="text-xs font-bold leading-tight text-ink-700">{title}</h2>
-                  <p className="mt-1 text-xs leading-snug text-ink-500">{body}</p>
+                  <h2 className="text-[11px] font-bold leading-tight text-ink-700 xs:text-xs">{title}</h2>
+                  <p className="mt-1 text-[11px] leading-snug text-ink-500 xs:text-xs">{body}</p>
                 </div>
               </div>
             ))}
@@ -148,20 +144,20 @@ export default async function PurchaseHistoryPage() {
           </>
         ) : (
           <div className="mt-5">
-            <section className="grid rounded-3xl bg-cream-50 p-4 shadow-clay-sm xl:grid-cols-4 xl:divide-x xl:divide-ink-100">
+            <section className="grid grid-cols-2 gap-3 rounded-2xl bg-cream-50 p-4 shadow-clay-sm xs:gap-4 xl:grid-cols-4 xl:gap-0 xl:divide-x xl:divide-ink-100">
               {[
                 { label: "Total Orders", value: orders.length, icon: ShoppingBag, tint: "bg-gold-50 text-gold-500" },
                 { label: "Completed", value: orders.filter((order) => order.status === "PAID").length, icon: Check, tint: "bg-sage-50 text-sage-600" },
                 { label: "Downloads", value: totalDownloads, icon: Download, tint: "bg-lemon-50 text-sunny-500" },
                 { label: "Last Order", value: lastOrderDate ?? "-", icon: Calendar, tint: "bg-blossom-50 text-blossom-500" },
               ].map(({ label, value, icon: Icon, tint }) => (
-                <div key={label} className="flex items-center gap-4 px-4 py-2">
-                  <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-soft ${tint}`}>
-                    <Icon className="h-7 w-7" aria-hidden="true" />
+                <div key={label} className="flex min-w-0 items-center gap-2.5 xl:gap-4 xl:px-4 xl:py-2">
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-soft xl:h-14 xl:w-14 xl:rounded-2xl ${tint}`}>
+                    <Icon className="h-4.5 w-4.5 xl:h-7 xl:w-7" aria-hidden="true" />
                   </span>
-                  <div>
-                    <p className="text-sm font-bold text-ink-500">{label}</p>
-                    <p className="mt-1 font-display text-sm font-bold text-ink-700">{value}</p>
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-bold text-ink-500 xl:text-sm">{label}</p>
+                    <p className="truncate font-display text-sm font-bold text-ink-700 xl:mt-1 xl:text-sm">{value}</p>
                   </div>
                 </div>
               ))}
@@ -278,7 +274,7 @@ export default async function PurchaseHistoryPage() {
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 font-bold text-ink-500">2</button>
                   <button type="button" className="tap-target flex h-10 w-10 items-center justify-center rounded-full border border-ink-100 text-ink-500">›</button>
                 </div>
-                <p className="text-center text-sm text-ink-400 sm:text-base xl:text-sm">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
+                <p className="text-center text-xs text-ink-400 xs:text-sm">Showing 1 to {Math.min(4, orders.length)} of {orders.length} orders</p>
               </div>
             </section>
 
@@ -290,7 +286,7 @@ export default async function PurchaseHistoryPage() {
                 <div className="hidden h-16 w-px bg-ink-100 sm:block" aria-hidden="true" />
                 <div>
                   <h2 className="font-display text-sm font-bold text-ink-600">Need help with your order?</h2>
-                  <p className="mt-1 max-w-md text-base leading-relaxed text-ink-400">
+                  <p className="mt-1 max-w-md text-xs leading-relaxed text-ink-400 xs:text-sm">
                     We&apos;re here to help! Contact our support team and we&apos;ll get back to you.
                   </p>
                 </div>
