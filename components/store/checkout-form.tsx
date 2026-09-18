@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
@@ -89,13 +90,25 @@ export function CheckoutForm({
     ? paymentMethods
     : paymentMethods.filter((method) => method.id === "card");
 
+  const { data: session, status: sessionStatus } = useSession();
+  const isLoggedIn = sessionStatus === "authenticated";
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
   });
+
+  // Prefill with the logged-in buyer's email instead of leaving it blank —
+  // they already told us who they are, no need to make them retype it.
+  useEffect(() => {
+    if (session?.user?.email) {
+      setValue("email", session.user.email, { shouldValidate: true });
+    }
+  }, [session?.user?.email, setValue]);
 
   useEffect(() => {
     if (!availablePaymentMethods.some((method) => method.id === paymentMethod)) {
@@ -214,9 +227,15 @@ export function CheckoutForm({
           <h2 className="font-display text-lg font-bold text-ink-700">
             <span>Contact Information</span>
           </h2>
-          <Link href="/login" className="shrink-0 text-sm text-ink-400">
-            Already have an account? <span className="font-semibold text-blossom-600">Login</span>
-          </Link>
+          {isLoggedIn ? (
+            <span className="shrink-0 text-sm text-ink-400">
+              Signed in as <span className="font-semibold text-sage-700">{session?.user?.email}</span>
+            </span>
+          ) : (
+            <Link href="/login" className="shrink-0 text-sm text-ink-400">
+              Already have an account? <span className="font-semibold text-blossom-600">Login</span>
+            </Link>
+          )}
         </div>
 
         <div className="relative mt-4">
