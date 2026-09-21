@@ -14,6 +14,7 @@ import { calculateBookSalePrice, BOOK_SALE_DISCOUNT_PERCENTAGE } from "@/lib/pri
 import { formatPrice } from "@/lib/utils/format";
 import { calculateRentalPrice } from "@/lib/rentals/pricing";
 import { RENTAL_CURRENCY_CODE, RENTAL_DURATION_DAYS, RENTAL_PERCENTAGE } from "@/lib/rentals/config";
+import { PDFDocument } from "pdf-lib";
 
 interface CategoryOption {
   id: string;
@@ -119,6 +120,17 @@ export function ProductForm({
     name: "prices",
   });
 
+  async function handlePdfFileChange(file: File | null) {
+    setPdfFile(file);
+    if (!file || dirtyFields.pageCount) return;
+    try {
+      const pdf = await PDFDocument.load(await file.arrayBuffer());
+      setValue("pageCount", pdf.getPageCount(), { shouldValidate: true });
+    } catch {
+      // Not a readable PDF (corrupt/encrypted) — leave Page Count for manual entry.
+    }
+  }
+
   async function onSubmit(values: ProductFormValues) {
     setIsSubmitting(true);
     setSubmitError(null);
@@ -131,9 +143,13 @@ export function ProductForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setSubmitError(data.error ?? "Could not save product.");
+        setSubmitError(data?.error ?? `Could not save product (${res.status}).`);
+        return;
+      }
+      if (!data) {
+        setSubmitError("Could not save product: the server returned an unexpected response.");
         return;
       }
 
@@ -281,7 +297,12 @@ export function ProductForm({
               ))}
             </select>
           </Field>
-          <Field label="Page Count" error={errors.pageCount?.message} className="w-28">
+          <Field
+            label="Page Count"
+            error={errors.pageCount?.message}
+            className="w-28"
+            hint={!productId ? "Auto-fills from PDF" : undefined}
+          >
             <input type="number" {...register("pageCount")} className="admin-input" />
           </Field>
           <Field label="Status" className="w-32">
@@ -621,7 +642,7 @@ export function ProductForm({
                   label="Main Product PDF"
                   accept="application/pdf"
                   file={pdfFile}
-                  onChange={setPdfFile}
+                  onChange={handlePdfFileChange}
                 />
               </div>
               {pdfUploadProgress !== null && (
