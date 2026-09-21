@@ -26,7 +26,7 @@ export function SiteHeader({
   categories = [],
 }: {
   showRentAndRead?: boolean;
-  categories?: Pick<Category, "slug" | "name">[];
+  categories?: Pick<Category, "id" | "slug" | "name" | "parentId">[];
 }) {
   const router = useRouter();
   const pathname = usePathname();

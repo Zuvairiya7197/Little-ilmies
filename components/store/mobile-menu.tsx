@@ -17,7 +17,7 @@ export function MobileMenu({
   open: boolean;
   onClose: () => void;
   showRentAndRead?: boolean;
-  categories?: Pick<Category, "slug" | "name">[];
+  categories?: Pick<Category, "id" | "slug" | "name" | "parentId">[];
 }) {
   const { data: session, status } = useSession();
   const [openSections, setOpenSections] = useState<string[]>(["Islamic Studies"]);

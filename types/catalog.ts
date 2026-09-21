@@ -17,6 +17,12 @@ export interface Category {
   displayOrder?: number;
   iconKey?: string | null;
   accentColor?: string | null;
+  /** Null/undefined for a top-level (parent) category. */
+  parentId?: string | null;
+  /** Populated only where the caller needs the hierarchy (e.g. admin forms,
+   * nav-building) — a flat Category list from getAllCategories() leaves
+   * this undefined rather than nesting every row. */
+  children?: Category[];
 }
 
 export interface ProductSummary {

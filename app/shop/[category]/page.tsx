@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ShopView } from "@/components/store/shop/shop-view";
 import { ProductGridSkeleton } from "@/components/store/shop/product-card-skeleton";
 import { getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
-import { categoryGroups, getCategoryGroupBySlug } from "@/data/category-groups";
+import { legacyCategoryGroupSlugs } from "@/data/category-groups";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
 import type { ProductSummary } from "@/types/catalog";
@@ -24,29 +24,44 @@ const AGE_CATEGORY_TO_RANGE = {
   "12-plus-years": "12+",
 } as const;
 
-const resolveCategory = cache(async (slug: string) => {
-  const group = getCategoryGroupBySlug(slug);
+// Legacy top-level group slugs from the old 3-group static system, mapped
+// to their closest equivalent in the new 8-group DB-driven hierarchy so
+// any old bookmarked/shared link (e.g. /shop/islamic-books) still resolves
+// instead of 404ing. "islamic-books" -> "islamic-studies" is a rename, not
+// an exact 1:1 (the old group also included quran-and-arabic + good-manners,
+// which are now nested under islamic-studies/other parents), but it's the
+// closest live equivalent and preserves the link.
+const LEGACY_GROUP_REDIRECTS: Record<string, string> = {
+  "islamic-books": "islamic-studies",
+  "educational-books": "early-learning",
+  "gifts-games": "activities-and-printables",
+};
+
+const resolveCategory = cache(async (slugParam: string) => {
+  const slug = LEGACY_GROUP_REDIRECTS[slugParam] ?? slugParam;
   const [products, categories] = await Promise.all([getPublishedProducts(), getAllCategories()]);
   const productHasCategory = (product: ProductSummary, categorySlug: string) =>
     product.categorySlugs?.includes(categorySlug) || product.category.slug === categorySlug;
 
-  if (group) {
-    return {
-      title: group.name,
-      description: group.description,
-      matchedProducts: products.filter((p) => group.categorySlugs.some((categorySlug) => productHasCategory(p, categorySlug))),
-      categories: categories.filter((c) => group.categorySlugs.includes(c.slug)),
-    };
-  }
-
   const category = categories.find((c) => c.slug === slug);
   if (category) {
     const ageRange = AGE_CATEGORY_TO_RANGE[slug as keyof typeof AGE_CATEGORY_TO_RANGE];
+    // Top-level categories in the new hierarchy (e.g. islamic-studies,
+    // mathematics) aggregate products from all of their children, same UX
+    // as the old category-groups.ts group pages.
+    const childSlugs = categories.filter((c) => c.parentId === category.id).map((c) => c.slug);
+    const isParentGroup = childSlugs.length > 0;
+    const matchedProducts = ageRange
+      ? products.filter((p) => p.ageRange === ageRange)
+      : isParentGroup
+        ? products.filter((p) => productHasCategory(p, slug) || childSlugs.some((childSlug) => productHasCategory(p, childSlug)))
+        : products.filter((p) => productHasCategory(p, slug));
+
     return {
       title: category.name,
       description: category.description ?? `Browse ${category.name} e-books.`,
-      matchedProducts: ageRange ? products.filter((p) => p.ageRange === ageRange) : products.filter((p) => productHasCategory(p, slug)),
-      categories,
+      matchedProducts,
+      categories: isParentGroup ? categories.filter((c) => c.id === category.id || childSlugs.includes(c.slug)) : categories,
     };
   }
 
@@ -54,17 +69,17 @@ const resolveCategory = cache(async (slug: string) => {
 });
 
 export async function generateStaticParams() {
-  // If the DB is unreachable at build time, fall back to just the static
-  // category groups — revalidate = 60 covers any DB-backed category slug
-  // on first request. See app/product/[slug]/page.tsx for the same pattern.
+  // If the DB is unreachable at build time, fall back to just the legacy
+  // group slugs — revalidate = 60 covers any DB-backed category slug on
+  // first request. See app/product/[slug]/page.tsx for the same pattern.
   try {
     const categories = await getAllCategories();
     return [
-      ...categoryGroups.map((g) => ({ category: g.slug })),
+      ...legacyCategoryGroupSlugs.map((slug) => ({ category: slug })),
       ...categories.map((c) => ({ category: c.slug })),
     ];
   } catch {
-    return categoryGroups.map((g) => ({ category: g.slug }));
+    return legacyCategoryGroupSlugs.map((slug) => ({ category: slug }));
   }
 }
 

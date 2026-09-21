@@ -26,7 +26,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
-import { booksMenuSections } from "@/lib/store-navigation";
 import { learningGoals } from "@/lib/learning-goals";
 import type { CurrencyCode } from "@/types/pricing";
 import { calculateBookSalePrice, BOOK_SALE_DISCOUNT_PERCENTAGE } from "@/lib/pricing/automatic-pricing";
@@ -39,6 +38,7 @@ interface CategoryOption {
   id: string;
   name: string;
   slug: string;
+  parentId?: string | null;
 }
 
 interface CurrentProductFiles {
@@ -992,19 +992,36 @@ interface CategoryOptionGroup {
   categories: CategoryOption[];
 }
 
+// Groups the flat category list by parent, the same way the storefront's
+// "Books" mega menu does (lib/store-navigation.ts#getBooksMenuSections) —
+// each top-level category (parentId null) becomes a group label, its
+// children the checkboxes under it, so the 58-category taxonomy reads as
+// 8 labeled clusters instead of one long alphabetical list. A top-level
+// category is also selectable itself (shown first inside its own group,
+// e.g. picking "Islamic Studies" broadly rather than a specific child).
 function buildCategoryGroups(categories: CategoryOption[]): CategoryOptionGroup[] {
-  const bySlug = new Map(categories.map((category) => [category.slug, category]));
+  const parents = categories
+    .filter((category) => !category.parentId)
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const childrenByParentId = new Map<string, CategoryOption[]>();
+  for (const category of categories) {
+    if (!category.parentId) continue;
+    const list = childrenByParentId.get(category.parentId) ?? [];
+    list.push(category);
+    childrenByParentId.set(category.parentId, list);
+  }
+  for (const list of childrenByParentId.values()) {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   const used = new Set<string>();
-  const groups: CategoryOptionGroup[] = booksMenuSections
-    .map((section) => {
-      const sectionSlugs = [slugFromHref(section.href), ...section.links.map((link) => slugFromHref(link.href))].filter(
-        (slug): slug is string => Boolean(slug)
-      );
-      const groupCategories = sectionSlugs
-        .map((slug) => bySlug.get(slug))
-        .filter((category): category is CategoryOption => Boolean(category));
-      groupCategories.forEach((category) => used.add(category.id));
-      return { title: section.title, categories: uniqueCategories(groupCategories) };
+  const groups: CategoryOptionGroup[] = parents
+    .map((parent) => {
+      const children = childrenByParentId.get(parent.id) ?? [];
+      used.add(parent.id);
+      children.forEach((child) => used.add(child.id));
+      return { title: parent.name, categories: [parent, ...children] };
     })
     .filter((group) => group.categories.length > 0);
 
@@ -1012,20 +1029,6 @@ function buildCategoryGroups(categories: CategoryOption[]): CategoryOptionGroup[
   if (otherCategories.length > 0) groups.push({ title: "Other", categories: otherCategories });
 
   return groups;
-}
-
-function uniqueCategories(categories: CategoryOption[]) {
-  const seen = new Set<string>();
-  return categories.filter((category) => {
-    if (seen.has(category.id)) return false;
-    seen.add(category.id);
-    return true;
-  });
-}
-
-function slugFromHref(href: string) {
-  const match = href.match(/^\/shop\/([^?/#]+)/);
-  return match?.[1];
 }
 
 function CurrentFileStatus({

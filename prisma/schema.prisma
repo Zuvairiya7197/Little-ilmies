@@ -126,8 +126,18 @@ model Category {
   accentColor String?
   createdAt   DateTime @default(now())
 
+  /// Self-relation giving the catalog a real two-level hierarchy (8
+  /// top-level groups, each with several child categories) rather than the
+  /// old flat list + static data/category-groups.ts aggregation. A child
+  /// losing its parent (parent deleted) should not cascade-delete the
+  /// child, so this is SetNull, not Cascade.
+  parentId String?
+  parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryChildren")
+
   products ProductCategory[]
 
+  @@index([parentId])
   @@map("categories")
 }
 

@@ -24,7 +24,7 @@ export function StorefrontChrome({
   children,
 }: {
   showRentAndRead: boolean;
-  categories: Pick<Category, "slug" | "name">[];
+  categories: Pick<Category, "id" | "slug" | "name" | "parentId">[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();

@@ -9,6 +9,13 @@ export const categoryFormSchema = z.object({
     .min(2, "Slug is required")
     .regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, and hyphens only"),
   description: z.string().trim().optional(),
+  // Empty string from a cleared <select> (top-level / "No parent") is
+  // normalized to undefined, same pattern as iconKey/accentColor below, so
+  // it's never persisted as an empty string for the optional String? field.
+  parentId: z
+    .union([z.string().trim().min(1), z.literal("")])
+    .optional()
+    .transform((value) => (value ? value : undefined)),
   isFeaturedOnHomepage: z.boolean().optional(),
   displayOrder: z.coerce.number().int().optional(),
   // Empty string from a cleared <select> is normalized to undefined so it

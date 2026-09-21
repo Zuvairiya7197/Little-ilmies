@@ -22,12 +22,36 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "A category with this slug already exists" }, { status: 409 });
   }
 
+  if (parsed.data.parentId) {
+    if (parsed.data.parentId === categoryId) {
+      return NextResponse.json({ error: "A category cannot be its own parent" }, { status: 400 });
+    }
+    const parent = await prisma.category.findUnique({ where: { id: parsed.data.parentId } });
+    if (!parent) {
+      return NextResponse.json({ error: "Selected parent category does not exist" }, { status: 400 });
+    }
+    if (parent.parentId) {
+      return NextResponse.json({ error: "Cannot nest a category under a child category" }, { status: 400 });
+    }
+    // If this category already has children, it can't also become a
+    // child itself — that would make the hierarchy more than two levels
+    // deep, which nothing in the storefront/admin UI expects.
+    const childCount = await prisma.category.count({ where: { parentId: categoryId } });
+    if (childCount > 0) {
+      return NextResponse.json(
+        { error: "This category has its own child categories — remove or reassign them before giving it a parent." },
+        { status: 400 }
+      );
+    }
+  }
+
   await prisma.category.update({
     where: { id: categoryId },
     data: {
       name: parsed.data.name,
       slug: parsed.data.slug,
       description: parsed.data.description,
+      parentId: parsed.data.parentId ?? null,
       isFeaturedOnHomepage: parsed.data.isFeaturedOnHomepage ?? false,
       displayOrder: parsed.data.displayOrder ?? 0,
       iconKey: parsed.data.iconKey ?? null,

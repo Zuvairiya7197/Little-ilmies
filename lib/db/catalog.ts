@@ -334,7 +334,31 @@ export async function getAllCategories(): Promise<Category[]> {
     displayOrder: c.displayOrder,
     iconKey: c.iconKey,
     accentColor: c.accentColor,
+    parentId: c.parentId,
   }));
+}
+
+/**
+ * All categories nested into their parent/child hierarchy — top-level
+ * (parentId === null) categories each carrying their `children` array.
+ * Powers the "Books" mega menu / mobile menu / filter panel sections
+ * (lib/store-navigation.ts) and the /shop/[category] parent-group
+ * aggregation, replacing the old static data/category-groups.ts approach.
+ */
+export async function getCategoryHierarchy(): Promise<Category[]> {
+  const categories = await getAllCategories();
+  const bySlugId = new Map(categories.map((c) => [c.id, { ...c, children: [] as Category[] }]));
+  const roots: Category[] = [];
+
+  for (const category of bySlugId.values()) {
+    if (category.parentId && bySlugId.has(category.parentId)) {
+      bySlugId.get(category.parentId)!.children!.push(category);
+    } else {
+      roots.push(category);
+    }
+  }
+
+  return roots;
 }
 
 /**
@@ -363,5 +387,6 @@ export async function getFeaturedCategories(): Promise<Category[]> {
     displayOrder: c.displayOrder,
     iconKey: c.iconKey,
     accentColor: c.accentColor,
+    parentId: c.parentId,
   }));
 }

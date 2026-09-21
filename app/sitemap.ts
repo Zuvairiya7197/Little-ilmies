@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db/prisma";
-import { categoryGroups } from "@/data/category-groups";
+import { legacyCategoryGroupSlugs } from "@/data/category-groups";
 
 const siteUrl = process.env.SITE_URL ?? "https://littleilmies.com";
 
@@ -23,8 +23,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : 0.6,
   }));
 
-  const categoryGroupEntries: MetadataRoute.Sitemap = categoryGroups.map((group) => ({
-    url: `${siteUrl}/shop/${group.slug}`,
+  const categoryGroupEntries: MetadataRoute.Sitemap = legacyCategoryGroupSlugs.map((slug) => ({
+    url: `${siteUrl}/shop/${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly",
     priority: 0.7,

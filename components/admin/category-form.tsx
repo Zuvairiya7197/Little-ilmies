@@ -17,10 +17,16 @@ export function CategoryForm({
   categoryId,
   defaultValues,
   currentCoverImage,
+  parentOptions = [],
 }: {
   categoryId?: string;
   defaultValues?: Partial<CategoryFormValues>;
   currentCoverImage?: string;
+  /** Candidate parent categories — top-level (no parent of their own)
+   * categories other than this one, so the hierarchy stays two levels
+   * deep. Empty when creating/editing what will itself be a top-level
+   * category is still fine — the picker just offers "No parent". */
+  parentOptions?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,6 +117,25 @@ export function CategoryForm({
           {errors.slug && <p className="mt-1 text-xs text-gold-700">{errors.slug.message}</p>}
         </div>
       </div>
+      <div>
+        <label htmlFor="category-parent" className="mb-1.5 block text-sm font-semibold text-ink-600">
+          Parent category
+        </label>
+        <select id="category-parent" {...register("parentId")} className="admin-input">
+          <option value="">No parent (top-level category)</option>
+          {parentOptions.map((parent) => (
+            <option key={parent.id} value={parent.id}>
+              {parent.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-ink-400">
+          Leave as &quot;No parent&quot; for one of the main top-level groups (e.g. Islamic Studies, Mathematics). Pick a
+          parent to nest this category underneath it.
+        </p>
+        {errors.parentId && <p className="mt-1 text-xs text-gold-700">{errors.parentId.message}</p>}
+      </div>
+
       <div>
         <label htmlFor="category-description" className="mb-1.5 block text-sm font-semibold text-ink-600">
           Description
