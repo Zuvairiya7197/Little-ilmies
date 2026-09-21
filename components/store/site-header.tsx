@@ -19,8 +19,15 @@ import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { useSearchStore } from "@/lib/store/use-search-store";
 import { cn } from "@/lib/utils/cn";
 import { shopNavLinks } from "@/lib/store-navigation";
+import type { Category } from "@/types/catalog";
 
-export function SiteHeader({ showRentAndRead = false }: { showRentAndRead?: boolean }) {
+export function SiteHeader({
+  showRentAndRead = false,
+  categories = [],
+}: {
+  showRentAndRead?: boolean;
+  categories?: Pick<Category, "slug" | "name">[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const isProductPage = pathname.startsWith("/product/");
@@ -85,7 +92,7 @@ export function SiteHeader({ showRentAndRead = false }: { showRentAndRead?: bool
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-1">
               <li>
-                <BooksMegaMenu />
+                <BooksMegaMenu categories={categories} />
               </li>
               {shopNavLinks.map((item) => (
                 <Fragment key={item.href}>
@@ -154,7 +161,12 @@ export function SiteHeader({ showRentAndRead = false }: { showRentAndRead?: bool
 
       <SearchOverlay open={searchOpen} onClose={closeSearch} />
       <CartDrawer />
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} showRentAndRead={showRentAndRead} />
+      <MobileMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        showRentAndRead={showRentAndRead}
+        categories={categories}
+      />
     </header>
   );
 }

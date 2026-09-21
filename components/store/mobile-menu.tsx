@@ -5,19 +5,23 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Heart, X, User, LogOut } from "lucide-react";
-import { booksMenuSections, shopNavLinks } from "@/lib/store-navigation";
+import { getBooksMenuSections, shopNavLinks } from "@/lib/store-navigation";
+import type { Category } from "@/types/catalog";
 
 export function MobileMenu({
   open,
   onClose,
   showRentAndRead = false,
+  categories = [],
 }: {
   open: boolean;
   onClose: () => void;
   showRentAndRead?: boolean;
+  categories?: Pick<Category, "slug" | "name">[];
 }) {
   const { data: session, status } = useSession();
   const [openSections, setOpenSections] = useState<string[]>(["Islamic Studies"]);
+  const booksMenuSections = getBooksMenuSections(categories);
 
   useEffect(() => {
     if (open) {

@@ -11,7 +11,7 @@ import type {
 import type { CurrencyCode } from "@/types/pricing";
 import { Prisma } from "@prisma/client";
 import { defaultExtra, detailExtras } from "@/data/product-details";
-import { productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
+import { categoryCoverUrl, productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
 import { calculateBookSalePrice, calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { getPricingSettings, type PricingSettings } from "@/lib/settings/pricing-settings";
 
@@ -326,7 +326,42 @@ export async function getAllCategories(): Promise<Category[]> {
     slug: c.slug,
     name: c.name,
     description: c.description ?? undefined,
-    coverImage: c.coverImage ?? "/images/categories/placeholder.svg",
+    coverImage: c.coverImage
+      ? categoryCoverUrl(c.id, c.coverImage)
+      : "/images/categories/placeholder.svg",
     bookCount: c._count.products,
+    isFeaturedOnHomepage: c.isFeaturedOnHomepage,
+    displayOrder: c.displayOrder,
+    iconKey: c.iconKey,
+    accentColor: c.accentColor,
+  }));
+}
+
+/**
+ * Categories flagged for the homepage "Featured Collections" section,
+ * ordered for display. Powers components/store/home/featured-collections.tsx —
+ * see lib/category-display.tsx for how iconKey/accentColor are resolved to
+ * actual icons/Tailwind classes.
+ */
+export async function getFeaturedCategories(): Promise<Category[]> {
+  const categories = await prisma.category.findMany({
+    where: { isFeaturedOnHomepage: true },
+    orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+    include: { _count: { select: { products: true } } },
+  });
+
+  return categories.map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    name: c.name,
+    description: c.description ?? undefined,
+    coverImage: c.coverImage
+      ? categoryCoverUrl(c.id, c.coverImage)
+      : "/images/categories/placeholder.svg",
+    bookCount: c._count.products,
+    isFeaturedOnHomepage: c.isFeaturedOnHomepage,
+    displayOrder: c.displayOrder,
+    iconKey: c.iconKey,
+    accentColor: c.accentColor,
   }));
 }

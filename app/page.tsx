@@ -15,6 +15,7 @@ import { ExploreMore } from "@/components/store/home/explore-more";
 import { ParentCta } from "@/components/store/home/parent-cta";
 import {
   getActiveBundles,
+  getFeaturedCategories,
   getHomepageSampleProduct,
   getPublishedProducts,
 } from "@/lib/db/catalog";
@@ -33,12 +34,13 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, bundles, homepageSample, rentalEligible] = await Promise.all(
+  const [products, bundles, homepageSample, rentalEligible, featuredCategories] = await Promise.all(
     [
       getPublishedProducts(),
       getActiveBundles(),
       getHomepageSampleProduct(),
       isRentalEligibleFromHeaders(),
+      getFeaturedCategories(),
     ],
   );
 
@@ -47,7 +49,7 @@ export default async function HomePage() {
       <HeroSection products={products} />
       <HeroCategoryStrip />
       <Reveal>
-        <FeaturedCollections />
+        <FeaturedCollections categories={featuredCategories} />
       </Reveal>
       <Reveal>
         <BestSellers products={products} />

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
+import type { Category } from "@/types/catalog";
 
 /**
  * Wraps every page in the storefront header/footer/mobile nav, except
@@ -19,9 +20,11 @@ import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
  */
 export function StorefrontChrome({
   showRentAndRead,
+  categories,
   children,
 }: {
   showRentAndRead: boolean;
+  categories: Pick<Category, "slug" | "name">[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -37,7 +40,7 @@ export function StorefrontChrome({
 
   return (
     <>
-      <SiteHeader showRentAndRead={showRentAndRead} />
+      <SiteHeader showRentAndRead={showRentAndRead} categories={categories} />
       <main id="main-content" className="flex-1">
         {children}
       </main>

@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
       slug: parsed.data.slug,
       description: parsed.data.description,
       coverImage: "/images/categories/placeholder.svg",
+      isFeaturedOnHomepage: parsed.data.isFeaturedOnHomepage ?? false,
+      displayOrder: parsed.data.displayOrder ?? 0,
+      iconKey: parsed.data.iconKey ?? null,
+      accentColor: parsed.data.accentColor ?? null,
     },
   });
 

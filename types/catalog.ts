@@ -13,6 +13,10 @@ export interface Category {
   description?: string;
   coverImage: string;
   bookCount: number;
+  isFeaturedOnHomepage?: boolean;
+  displayOrder?: number;
+  iconKey?: string | null;
+  accentColor?: string | null;
 }
 
 export interface ProductSummary {

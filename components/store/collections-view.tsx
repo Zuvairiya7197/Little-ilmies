@@ -1,7 +1,9 @@
 import { Sparkles } from "lucide-react";
-import { collections, CollectionCard } from "@/components/store/home/featured-collections";
+import { CollectionCard, resolveCollectionTiles } from "@/components/store/home/featured-collections";
+import type { Category } from "@/types/catalog";
 
-export function CollectionsView() {
+export function CollectionsView({ categories }: { categories: Category[] }) {
+  const collections = resolveCollectionTiles(categories);
   return (
     <div className="container-content py-6 xs:py-8 md:py-10">
       <div className="mx-auto mb-8 max-w-xl text-center xs:mb-10">
@@ -21,7 +23,7 @@ export function CollectionsView() {
 
       <div className="flex flex-col gap-4">
         {collections.map((collection) => (
-          <CollectionCard key={collection.title} {...collection} />
+          <CollectionCard key={collection.id} {...collection} />
         ))}
       </div>
     </div>

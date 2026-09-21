@@ -108,6 +108,22 @@ model Category {
   name        String
   description String?
   coverImage  String?
+  /// Shows this category as one of the homepage "Featured Collections"
+  /// tiles when true. iconKey/accentColor are only meaningful when this is
+  /// set — both are string keys resolved against a small fixed allowlist
+  /// (see lib/category-display.tsx) rather than raw Tailwind classes or
+  /// component references, so an admin can never inject arbitrary markup
+  /// or classnames into the homepage.
+  isFeaturedOnHomepage Boolean  @default(false)
+  /// Lower sorts first among featured categories. Plain integer, no
+  /// drag-to-reorder UI — admin edits the number directly.
+  displayOrder         Int      @default(0)
+  /// Key into the lucide icon allowlist in lib/category-display.tsx.
+  iconKey     String?
+  /// Key into the Tailwind color-token allowlist in lib/category-display.tsx
+  /// (ink/sunny/teal/blossom/sage/lemon) — keeps new tiles visually
+  /// consistent with the existing design system.
+  accentColor String?
   createdAt   DateTime @default(now())
 
   products ProductCategory[]

@@ -5,7 +5,7 @@ import { useShopFilters } from "@/hooks/use-shop-filters";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { formatPrice } from "@/lib/utils/format";
 import { getCategoryIcon } from "@/lib/category-icons";
-import { booksMenuSections } from "@/lib/store-navigation";
+import { getBooksMenuSections } from "@/lib/store-navigation";
 import type { CurrencyCode } from "@/types/pricing";
 import type { AgeRange, Category, Language, ProductFormat } from "@/types/catalog";
 import { cn } from "@/lib/utils/cn";
@@ -212,7 +212,7 @@ export function FilterPanel({
 
 function buildFilterCategoryGroups(categories: Category[]): { title: string; categories: Category[] }[] {
   const bySlug = new Map(categories.map((category) => [category.slug, category]));
-  return booksMenuSections
+  return getBooksMenuSections(categories)
     .filter((section) => section.title !== "Shop by Age")
     .map((section) => {
       const categorySlugs = section.links

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { CategoryForm } from "@/components/admin/category-form";
+import { categoryCoverUrl } from "@/lib/catalog-assets";
 
 export const metadata: Metadata = {
   title: "Edit Category",
@@ -28,7 +29,14 @@ export default async function EditCategoryPage({ params }: PageProps) {
           name: category.name,
           slug: category.slug,
           description: category.description ?? undefined,
+          isFeaturedOnHomepage: category.isFeaturedOnHomepage,
+          displayOrder: category.displayOrder,
+          iconKey: category.iconKey ?? "",
+          accentColor: category.accentColor ?? "",
         }}
+        currentCoverImage={
+          category.coverImage ? categoryCoverUrl(category.id, category.coverImage) : undefined
+        }
       />
     </div>
   );

@@ -1,3 +1,5 @@
+import type { Category } from "@/types/catalog";
+
 export const shopNavLinks = [
   { label: "Bundles", href: "/shop?bundle=all" },
   { label: "Printables", href: "/shop/activities-and-printables" },
@@ -89,3 +91,45 @@ export const booksMenuSections = [
     ],
   },
 ] as const;
+
+export interface BooksMenuSection {
+  title: string;
+  href: string;
+  links: readonly { label: string; href: string }[];
+}
+
+const CURATED_CATEGORY_SLUGS = new Set(
+  booksMenuSections.flatMap((section) =>
+    section.links
+      .map((link) => link.href.match(/^\/shop\/([^?/#]+)/)?.[1])
+      .filter((slug): slug is string => Boolean(slug))
+  )
+);
+
+/**
+ * Merges the curated, hand-tuned booksMenuSections above with any live
+ * category the admin has created that isn't already covered by one of
+ * those curated links — so a brand-new admin-created category shows up in
+ * the mega menu / mobile menu / filter panel immediately, with no code
+ * change or deploy needed. Existing curated sections and hrefs are
+ * returned completely untouched (same slugs/URLs as before); new
+ * categories are appended as their own trailing "More Categories" section.
+ *
+ * "Shop by Age" and category-group slugs (islamic-books/educational-books/
+ * gifts-games, from data/category-groups.ts) are deliberately excluded —
+ * this menu is about individual categories, not the age taxonomy or the
+ * top-level groupings.
+ */
+export function getBooksMenuSections(categories: Pick<Category, "slug" | "name">[]): BooksMenuSection[] {
+  const uncovered = categories.filter((category) => !CURATED_CATEGORY_SLUGS.has(category.slug));
+  if (uncovered.length === 0) return [...booksMenuSections];
+
+  return [
+    ...booksMenuSections,
+    {
+      title: "More Categories",
+      href: "/shop",
+      links: uncovered.map((category) => ({ label: category.name, href: `/shop/${category.slug}` })),
+    },
+  ];
+}

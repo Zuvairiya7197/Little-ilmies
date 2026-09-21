@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, BookOpen } from "lucide-react";
-import { booksMenuSections } from "@/lib/store-navigation";
+import { getBooksMenuSections } from "@/lib/store-navigation";
+import type { Category } from "@/types/catalog";
 
-export function BooksMegaMenu() {
+export function BooksMegaMenu({ categories = [] }: { categories?: Pick<Category, "slug" | "name">[] }) {
   const [open, setOpen] = useState(false);
+  const booksMenuSections = getBooksMenuSections(categories);
   const [panelLeft, setPanelLeft] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
 

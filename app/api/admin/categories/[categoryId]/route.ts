@@ -22,7 +22,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "A category with this slug already exists" }, { status: 409 });
   }
 
-  await prisma.category.update({ where: { id: categoryId }, data: parsed.data });
+  await prisma.category.update({
+    where: { id: categoryId },
+    data: {
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      description: parsed.data.description,
+      isFeaturedOnHomepage: parsed.data.isFeaturedOnHomepage ?? false,
+      displayOrder: parsed.data.displayOrder ?? 0,
+      iconKey: parsed.data.iconKey ?? null,
+      accentColor: parsed.data.accentColor ?? null,
+    },
+  });
   return NextResponse.json({ id: categoryId });
 }
 

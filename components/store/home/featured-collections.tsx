@@ -1,76 +1,89 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookHeart, Sparkles, Moon, Languages, PenTool } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { getFeaturedCategoryIcon, getFeaturedCategoryAccent } from "@/lib/category-display";
+import type { Category } from "@/types/catalog";
 
-export const collections = [
+/**
+ * Static fallback shown only when fewer than 3 categories are flagged
+ * isFeaturedOnHomepage in the DB (e.g. a fresh install before an admin has
+ * curated any) — keeps the section from rendering an empty/broken grid.
+ * Mirrors the same 5 collections this section used to hardcode.
+ */
+export const FALLBACK_COLLECTIONS: CollectionTileData[] = [
   {
+    id: "stories-of-the-prophets",
     title: "Stories of the Prophets",
     description: "Authentic tales retold for young hearts.",
     href: "/shop/stories-of-the-prophets",
-    icon: BookHeart,
     image: "/images/collection-stories-of-the-prophets.png",
-    cardBg: "bg-ink-50",
-    badgeBg: "bg-ink-500",
-    titleColor: "text-ink-700",
-    button: "bg-ink-400 hover:bg-ink-500",
+    ...getFeaturedCategoryAccent("ink"),
+    icon: getFeaturedCategoryIcon("book-heart"),
   },
   {
+    id: "good-manners",
     title: "Good Manners Collection",
     description: "Building akhlaq, one habit at a time.",
     href: "/shop/good-manners",
-    icon: Sparkles,
     image: "/images/collection-good-manners.png",
-    cardBg: "bg-sunny-50",
-    badgeBg: "bg-sunny-500",
-    titleColor: "text-sunny-800",
-    button: "bg-sunny-500 hover:bg-sunny-600",
+    ...getFeaturedCategoryAccent("sunny"),
+    icon: getFeaturedCategoryIcon("sparkles"),
   },
   {
+    id: "ramadan",
     title: "Ramadan Collection",
     description: "Duas, stories, and activities for the blessed month.",
     href: "/shop/ramadan",
-    icon: Moon,
     image: "/images/collection-ramadan.png",
-    cardBg: "bg-teal-50",
-    badgeBg: "bg-teal-500",
-    titleColor: "text-teal-800",
-    button: "bg-teal-500 hover:bg-teal-600",
+    ...getFeaturedCategoryAccent("teal"),
+    icon: getFeaturedCategoryIcon("moon"),
   },
   {
+    id: "quran-and-arabic",
     title: "Learning Arabic",
     description: "First steps in reading and writing Arabic.",
     href: "/shop/quran-and-arabic",
-    icon: Languages,
     image: "/images/collection-learning-arabic.png",
-    cardBg: "bg-blossom-50",
-    badgeBg: "bg-blossom-500",
-    titleColor: "text-blossom-700",
-    button: "bg-blossom-500 hover:bg-blossom-600",
+    ...getFeaturedCategoryAccent("blossom"),
+    icon: getFeaturedCategoryIcon("languages"),
   },
   {
+    id: "activities-and-printables",
     title: "Printable Activities",
     description: "Coloring pages and activity books for quiet afternoons.",
     href: "/shop/activities-and-printables",
-    icon: PenTool,
     image: "/images/collection-printable-activities.png",
-    cardBg: "bg-sage-50",
-    badgeBg: "bg-sage-500",
-    titleColor: "text-sage-800",
-    button: "bg-sage-500 hover:bg-sage-600",
+    ...getFeaturedCategoryAccent("sage"),
+    icon: getFeaturedCategoryIcon("pen-tool"),
   },
-] as const;
+];
 
-export function CollectionCard({
-  title,
-  description,
-  href,
-  icon: Icon,
-  image,
-  cardBg,
-  badgeBg,
-  titleColor,
-  button,
-}: (typeof collections)[number]) {
+export interface CollectionTileData {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  image: string;
+  icon: ReturnType<typeof getFeaturedCategoryIcon>;
+  cardBg: string;
+  badgeBg: string;
+  titleColor: string;
+  button: string;
+}
+
+export function toCollectionTiles(categories: Category[]): CollectionTileData[] {
+  return categories.map((category) => ({
+    id: category.slug,
+    title: category.name,
+    description: category.description ?? "",
+    href: `/shop/${category.slug}`,
+    image: category.coverImage,
+    icon: getFeaturedCategoryIcon(category.iconKey),
+    ...getFeaturedCategoryAccent(category.accentColor),
+  }));
+}
+
+export function CollectionCard({ title, description, href, icon: Icon, image, cardBg, badgeBg, titleColor, button }: CollectionTileData) {
   return (
     <Link
       href={href}
@@ -107,7 +120,7 @@ export function CollectionCard({
   );
 }
 
-function CollectionTile({ title, href, image, cardBg, titleColor }: (typeof collections)[number]) {
+function CollectionTile({ title, href, image, cardBg, titleColor }: CollectionTileData) {
   return (
     <Link
       href={href}
@@ -127,7 +140,18 @@ function CollectionTile({ title, href, image, cardBg, titleColor }: (typeof coll
   );
 }
 
-export function FeaturedCollections() {
+/** Fewer than 3 curated categories would leave the 3-col desktop grid
+ * looking broken (empty cells) — fall back to the static set in that case. */
+export function resolveCollectionTiles(categories: Category[]): CollectionTileData[] {
+  return categories.length >= 3 ? toCollectionTiles(categories) : FALLBACK_COLLECTIONS;
+}
+
+export function FeaturedCollections({ categories }: { categories: Category[] }) {
+  const collections = resolveCollectionTiles(categories);
+  // Desktop grid is a 3-up row followed by a 2-up row; when there are more
+  // than 5, only show the first 5 so the curated layout never overflows.
+  const gridCollections = collections.slice(0, 5);
+
   return (
     <section aria-labelledby="collections-heading" className="py-10 xs:py-12 md:py-16">
       <div className="container-content">
@@ -153,7 +177,7 @@ export function FeaturedCollections() {
 
         <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 no-scrollbar md:hidden">
           {collections.map((collection) => (
-            <li key={collection.title}>
+            <li key={collection.id}>
               <CollectionTile {...collection} />
             </li>
           ))}
@@ -176,15 +200,17 @@ export function FeaturedCollections() {
         </div>
 
         <div className="hidden gap-4 md:grid md:grid-cols-3">
-          {collections.slice(0, 3).map((collection) => (
-            <CollectionCard key={collection.title} {...collection} />
+          {gridCollections.slice(0, 3).map((collection) => (
+            <CollectionCard key={collection.id} {...collection} />
           ))}
         </div>
-        <div className="mx-auto mt-4 hidden gap-4 md:grid md:w-2/3 md:grid-cols-2">
-          {collections.slice(3).map((collection) => (
-            <CollectionCard key={collection.title} {...collection} />
-          ))}
-        </div>
+        {gridCollections.length > 3 && (
+          <div className="mx-auto mt-4 hidden gap-4 md:grid md:w-2/3 md:grid-cols-2">
+            {gridCollections.slice(3).map((collection) => (
+              <CollectionCard key={collection.id} {...collection} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

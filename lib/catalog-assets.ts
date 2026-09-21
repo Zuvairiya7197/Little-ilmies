@@ -17,6 +17,16 @@ export function productCoverUrl(productId: string, coverImage: string) {
   return coverImage;
 }
 
+/** Same pattern as productCoverUrl, for Category.coverImage — used for the
+ * homepage Featured Collections tile image when an admin uploads one. */
+export function categoryCoverUrl(categoryId: string, coverImage: string) {
+  if (coverImage.startsWith("covers/")) {
+    if (CDN_DOMAIN) return `https://${CDN_DOMAIN}/${coverImage}`;
+    return `/api/category-assets/covers/${categoryId}?v=${encodeURIComponent(coverImage)}`;
+  }
+  return coverImage;
+}
+
 export function productPreviewUrls(productId: string, previewImagePaths: string[]) {
   return previewImagePaths.map((path, index) => {
     if (!path.startsWith("previews/")) return path;
