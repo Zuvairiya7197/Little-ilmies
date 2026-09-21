@@ -5,7 +5,26 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, AlertTriangle, Upload, Trash2, ChevronDown, Check, Wand2, X } from "lucide-react";
+import {
+  Loader2,
+  AlertTriangle,
+  Upload,
+  Trash2,
+  ChevronDown,
+  Check,
+  Wand2,
+  X,
+  Info,
+  FolderTree,
+  Sparkles,
+  ShieldCheck,
+  SlidersHorizontal,
+  Clock,
+  FileStack,
+  Coins,
+  Search,
+  type LucideIcon,
+} from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import { booksMenuSections } from "@/lib/store-navigation";
 import { learningGoals } from "@/lib/learning-goals";
@@ -31,6 +50,51 @@ interface CurrentProductFiles {
   previewImages?: string[];
   rentalPageCount?: number;
   rentalPageImages?: string[];
+}
+
+// Each form section gets its own accent from the brand's rainbow palette —
+// same tokens the admin sidebar nav uses — so the long form reads as a set
+// of distinct sections rather than one uniform block. Static lookup (never
+// string-interpolated) so Tailwind's compiler can see every class name.
+const SECTION_COLORS = {
+  ink: { card: "border-l-ink-400 bg-ink-50/40", badge: "bg-ink-400 text-cream-50", title: "text-ink-700" },
+  sage: { card: "border-l-sage-500 bg-sage-50/50", badge: "bg-sage-500 text-cream-50", title: "text-sage-800" },
+  gold: { card: "border-l-gold-500 bg-gold-50/50", badge: "bg-gold-500 text-cream-50", title: "text-gold-800" },
+  blossom: { card: "border-l-blossom-400 bg-blossom-50/50", badge: "bg-blossom-400 text-cream-50", title: "text-blossom-700" },
+  teal: { card: "border-l-teal-500 bg-teal-50/50", badge: "bg-teal-500 text-cream-50", title: "text-teal-800" },
+  sunny: { card: "border-l-sunny-500 bg-sunny-50/50", badge: "bg-sunny-500 text-cream-50", title: "text-sunny-800" },
+  lemon: { card: "border-l-lemon-500 bg-lemon-50/50", badge: "bg-lemon-500 text-ink-700", title: "text-lemon-800" },
+  blossomDeep: { card: "border-l-blossom-600 bg-blossom-50/50", badge: "bg-blossom-600 text-cream-50", title: "text-blossom-700" },
+  inkPale: { card: "border-l-ink-200 bg-ink-50/30", badge: "bg-ink-200 text-ink-700", title: "text-ink-700" },
+} as const;
+
+type SectionColor = keyof typeof SECTION_COLORS;
+
+function SectionHeading({
+  icon: Icon,
+  color,
+  as = "h2",
+  children,
+}: {
+  icon: LucideIcon;
+  color: SectionColor;
+  as?: "h2" | "summary";
+  children: React.ReactNode;
+}) {
+  const colors = SECTION_COLORS[color];
+  const content = (
+    <span className="flex items-center gap-2.5">
+      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${colors.badge}`}>
+        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      </span>
+      <span className={`font-display text-lg font-semibold ${colors.title}`}>{children}</span>
+    </span>
+  );
+  return as === "summary" ? (
+    <summary className="cursor-pointer list-none">{content}</summary>
+  ) : (
+    <h2>{content}</h2>
+  );
 }
 
 const CURRENCY_OPTIONS: CurrencyCode[] = ["INR", "USD", "GBP", "AED"];
@@ -184,8 +248,8 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
-      <div className="card-surface border-l-4 border-l-ink-400 p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Basic Info</h2>
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.ink.card}`}>
+        <div className="mb-4"><SectionHeading icon={Info} color="ink">Basic Info</SectionHeading></div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Field label="Title" error={errors.title?.message}>
             <input {...register("title")} className="admin-input" />
@@ -218,8 +282,8 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface border-l-4 border-l-sage-500 p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Catalog Details</h2>
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.sage.card}`}>
+        <div className="mb-4"><SectionHeading icon={FolderTree} color="sage">Catalog Details</SectionHeading></div>
         <div>
           <p className="mb-2 text-sm font-semibold text-ink-600">Categories</p>
           <Controller
@@ -323,8 +387,8 @@ export function ProductForm({
 
       </div>
 
-      <div className="card-surface border-l-4 border-l-gold-500 p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Product Highlights</h2>
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.gold.card}`}>
+        <div className="mb-4"><SectionHeading icon={Sparkles} color="gold">Product Highlights</SectionHeading></div>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <ArrayField
             label="What's Included"
@@ -350,8 +414,8 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface border-l-4 border-l-blossom-400 p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">License / Usage</h2>
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.blossom.card}`}>
+        <div className="mb-4"><SectionHeading icon={ShieldCheck} color="blossom">License / Usage</SectionHeading></div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
           <Field label="Usage License" error={errors.usageLicense?.message}>
             <select {...register("usageLicense")} className="admin-input">
@@ -371,8 +435,8 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface border-l-4 border-l-teal-500 p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Store Settings</h2>
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.teal.card}`}>
+        <div className="mb-4"><SectionHeading icon={SlidersHorizontal} color="teal">Store Settings</SectionHeading></div>
         <div className="grid gap-3 rounded-2xl bg-cream-50 p-3 shadow-clay-pressed sm:grid-cols-2 lg:grid-cols-5">
           <Checkbox label="Bestseller" {...register("isBestseller")} />
           <Checkbox label="New Arrival" {...register("isNewArrival")} />
@@ -392,8 +456,8 @@ export function ProductForm({
         <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
       </div>
 
-      <div className="card-surface border-l-4 border-l-sunny-500 p-5">
-        <h2 className="font-display text-lg font-semibold text-ink-700">Rent & Read</h2>
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.sunny.card}`}>
+        <SectionHeading icon={Clock} color="sunny">Rent &amp; Read</SectionHeading>
         <p className="mt-1 text-xs text-ink-400">
           India-only temporary online reading access. Rental price is automatically calculated — never entered
           manually.
@@ -513,16 +577,14 @@ export function ProductForm({
         </div>
       </div>
 
-      <div className="card-surface border-l-4 border-l-lemon-500 p-5">
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.lemon.card}`}>
         <details open>
-          <summary className="cursor-pointer list-none font-display text-lg font-semibold text-ink-700">
-            Files & Preview
-          </summary>
-        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+          <SectionHeading icon={FileStack} color="lemon" as="summary">Files &amp; Preview</SectionHeading>
+        <div className="mt-4 flex flex-col gap-4">
           {productId && (
           <div className="rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
             <p className="text-sm font-semibold text-ink-600">Current uploads</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid gap-4 sm:grid-cols-3 xl:gap-6">
               <CurrentFileStatus label="Cover image" status={currentFiles?.coverImage ? "Uploaded" : "Missing"}>
                 {currentFiles?.coverImage && (
                   <>
@@ -630,7 +692,7 @@ export function ProductForm({
           )}
 
           {!productId && (
-            <div className="flex flex-col gap-4 xl:col-span-2">
+            <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FileField
                   label="Cover Image"
@@ -667,9 +729,9 @@ export function ProductForm({
         </details>
       </div>
 
-      <div className="card-surface border-l-4 border-l-blossom-600 p-5">
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.blossomDeep.card}`}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink-700">Regional Prices</h2>
+          <SectionHeading icon={Coins} color="blossomDeep">Regional Prices</SectionHeading>
           <button
             type="button"
             onClick={() =>
@@ -781,11 +843,9 @@ export function ProductForm({
         )}
       </div>
 
-      <div className="card-surface border-l-4 border-l-ink-200 p-5">
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.inkPale.card}`}>
         <details open>
-          <summary className="cursor-pointer list-none font-display text-lg font-semibold text-ink-700">
-            SEO
-          </summary>
+          <SectionHeading icon={Search} color="inkPale" as="summary">SEO</SectionHeading>
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Field
               label="SEO Title"

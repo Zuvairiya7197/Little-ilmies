@@ -17,6 +17,25 @@ type AdminProductListItem = {
   prices: { currencyCode: string; regularPrice: number }[];
 };
 
+// Stable color per category name (same name always gets the same chip
+// color) — cycles through the brand's rainbow palette used elsewhere in
+// admin, so categories are visually distinguishable at a glance.
+const CATEGORY_CHIP_COLORS = [
+  "bg-sage-50 text-sage-700",
+  "bg-gold-50 text-gold-700",
+  "bg-teal-50 text-teal-700",
+  "bg-blossom-50 text-blossom-700",
+  "bg-sunny-50 text-sunny-800",
+  "bg-lemon-50 text-lemon-800",
+  "bg-ink-100 text-ink-600",
+] as const;
+
+function categoryChipColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return CATEGORY_CHIP_COLORS[Math.abs(hash) % CATEGORY_CHIP_COLORS.length];
+}
+
 export function AdminProductsList({ products }: { products: AdminProductListItem[] }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -112,8 +131,14 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
         {products.map((product) => {
           const inr = product.prices.find((p) => p.currencyCode === "INR");
           const usd = product.prices.find((p) => p.currencyCode === "USD");
+          const isPublished = product.status === "PUBLISHED";
           return (
-            <li key={product.id} className="flex items-center gap-3 p-4 transition-colors hover:bg-cream-100">
+            <li
+              key={product.id}
+              className={`flex items-center gap-3 border-l-4 p-4 transition-colors hover:bg-cream-100 ${
+                isPublished ? "border-l-sage-400" : "border-l-gold-300"
+              }`}
+            >
               <input
                 type="checkbox"
                 checked={selectedSet.has(product.id)}
@@ -128,9 +153,20 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-ink-600">{product.title}</p>
-                  <p className="mt-0.5 text-xs text-ink-300">
-                    {product.categories.map((c) => c.category.name).join(", ") || "Uncategorized"}
-                  </p>
+                  {product.categories.length > 0 ? (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {product.categories.map(({ category }) => (
+                        <span
+                          key={category.name}
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${categoryChipColor(category.name)}`}
+                        >
+                          {category.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-ink-300">Uncategorized</p>
+                  )}
                 </div>
                 <div className="hidden shrink-0 text-sm text-ink-500 sm:block">
                   {inr ? formatPrice(inr.regularPrice, "INR" as CurrencyCode) : "-"}
@@ -144,7 +180,7 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
                 </div>
                 <span
                   className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold shadow-clay-sm ${
-                    product.status === "PUBLISHED" ? "bg-sage-50 text-sage-700" : "bg-ink-100 text-ink-500"
+                    isPublished ? "bg-sage-500 text-cream-50" : "bg-gold-100 text-gold-700"
                   }`}
                 >
                   {product.status}
