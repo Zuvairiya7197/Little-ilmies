@@ -131,7 +131,7 @@ export function CollectionCard({ title, description, href, icon: Icon, image, ca
           alt=""
           fill
           sizes="(max-width: 480px) 50vw, 300px"
-          className="scale-125 object-contain object-right transition-transform duration-300 group-hover:scale-[1.35] md:scale-150 md:group-hover:scale-[1.6]"
+          className="object-contain object-right p-2 transition-transform duration-300 group-hover:scale-105"
         />
       </div>
     </Link>
