@@ -122,17 +122,29 @@ export type SortOption =
   | "most-downloaded"
   | "highest-rated";
 
+export type ActivityType =
+  | "Colouring"
+  | "Tracing"
+  | "Worksheets"
+  | "Activities"
+  | "Stories"
+  | "Recipes"
+  | "Reading"
+  | "Learning";
+
 export interface ProductFilters {
   categorySlugs?: string[];
   ageRanges?: AgeRange[];
   languages?: Language[];
   formats?: ProductFormat[];
+  activityTypes?: ActivityType[];
   minPrice?: number;
   maxPrice?: number;
   minPageCount?: number;
   maxPageCount?: number;
   newArrivalsOnly?: boolean;
   bestsellersOnly?: boolean;
+  featuredOnly?: boolean;
   onSaleOnly?: boolean;
   freePreviewOnly?: boolean;
   query?: string;

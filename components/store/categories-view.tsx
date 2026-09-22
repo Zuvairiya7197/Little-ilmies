@@ -2,24 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Sparkles,
-  Moon,
-  Languages,
-  GraduationCap,
-  Palette,
-  HandHeart,
-  Heart,
-  Landmark,
   Star,
   Gift,
-  Gamepad2,
-  BookMarked,
   ArrowRight,
   Download,
   Printer,
   Baby,
   ShieldCheck,
-  BookOpen,
 } from "lucide-react";
+import { getCategoryIcon } from "@/lib/category-icons";
 import type { Category } from "@/types/catalog";
 
 const tileTints = [
@@ -31,125 +22,46 @@ const tileTints = [
   "bg-ink-50 text-ink-600",
 ] as const;
 
-function findCategory(categories: Category[], slug: string) {
-  return categories.find((c) => c.slug === slug);
+/**
+ * Every top-level category (parentId null) becomes a tile automatically —
+ * same DB-driven pattern as getBooksMenuSections (lib/store-navigation.ts),
+ * so a category added in admin appears here with no code change instead of
+ * silently being dropped like the old hardcoded tile list was. Book counts
+ * for a parent aggregate its own products plus every child's, matching how
+ * /shop/[category] already aggregates a parent group's results.
+ */
+function parentCategoryBookCount(categories: Category[], parent: Category) {
+  const ownCount = parent.bookCount;
+  const childrenCount = categories
+    .filter((c) => c.parentId === parent.id)
+    .reduce((sum, child) => sum + child.bookCount, 0);
+  return ownCount + childrenCount;
 }
 
 export function CategoriesView({ categories }: { categories: Category[] }) {
-  const tiles = [
-    {
-      label: "Islamic Studies",
-      href: "/shop/islamic-studies",
-      icon: Moon,
-      count: findCategory(categories, "islamic-studies")?.bookCount ?? 0,
+  const parentCategoryTiles = categories
+    .filter((c) => !c.parentId)
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((category) => ({
+      label: category.name,
+      href: `/shop/${category.slug}`,
+      icon: getCategoryIcon(category.slug),
+      count: parentCategoryBookCount(categories, category),
       unit: "Books",
-    },
-    {
-      label: "Qur'an & Arabic",
-      href: "/shop/quran-and-arabic",
-      icon: Languages,
-      count: findCategory(categories, "quran-and-arabic")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Early Learning",
-      href: "/shop/early-learning",
-      icon: GraduationCap,
-      count: findCategory(categories, "early-learning")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Languages",
-      href: "/shop/languages",
-      icon: BookOpen,
-      count: findCategory(categories, "languages")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Mathematics",
-      href: "/shop/mathematics",
-      icon: GraduationCap,
-      count: findCategory(categories, "mathematics")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Science & STEM",
-      href: "/shop/science-and-stem",
-      icon: Sparkles,
-      count: findCategory(categories, "science-and-stem")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Character Building",
-      href: "/shop/character-building",
-      icon: Heart,
-      count: findCategory(categories, "character-building")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Life Skills",
-      href: "/shop/life-skills",
-      icon: HandHeart,
-      count: findCategory(categories, "life-skills")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Creative Learning",
-      href: "/shop/creative-learning",
-      icon: Palette,
-      count: findCategory(categories, "creative-learning")?.bookCount ?? 0,
-      unit: "Activities",
-    },
-    {
-      label: "Printables",
-      href: "/shop/printables",
-      icon: BookMarked,
-      count: findCategory(categories, "printables")?.bookCount ?? 0,
-      unit: "Items",
-    },
-    {
-      label: "Games & Activities",
-      href: "/shop/games-and-activities",
-      icon: Gamepad2,
-      count: findCategory(categories, "games-and-activities")?.bookCount ?? 0,
-      unit: "Items",
-    },
-    {
-      label: "Seasonal Collections",
-      href: "/shop/seasonal-collections",
-      icon: Landmark,
-      count: findCategory(categories, "seasonal-collections")?.bookCount ?? 0,
-      unit: "Books",
-    },
-    {
-      label: "Bundles",
-      href: "/shop?bundle=all",
-      icon: Gift,
-      count: findCategory(categories, "bundles")?.bookCount ?? 0,
-      unit: "Bundles",
-    },
-    {
-      label: "Best Sellers",
-      href: "/shop?sort=bestselling",
-      icon: Star,
-      count: findCategory(categories, "best-sellers")?.bookCount ?? 0,
-      unit: "",
-    },
-    {
-      label: "New Arrivals",
-      href: "/shop?sort=newest",
-      icon: BookOpen,
-      count: findCategory(categories, "new-arrivals")?.bookCount ?? 0,
-      unit: "",
-    },
-    {
-      label: "Free Downloads",
-      href: "/shop/free-downloads",
-      icon: Download,
-      count: findCategory(categories, "free-downloads")?.bookCount ?? 0,
-      unit: "Books",
-    },
-  ].filter((tile) => tile.count > 0 || tile.unit === "");
+    }))
+    .filter((tile) => tile.count > 0);
+
+  // Bundles/Best Sellers/New Arrivals aren't Category rows — they're
+  // Bundle records and Product flags respectively — so they stay as fixed
+  // entries alongside the DB-driven category tiles above.
+  const specialTiles = [
+    { label: "Bundles", href: "/shop?bundle=all", icon: Gift, count: 0, unit: "" },
+    { label: "Best Sellers", href: "/shop?sort=bestselling", icon: Star, count: 0, unit: "" },
+    { label: "New Arrivals", href: "/shop?sort=newest", icon: Download, count: 0, unit: "" },
+  ];
+
+  const tiles = [...parentCategoryTiles, ...specialTiles];
 
   const badges = [
     { label: "Instant Download", description: "Start reading right away", icon: Download, iconBg: "bg-ink-50", iconColor: "text-ink-500" },

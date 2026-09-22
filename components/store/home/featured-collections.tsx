@@ -8,53 +8,60 @@ import type { Category } from "@/types/catalog";
  * Static fallback shown only when fewer than 3 categories are flagged
  * isFeaturedOnHomepage in the DB (e.g. a fresh install before an admin has
  * curated any) — keeps the section from rendering an empty/broken grid.
- * Mirrors the same 5 collections this section used to hardcode.
+ * Mirrors the 5 broad collections (Islamic + general learning) the DB rows
+ * are normally flagged with, so this fallback stays on-message even if an
+ * admin temporarily clears the featured flags.
  */
 export const FALLBACK_COLLECTIONS: CollectionTileData[] = [
   {
-    id: "stories-of-the-prophets",
-    title: "Stories of the Prophets",
-    description: "Authentic tales retold for young hearts.",
-    href: "/shop/stories-of-the-prophets",
-    image: "/images/collection-stories-of-the-prophets.png",
+    id: "islamic-studies",
+    title: "Islamic Learning",
+    description:
+      "Build a meaningful foundation with books about faith, manners, Qur'an, duas, and everyday Islamic learning.",
+    href: "/shop/islamic-studies",
+    image: "/images/islamic-learning.png",
     ...getFeaturedCategoryAccent("ink"),
     icon: getFeaturedCategoryIcon("book-heart"),
   },
   {
-    id: "good-manners",
-    title: "Good Manners Collection",
-    description: "Building akhlaq, one habit at a time.",
-    href: "/shop/good-manners",
-    image: "/images/collection-good-manners.png",
+    id: "early-learning",
+    title: "Early Learning",
+    description:
+      "Make the early years more engaging with ABCs, numbers, shapes, vocabulary, and preschool learning.",
+    href: "/shop/early-learning",
+    image: "/images/early-learning.png",
     ...getFeaturedCategoryAccent("sunny"),
+    icon: getFeaturedCategoryIcon("graduation-cap"),
+  },
+  {
+    id: "science-and-nature",
+    title: "Science & Nature",
+    description:
+      "Help little learners discover rain, plants, space, weather, and the fascinating world around them.",
+    href: "/shop/science-and-nature",
+    image: "/images/science-and-nature.png",
+    ...getFeaturedCategoryAccent("teal"),
     icon: getFeaturedCategoryIcon("sparkles"),
   },
   {
-    id: "ramadan",
-    title: "Ramadan Collection",
-    description: "Duas, stories, and activities for the blessed month.",
-    href: "/shop/ramadan",
-    image: "/images/collection-ramadan.png",
-    ...getFeaturedCategoryAccent("teal"),
-    icon: getFeaturedCategoryIcon("moon"),
-  },
-  {
-    id: "quran-and-arabic",
-    title: "Learning Arabic",
-    description: "First steps in reading and writing Arabic.",
-    href: "/shop/quran-and-arabic",
-    image: "/images/collection-learning-arabic.png",
-    ...getFeaturedCategoryAccent("blossom"),
-    icon: getFeaturedCategoryIcon("languages"),
-  },
-  {
     id: "activities-and-printables",
-    title: "Printable Activities",
-    description: "Coloring pages and activity books for quiet afternoons.",
+    title: "Activities & Printables",
+    description:
+      "Keep little hands learning with colouring, worksheets, tracing, activities, and creative printables.",
     href: "/shop/activities-and-printables",
-    image: "/images/collection-printable-activities.png",
+    image: "/images/activities-and-printables.png",
     ...getFeaturedCategoryAccent("sage"),
     icon: getFeaturedCategoryIcon("pen-tool"),
+  },
+  {
+    id: "life-skills",
+    title: "Life Skills",
+    description:
+      "Introduce useful everyday skills through simple resources for cooking, healthy habits, practical learning, and independence.",
+    href: "/shop/life-skills",
+    image: "/images/life-skills.png",
+    ...getFeaturedCategoryAccent("blossom"),
+    icon: getFeaturedCategoryIcon("heart"),
   },
 ];
 
@@ -71,10 +78,20 @@ export interface CollectionTileData {
   button: string;
 }
 
+/**
+ * The Category record stays "Islamic Studies" everywhere it's used as the
+ * real taxonomy name (admin, filters, nav, /shop/islamic-studies) — only
+ * this homepage/collections card reads friendlier as "Islamic Learning",
+ * so the override lives here rather than renaming the category itself.
+ */
+const HOMEPAGE_TITLE_OVERRIDES: Record<string, string> = {
+  "islamic-studies": "Islamic Learning",
+};
+
 export function toCollectionTiles(categories: Category[]): CollectionTileData[] {
   return categories.map((category) => ({
     id: category.slug,
-    title: category.name,
+    title: HOMEPAGE_TITLE_OVERRIDES[category.slug] ?? category.name,
     description: category.description ?? "",
     href: `/shop/${category.slug}`,
     image: category.coverImage,
@@ -87,6 +104,7 @@ export function CollectionCard({ title, description, href, icon: Icon, image, ca
   return (
     <Link
       href={href}
+      aria-label={`Explore ${title}`}
       className={`group relative flex min-h-[190px] gap-3 overflow-hidden rounded-3xl p-5 shadow-clay transition-transform duration-300 hover:-translate-y-1 xs:min-h-[200px] ${cardBg}`}
     >
       <div className="relative z-10 flex w-1/2 shrink-0 flex-col items-start justify-center md:w-[45%]">
@@ -194,8 +212,9 @@ export function FeaturedCollections({ categories }: { categories: Category[] }) 
             Curated for every learning moment
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-ink-400 xs:text-base">
-            Explore handpicked e-books and activities that inspire faith,
-            build character, and make learning delightful.
+            Thoughtfully created e-books and activities to help children learn
+            about their Deen, discover the world around them, build useful
+            skills, and enjoy learning along the way.
           </p>
         </div>
 

@@ -2,10 +2,10 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { AgeRange, Language, ProductFilters, ProductFormat, SortOption } from "@/types/catalog";
+import type { ActivityType, AgeRange, Language, ProductFilters, ProductFormat, SortOption } from "@/types/catalog";
 
-const ARRAY_KEYS = ["category", "age", "language", "format"] as const;
-const BOOLEAN_KEYS = ["new", "bestseller", "sale", "preview"] as const;
+const ARRAY_KEYS = ["category", "age", "language", "format", "activity"] as const;
+const BOOLEAN_KEYS = ["new", "bestseller", "featured", "sale", "preview"] as const;
 
 export function useShopFilters() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export function useShopFilters() {
     const ageRanges = searchParams.getAll("age") as AgeRange[];
     const languages = searchParams.getAll("language") as Language[];
     const formats = searchParams.getAll("format") as ProductFormat[];
+    const activityTypes = searchParams.getAll("activity") as ActivityType[];
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
     const query = searchParams.get("q") ?? undefined;
@@ -26,10 +27,12 @@ export function useShopFilters() {
       ageRanges: ageRanges.length ? ageRanges : undefined,
       languages: languages.length ? languages : undefined,
       formats: formats.length ? formats : undefined,
+      activityTypes: activityTypes.length ? activityTypes : undefined,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       newArrivalsOnly: searchParams.get("new") === "1",
       bestsellersOnly: searchParams.get("bestseller") === "1",
+      featuredOnly: searchParams.get("featured") === "1",
       onSaleOnly: searchParams.get("sale") === "1",
       freePreviewOnly: searchParams.get("preview") === "1",
       query,
@@ -121,13 +124,22 @@ export function useShopFilters() {
     router.push(`${pathname}?${params.toString()}` as never, { scroll: false });
   }, [pathname, router, searchParams]);
 
+  const removeArrayValue = useCallback(
+    (key: (typeof ARRAY_KEYS)[number], value: string) => toggleArrayValue(key, value),
+    [toggleArrayValue]
+  );
+
+  const clearPriceRange = useCallback(() => setPriceRange(undefined, undefined), [setPriceRange]);
+
   return {
     filters,
     sort,
     activeFilterCount,
     toggleArrayValue,
+    removeArrayValue,
     setBoolean,
     setPriceRange,
+    clearPriceRange,
     setSort,
     setQuery,
     clearAll,

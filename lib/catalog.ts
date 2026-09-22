@@ -1,6 +1,7 @@
 import type { ProductFilters, ProductSummary, SortOption } from "@/types/catalog";
 import type { CurrencyCode } from "@/types/pricing";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
+import { productMatchesActivityType } from "@/lib/activity-types";
 
 const AGE_CATEGORY_TO_RANGE = {
   "0-3-years": "0-3",
@@ -37,12 +38,16 @@ export function filterProducts(
     if (filters.formats?.length && !filters.formats.includes(p.format)) {
       return false;
     }
+    if (filters.activityTypes?.length && !filters.activityTypes.some((type) => productMatchesActivityType(p, type))) {
+      return false;
+    }
     if (filters.minPrice !== undefined && price < filters.minPrice) return false;
     if (filters.maxPrice !== undefined && price > filters.maxPrice) return false;
     if (filters.minPageCount !== undefined && p.pageCount < filters.minPageCount) return false;
     if (filters.maxPageCount !== undefined && p.pageCount > filters.maxPageCount) return false;
     if (filters.newArrivalsOnly && !p.isNewArrival) return false;
     if (filters.bestsellersOnly && !p.isBestseller) return false;
+    if (filters.featuredOnly && !p.isFeatured) return false;
     if (filters.onSaleOnly && !resolved.salePrice) return false;
     if (filters.freePreviewOnly && !p.hasFreePreview) return false;
 

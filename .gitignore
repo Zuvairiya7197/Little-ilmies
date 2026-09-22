@@ -41,3 +41,4 @@ next-env.d.ts
 /private-uploads/previews/*
 /private-uploads/covers/*
 !/private-uploads/**/.gitkeep
+.env*

@@ -1,11 +1,12 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import { X, type LucideIcon } from "lucide-react";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { formatPrice } from "@/lib/utils/format";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { getBooksMenuSections } from "@/lib/store-navigation";
+import { activityTypes } from "@/lib/activity-types";
 import type { CurrencyCode } from "@/types/pricing";
 import type { AgeRange, Category, Language, ProductFormat } from "@/types/catalog";
 import { cn } from "@/lib/utils/cn";
@@ -76,6 +77,8 @@ export function FilterPanel({
         </div>
       )}
 
+      <ActiveFilterChips categories={categories} />
+
       <FilterGroup title="Category">
         <div className="flex flex-col gap-4">
           {categoryGroups.map((group) => (
@@ -111,6 +114,22 @@ export function FilterPanel({
               checked={isArrayValueActive("age", age)}
               onChange={() => {
                 toggleArrayValue("age", age);
+                onApply?.();
+              }}
+            />
+          ))}
+        </div>
+      </FilterGroup>
+
+      <FilterGroup title="Activity Type">
+        <div className="flex flex-wrap gap-2">
+          {activityTypes.map((type) => (
+            <FilterChip
+              key={type}
+              label={type}
+              checked={isArrayValueActive("activity", type)}
+              onChange={() => {
+                toggleArrayValue("activity", type);
                 onApply?.();
               }}
             />
@@ -170,10 +189,10 @@ export function FilterPanel({
         </div>
       </FilterGroup>
 
-      <FilterGroup title="More">
+      <FilterGroup title="Special">
         <div className="flex flex-col gap-1">
           <FilterCheckbox
-            label="New arrivals"
+            label="New arrival"
             checked={isBooleanActive("new")}
             onChange={(checked) => {
               setBoolean("new", checked);
@@ -181,10 +200,18 @@ export function FilterPanel({
             }}
           />
           <FilterCheckbox
-            label="Best sellers"
+            label="Bestseller"
             checked={isBooleanActive("bestseller")}
             onChange={(checked) => {
               setBoolean("bestseller", checked);
+              onApply?.();
+            }}
+          />
+          <FilterCheckbox
+            label="Featured"
+            checked={isBooleanActive("featured")}
+            onChange={(checked) => {
+              setBoolean("featured", checked);
               onApply?.();
             }}
           />
@@ -206,6 +233,94 @@ export function FilterPanel({
           />
         </div>
       </FilterGroup>
+    </div>
+  );
+}
+
+const BOOLEAN_CHIP_LABELS: Record<"new" | "bestseller" | "featured" | "sale" | "preview", string> = {
+  new: "New arrival",
+  bestseller: "Bestseller",
+  featured: "Featured",
+  sale: "On sale",
+  preview: "Free preview",
+};
+
+/**
+ * Removable chips summarizing every active filter, mirroring the pattern
+ * described in the storefront filter spec: one chip per selected value
+ * (not per group), each removable on its own without disturbing the rest.
+ * Reads straight from useShopFilters()/searchParams — no separate state,
+ * so it can never drift from the filters actually applied.
+ */
+function ActiveFilterChips({ categories }: { categories: Category[] }) {
+  const { filters, toggleArrayValue, setBoolean, clearPriceRange, clearAll, activeFilterCount } = useShopFilters();
+  const currency = useCurrencyStore((s) => s.currency);
+
+  if (activeFilterCount === 0) return null;
+
+  const categoryBySlug = new Map(categories.map((c) => [c.slug, c.name]));
+
+  const chips: { key: string; label: string; onRemove: () => void }[] = [];
+
+  for (const slug of filters.categorySlugs ?? []) {
+    chips.push({
+      key: `category:${slug}`,
+      label: categoryBySlug.get(slug) ?? slug,
+      onRemove: () => toggleArrayValue("category", slug),
+    });
+  }
+  for (const age of filters.ageRanges ?? []) {
+    chips.push({ key: `age:${age}`, label: `Age ${age}`, onRemove: () => toggleArrayValue("age", age) });
+  }
+  for (const type of filters.activityTypes ?? []) {
+    chips.push({ key: `activity:${type}`, label: type, onRemove: () => toggleArrayValue("activity", type) });
+  }
+  for (const lang of filters.languages ?? []) {
+    chips.push({ key: `language:${lang}`, label: lang, onRemove: () => toggleArrayValue("language", lang) });
+  }
+  for (const format of filters.formats ?? []) {
+    chips.push({ key: `format:${format}`, label: format, onRemove: () => toggleArrayValue("format", format) });
+  }
+  if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+    const { min, max } = { min: filters.minPrice, max: filters.maxPrice };
+    const label =
+      min !== undefined && max !== undefined
+        ? `${formatPrice(min, currency)} – ${formatPrice(max, currency)}`
+        : min !== undefined
+          ? `Above ${formatPrice(min, currency)}`
+          : `Under ${formatPrice(max!, currency)}`;
+    chips.push({ key: "price", label, onRemove: clearPriceRange });
+  }
+  if (filters.newArrivalsOnly) chips.push({ key: "new", label: BOOLEAN_CHIP_LABELS.new, onRemove: () => setBoolean("new", false) });
+  if (filters.bestsellersOnly) chips.push({ key: "bestseller", label: BOOLEAN_CHIP_LABELS.bestseller, onRemove: () => setBoolean("bestseller", false) });
+  if (filters.featuredOnly) chips.push({ key: "featured", label: BOOLEAN_CHIP_LABELS.featured, onRemove: () => setBoolean("featured", false) });
+  if (filters.onSaleOnly) chips.push({ key: "sale", label: BOOLEAN_CHIP_LABELS.sale, onRemove: () => setBoolean("sale", false) });
+  if (filters.freePreviewOnly) chips.push({ key: "preview", label: BOOLEAN_CHIP_LABELS.preview, onRemove: () => setBoolean("preview", false) });
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-b border-ink-100 pb-4">
+      {chips.map((chip) => (
+        <button
+          key={chip.key}
+          type="button"
+          onClick={chip.onRemove}
+          className="tap-target inline-flex items-center gap-1.5 rounded-full bg-sage-50 py-1.5 pl-3 pr-2 text-xs font-semibold text-sage-700 transition-colors hover:bg-gold-50 hover:text-gold-700"
+        >
+          <span className="max-w-[10rem] truncate xs:max-w-[14rem]">{chip.label}</span>
+          <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        </button>
+      ))}
+      {chips.length > 1 && (
+        <button
+          type="button"
+          onClick={clearAll}
+          className="tap-target text-xs font-semibold text-ink-400 underline-offset-2 hover:text-ink-700 hover:underline"
+        >
+          Clear all
+        </button>
+      )}
     </div>
   );
 }
@@ -260,7 +375,7 @@ function FilterCheckbox({
         className="h-4 w-4 shrink-0 rounded border-ink-200 text-sage-600 focus:ring-sage-400"
       />
       {Icon && <Icon className="h-4 w-4 shrink-0 text-ink-300" aria-hidden="true" />}
-      <span>{label}</span>
+      <span className="min-w-0 break-words">{label}</span>
     </label>
   );
 }

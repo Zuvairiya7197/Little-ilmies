@@ -16,8 +16,9 @@ export function CollectionsView({ categories }: { categories: Category[] }) {
           Curated for every learning moment
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-ink-400 xs:text-base">
-          Explore handpicked e-books and activities that inspire faith, build
-          character, and make learning delightful.
+          Thoughtfully created e-books and activities to help children learn
+          about their Deen, discover the world around them, build useful
+          skills, and enjoy learning along the way.
         </p>
       </div>
 
