@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
 import { learningGoals } from "@/lib/learning-goals";
+import { DEFAULT_PRODUCT_AUTHOR, LICENSE_INFO_DEFAULTS, isLicenseInfoDefaultOrEmpty } from "@/lib/license-defaults";
 import type { CurrencyCode } from "@/types/pricing";
 import { calculateBookSalePrice, BOOK_SALE_DISCOUNT_PERCENTAGE } from "@/lib/pricing/automatic-pricing";
 import { formatPrice } from "@/lib/utils/format";
@@ -141,17 +142,18 @@ export function ProductForm({
       status: "PUBLISHED",
       hasFreePreview: true,
       rentAndReadEnabled: true,
-      author: "Zuvairiya Maryam",
+      author: DEFAULT_PRODUCT_AUTHOR,
       ageRange: "" as ProductFormValues["ageRange"],
       language: "English",
       format: "PDF",
-      baseCurrency: "INR",
+      baseCurrency: "USD",
       tags: [],
       learningGoals: [],
       whatsIncluded: [],
       learningObjectives: [],
       suitableFor: [],
       usageLicense: "PERSONAL_USE",
+      licenseInfo: LICENSE_INFO_DEFAULTS.PERSONAL_USE,
       seoKeywords: [],
       categoryIds: [],
       prices: [{ currencyCode: "INR", regularPrice: 0, isActive: true }],
@@ -168,6 +170,7 @@ export function ProductForm({
   const previewDescription =
     seoDescription || shortDescription || "A short description used by search engines and social previews.";
   const watchedPrices = watch("prices");
+  const usageLicense = watch("usageLicense");
 
   useEffect(() => {
     if (productId || !title) return;
@@ -178,6 +181,18 @@ export function ProductForm({
       setValue("seoTitle", title, { shouldValidate: true });
     }
   }, [dirtyFields.seoTitle, dirtyFields.slug, productId, setValue, title]);
+
+  // Keep License Information in sync with the selected Usage License, but
+  // only while it still holds a system-generated default (or is empty) —
+  // never overwrite text the admin typed themselves, even across re-renders
+  // triggered by unrelated field changes elsewhere in this form.
+  useEffect(() => {
+    if (!usageLicense) return;
+    const currentLicenseInfo = watch("licenseInfo");
+    if (isLicenseInfoDefaultOrEmpty(currentLicenseInfo)) {
+      setValue("licenseInfo", LICENSE_INFO_DEFAULTS[usageLicense], { shouldDirty: false });
+    }
+  }, [usageLicense, setValue, watch]);
 
   const { fields: priceFields, append: appendPrice, remove: removePrice } = useFieldArray({
     control,

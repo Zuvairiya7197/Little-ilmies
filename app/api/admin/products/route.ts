@@ -4,6 +4,7 @@ import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { productFormSchema } from "@/lib/validation/admin-product";
 import { deletePrivatePdf } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
+import { DEFAULT_PRODUCT_AUTHOR, LICENSE_INFO_DEFAULTS } from "@/lib/license-defaults";
 import { z } from "zod";
 
 const bulkDeleteSchema = z.object({
@@ -42,6 +43,8 @@ export async function POST(request: NextRequest) {
   const product = await prisma.product.create({
     data: {
       ...productData,
+      author: productData.author?.trim() || DEFAULT_PRODUCT_AUTHOR,
+      licenseInfo: productData.licenseInfo?.trim() || LICENSE_INFO_DEFAULTS[productData.usageLicense],
       coverImage: "/images/products/placeholder.svg",
       previewImagePaths: [],
       publishedAt: productData.status === "PUBLISHED" ? new Date() : null,
