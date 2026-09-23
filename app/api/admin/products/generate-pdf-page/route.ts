@@ -14,11 +14,15 @@ import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { productPreviewUrls, productRentalPageUrls } from "@/lib/catalog-assets";
 import { z } from "zod";
 
-// Matches the quality/size targets already used for manually-uploaded
-// rental pages (see upload-rental-pages/route.ts) so generated pages look
-// and weigh the same as hand-uploaded ones.
-const JPEG_QUALITY = 85;
-const MAX_DIMENSION = 2400;
+// Higher than the 85/2400 defaults used for re-compressing manually
+// uploaded rental pages (upload-rental-pages/route.ts): those exist to
+// shrink whatever an admin happened to upload, but here we control the
+// entire render pipeline, so quality 95 keeps generated pages visually
+// indistinguishable from the source PDF (no perceptible JPEG artifacting)
+// while still compressing meaningfully versus PNG. 3000px keeps text
+// crisp even if a reader zooms in past 100%.
+const JPEG_QUALITY = 95;
+const MAX_DIMENSION = 3000;
 
 const requestSchema = z.object({
   productId: z.string().min(1),
