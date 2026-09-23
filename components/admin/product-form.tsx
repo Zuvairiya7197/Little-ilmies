@@ -526,6 +526,7 @@ export function ProductForm({
                   productId={productId}
                   target="rental"
                   pageCount={watchedPageCount}
+                  existingPageCount={currentFiles.rentalPageCount ?? 0}
                   disabled={!rentAndReadEnabled}
                   refresh={router.refresh}
                   setError={setSubmitError}
@@ -715,6 +716,7 @@ export function ProductForm({
                     productId={productId}
                     target="preview"
                     pageCount={watchedPageCount}
+                    existingPageCount={currentFiles.previewPageCount ?? 0}
                     refresh={router.refresh}
                     setError={setSubmitError}
                   />
@@ -2022,6 +2024,7 @@ function GeneratePagesFromPdf({
   productId,
   target,
   pageCount,
+  existingPageCount = 0,
   disabled,
   refresh,
   setError,
@@ -2029,22 +2032,42 @@ function GeneratePagesFromPdf({
   productId: string;
   target: "preview" | "rental";
   pageCount: number | undefined;
+  existingPageCount?: number;
   disabled?: boolean;
   refresh: () => void;
   setError: (message: string | null) => void;
 }) {
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  // Mirrors the failure into a message right next to this button, in
+  // addition to the page-level submitError banner (setError prop) — that
+  // banner only renders once, at the very bottom of this long form, so a
+  // failure here could otherwise be invisible without scrolling all the
+  // way down.
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const label = target === "preview" ? "Free Preview" : "Rent & Read";
   const maxPages = target === "preview" ? Math.min(pageCount ?? 0, 20) : pageCount ?? 0;
 
+  function reportError(message: string) {
+    setLocalError(message);
+    setError(message);
+  }
+
   async function run() {
     if (!pageCount || pageCount < 1) {
-      setError("This product's page count isn't set yet — add it above before generating pages.");
+      reportError("This product's page count isn't set yet — add it above before generating pages.");
       return;
     }
+    if (existingPageCount > 0) {
+      const confirmed = window.confirm(
+        `This will delete the ${existingPageCount} existing ${label} page${existingPageCount === 1 ? "" : "s"} and replace ` +
+          `${existingPageCount === 1 ? "it" : "them"} with pages generated from the PDF. This can't be undone. Continue?`
+      );
+      if (!confirmed) return;
+    }
     setIsRunning(true);
+    setLocalError(null);
     setError(null);
     setProgress({ done: 0, total: maxPages });
 
@@ -2090,7 +2113,7 @@ function GeneratePagesFromPdf({
     setIsRunning(false);
     setProgress(null);
     if (firstError) {
-      setError(firstError);
+      reportError(firstError);
       return;
     }
     refresh();
@@ -2110,6 +2133,12 @@ function GeneratePagesFromPdf({
       {progress && (
         <p className="mt-1 text-xs text-ink-400">
           Generating page {Math.min(progress.done + 1, progress.total)} of {progress.total}…
+        </p>
+      )}
+      {localError && (
+        <p role="alert" className="mt-1 flex items-start gap-1.5 text-xs font-semibold text-gold-700">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {localError}
         </p>
       )}
     </div>
