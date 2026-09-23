@@ -171,7 +171,6 @@ export function ProductForm({
     seoDescription || shortDescription || "A short description used by search engines and social previews.";
   const watchedPrices = watch("prices");
   const usageLicense = watch("usageLicense");
-  const watchedPageCount = watch("pageCount");
 
   useEffect(() => {
     if (productId || !title) return;
@@ -514,25 +513,12 @@ export function ProductForm({
 
         <div className="mt-4">
           {productId ? (
-            <>
-              <RentalPagesUploader
-                productId={productId}
-                disabled={!rentAndReadEnabled}
-                onUploaded={router.refresh}
-                setError={setSubmitError}
-              />
-              {currentFiles?.hasPdf && (
-                <GeneratePagesFromPdf
-                  productId={productId}
-                  target="rental"
-                  pageCount={watchedPageCount}
-                  existingPageCount={currentFiles.rentalPageCount ?? 0}
-                  disabled={!rentAndReadEnabled}
-                  refresh={router.refresh}
-                  setError={setSubmitError}
-                />
-              )}
-            </>
+            <RentalPagesUploader
+              productId={productId}
+              disabled={!rentAndReadEnabled}
+              onUploaded={router.refresh}
+              setError={setSubmitError}
+            />
           ) : (
             <>
               <PreviewPagesField
@@ -711,16 +697,6 @@ export function ProductForm({
                   </div>
                 ) : null}
                 <DirectPreviewUploader productId={productId} refresh={router.refresh} setError={setSubmitError} />
-                {currentFiles?.hasPdf && (
-                  <GeneratePagesFromPdf
-                    productId={productId}
-                    target="preview"
-                    pageCount={watchedPageCount}
-                    existingPageCount={currentFiles.previewPageCount ?? 0}
-                    refresh={router.refresh}
-                    setError={setSubmitError}
-                  />
-                )}
               </CurrentFileStatus>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-ink-300">
@@ -2008,139 +1984,6 @@ function UseRentalPagesAsPreview({
           Cancel
         </button>
       </div>
-    </div>
-  );
-}
-
-/**
- * Renders every page of the product's already-uploaded PDF into images
- * server-side and attaches them as either Free Preview or Rent & Read
- * pages — an alternative to uploading page images by hand. One request
- * per page (see app/api/admin/products/generate-pdf-page/route.ts for
- * why), looped here with a little concurrency so a long book doesn't take
- * forever, but slowly enough to stay predictable if a page fails.
- */
-function GeneratePagesFromPdf({
-  productId,
-  target,
-  pageCount,
-  existingPageCount = 0,
-  disabled,
-  refresh,
-  setError,
-}: {
-  productId: string;
-  target: "preview" | "rental";
-  pageCount: number | undefined;
-  existingPageCount?: number;
-  disabled?: boolean;
-  refresh: () => void;
-  setError: (message: string | null) => void;
-}) {
-  const [isRunning, setIsRunning] = useState(false);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  // Mirrors the failure into a message right next to this button, in
-  // addition to the page-level submitError banner (setError prop) — that
-  // banner only renders once, at the very bottom of this long form, so a
-  // failure here could otherwise be invisible without scrolling all the
-  // way down.
-  const [localError, setLocalError] = useState<string | null>(null);
-
-  const label = target === "preview" ? "Free Preview" : "Rent & Read";
-  const maxPages = target === "preview" ? Math.min(pageCount ?? 0, 20) : pageCount ?? 0;
-
-  function reportError(message: string) {
-    setLocalError(message);
-    setError(message);
-  }
-
-  async function run() {
-    if (!pageCount || pageCount < 1) {
-      reportError("This product's page count isn't set yet — add it above before generating pages.");
-      return;
-    }
-    if (existingPageCount > 0) {
-      const confirmed = window.confirm(
-        `This will delete the ${existingPageCount} existing ${label} page${existingPageCount === 1 ? "" : "s"} and replace ` +
-          `${existingPageCount === 1 ? "it" : "them"} with pages generated from the PDF. This can't be undone. Continue?`
-      );
-      if (!confirmed) return;
-    }
-    setIsRunning(true);
-    setLocalError(null);
-    setError(null);
-    setProgress({ done: 0, total: maxPages });
-
-    const CONCURRENCY = 3;
-    let nextPage = 1;
-    let firstError: string | null = null;
-
-    async function worker() {
-      while (nextPage <= maxPages && !firstError) {
-        const pageNumber = nextPage++;
-        try {
-          const res = await fetch("/api/admin/products/generate-pdf-page", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              productId,
-              pageNumber,
-              target,
-              append: pageNumber > 1,
-            }),
-          });
-          if (!res.ok) {
-            const data = await res.json().catch(() => null);
-            firstError = data?.error ?? `Could not generate page ${pageNumber}.`;
-            return;
-          }
-          setProgress((current) => (current ? { ...current, done: current.done + 1 } : current));
-        } catch {
-          firstError = `Could not generate page ${pageNumber} — check your connection and try again.`;
-          return;
-        }
-      }
-    }
-
-    // Page 1 must land first (it's the one that clears any existing set via
-    // append:false), so run it alone before fanning out the rest.
-    await worker();
-    if (!firstError && maxPages > 1) {
-      nextPage = 2;
-      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, maxPages - 1) }, worker));
-    }
-
-    setIsRunning(false);
-    setProgress(null);
-    if (firstError) {
-      reportError(firstError);
-      return;
-    }
-    refresh();
-  }
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={run}
-        disabled={disabled || isRunning}
-        className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-sage-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : null}
-        Generate {label} pages from PDF
-      </button>
-      {progress && (
-        <p className="mt-1 text-xs text-ink-400">
-          Generating page {Math.min(progress.done + 1, progress.total)} of {progress.total}…
-        </p>
-      )}
-      {localError && (
-        <p role="alert" className="mt-1 flex items-start gap-1.5 text-xs font-semibold text-gold-700">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {localError}
-        </p>
-      )}
     </div>
   );
 }
