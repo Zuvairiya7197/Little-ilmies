@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   // that webpack can't parse as a module — this tells Next to require() it
   // at runtime instead of bundling it, same as sharp already needs.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
+  // pdf.js loads its worker (pdf.worker.mjs) via a runtime dynamic import
+  // of a plain string path, which Vercel's build-time file tracer can't
+  // follow — without this, the worker file is silently missing from the
+  // deployed function and every render fails with "Cannot find module
+  // .../pdf.worker.mjs". This explicitly tells the tracer to include it
+  // for every route that might call lib/pdf-rasterize.ts.
+  outputFileTracingIncludes: {
+    "/api/admin/products/generate-pdf-page": ["node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     dangerouslyAllowSVG: true,
