@@ -7,6 +7,10 @@ import type { NextConfig } from "next";
 const cdnDomain = process.env.ASSETS_CDN_DOMAIN;
 
 const nextConfig: NextConfig = {
+  // @napi-rs/canvas ships a native .node binary (see lib/pdf-rasterize.ts)
+  // that webpack can't parse as a module — this tells Next to require() it
+  // at runtime instead of bundling it, same as sharp already needs.
+  serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
   images: {
     formats: ["image/avif", "image/webp"],
     dangerouslyAllowSVG: true,

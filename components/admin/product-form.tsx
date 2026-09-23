@@ -171,6 +171,7 @@ export function ProductForm({
     seoDescription || shortDescription || "A short description used by search engines and social previews.";
   const watchedPrices = watch("prices");
   const usageLicense = watch("usageLicense");
+  const watchedPageCount = watch("pageCount");
 
   useEffect(() => {
     if (productId || !title) return;
@@ -513,12 +514,24 @@ export function ProductForm({
 
         <div className="mt-4">
           {productId ? (
-            <RentalPagesUploader
-              productId={productId}
-              disabled={!rentAndReadEnabled}
-              onUploaded={router.refresh}
-              setError={setSubmitError}
-            />
+            <>
+              <RentalPagesUploader
+                productId={productId}
+                disabled={!rentAndReadEnabled}
+                onUploaded={router.refresh}
+                setError={setSubmitError}
+              />
+              {currentFiles?.hasPdf && (
+                <GeneratePagesFromPdf
+                  productId={productId}
+                  target="rental"
+                  pageCount={watchedPageCount}
+                  disabled={!rentAndReadEnabled}
+                  refresh={router.refresh}
+                  setError={setSubmitError}
+                />
+              )}
+            </>
           ) : (
             <>
               <PreviewPagesField
@@ -697,6 +710,15 @@ export function ProductForm({
                   </div>
                 ) : null}
                 <DirectPreviewUploader productId={productId} refresh={router.refresh} setError={setSubmitError} />
+                {currentFiles?.hasPdf && (
+                  <GeneratePagesFromPdf
+                    productId={productId}
+                    target="preview"
+                    pageCount={watchedPageCount}
+                    refresh={router.refresh}
+                    setError={setSubmitError}
+                  />
+                )}
               </CurrentFileStatus>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-ink-300">
@@ -1984,6 +2006,112 @@ function UseRentalPagesAsPreview({
           Cancel
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Renders every page of the product's already-uploaded PDF into images
+ * server-side and attaches them as either Free Preview or Rent & Read
+ * pages — an alternative to uploading page images by hand. One request
+ * per page (see app/api/admin/products/generate-pdf-page/route.ts for
+ * why), looped here with a little concurrency so a long book doesn't take
+ * forever, but slowly enough to stay predictable if a page fails.
+ */
+function GeneratePagesFromPdf({
+  productId,
+  target,
+  pageCount,
+  disabled,
+  refresh,
+  setError,
+}: {
+  productId: string;
+  target: "preview" | "rental";
+  pageCount: number | undefined;
+  disabled?: boolean;
+  refresh: () => void;
+  setError: (message: string | null) => void;
+}) {
+  const [isRunning, setIsRunning] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+
+  const label = target === "preview" ? "Free Preview" : "Rent & Read";
+  const maxPages = target === "preview" ? Math.min(pageCount ?? 0, 20) : pageCount ?? 0;
+
+  async function run() {
+    if (!pageCount || pageCount < 1) {
+      setError("This product's page count isn't set yet — add it above before generating pages.");
+      return;
+    }
+    setIsRunning(true);
+    setError(null);
+    setProgress({ done: 0, total: maxPages });
+
+    const CONCURRENCY = 3;
+    let nextPage = 1;
+    let firstError: string | null = null;
+
+    async function worker() {
+      while (nextPage <= maxPages && !firstError) {
+        const pageNumber = nextPage++;
+        try {
+          const res = await fetch("/api/admin/products/generate-pdf-page", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              productId,
+              pageNumber,
+              target,
+              append: pageNumber > 1,
+            }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            firstError = data?.error ?? `Could not generate page ${pageNumber}.`;
+            return;
+          }
+          setProgress((current) => (current ? { ...current, done: current.done + 1 } : current));
+        } catch {
+          firstError = `Could not generate page ${pageNumber} — check your connection and try again.`;
+          return;
+        }
+      }
+    }
+
+    // Page 1 must land first (it's the one that clears any existing set via
+    // append:false), so run it alone before fanning out the rest.
+    await worker();
+    if (!firstError && maxPages > 1) {
+      nextPage = 2;
+      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, maxPages - 1) }, worker));
+    }
+
+    setIsRunning(false);
+    setProgress(null);
+    if (firstError) {
+      setError(firstError);
+      return;
+    }
+    refresh();
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={run}
+        disabled={disabled || isRunning}
+        className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-sage-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : null}
+        Generate {label} pages from PDF
+      </button>
+      {progress && (
+        <p className="mt-1 text-xs text-ink-400">
+          Generating page {Math.min(progress.done + 1, progress.total)} of {progress.total}…
+        </p>
+      )}
     </div>
   );
 }
