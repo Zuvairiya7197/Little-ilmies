@@ -22,7 +22,11 @@ const attachedRentalPagesSchema = z.object({
   productId: z.string().min(1),
   pathnames: z.array(z.string().min(1)).min(1).max(500),
 });
-const removeRentalPagesSchema = z.object({ productId: z.string().min(1) });
+// With `pathname`, removes just that one page; without it, removes them all.
+const removeRentalPagesSchema = z.object({
+  productId: z.string().min(1),
+  pathname: z.string().min(1).optional(),
+});
 // Reorders the existing pages in place — same set of keys, just a new
 // order, so (unlike attachedRentalPagesSchema below) nothing gets deleted
 // from storage.
@@ -189,6 +193,18 @@ export async function DELETE(request: NextRequest) {
     });
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const { pathname } = parsed.data;
+    if (pathname) {
+      if (!product.rentalPageImagePaths.includes(pathname)) {
+        return NextResponse.json({ error: "Rental page not found" }, { status: 404 });
+      }
+      const remaining = product.rentalPageImagePaths.filter((p) => p !== pathname);
+      await prisma.product.update({ where: { id: product.id }, data: { rentalPageImagePaths: remaining } });
+      await deleteRentalPages([pathname]);
+      revalidateCatalogPaths(product.slug);
+      return NextResponse.json({ status: "removed" });
     }
 
     await deleteRentalPages(product.rentalPageImagePaths);

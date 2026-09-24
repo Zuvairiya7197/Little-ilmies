@@ -11,6 +11,8 @@ import {
   Upload,
   Trash2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Check,
   Wand2,
   X,
@@ -565,7 +567,7 @@ export function ProductForm({
               </p>
               {currentFiles?.rentalPageCount ? (
                 <div className="mt-2">
-                  <p className="mb-2 text-xs text-ink-300">Drag a page to reorder it.</p>
+                  <p className="mb-2 text-xs text-ink-300">Drag a page (or use the arrows) to reorder it; the bin deletes that page.</p>
                   <RentalPageThumbs
                     productId={productId}
                     images={currentFiles.rentalPageImages ?? []}
@@ -1602,11 +1604,12 @@ interface RentalPageUploadItem {
 
 /**
  * Rent & Read page uploader for an existing product. Selecting files
- * stages them (no network call yet); each staged page gets its own
- * "Add" button that uploads and appends just that page to the product,
- * settling into a "Done" state once it's live — mirrors
- * InstantFileUpload's Add/Done pattern instead of auto-uploading on
- * selection.
+ * stages them (no network call yet, sorted by filename so "page-2" comes
+ * before "page-10"); a single "Add" button then uploads the whole queue
+ * one page at a time, in order. Sequential on purpose: each finalize call
+ * appends to the product's page list, so parallel uploads would race and
+ * scramble (or drop) pages. Staged or failed files can be removed before
+ * uploading.
  */
 function RentalPagesUploader({
   productId,
@@ -1620,27 +1623,34 @@ function RentalPagesUploader({
   setError: (message: string | null) => void;
 }) {
   const [items, setItems] = useState<RentalPageUploadItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const pendingItems = items.filter((item) => item.status === "queued" || item.status === "error");
+  const doneCount = items.filter((item) => item.status === "done").length;
 
   function updateItem(id: string, patch: Partial<RentalPageUploadItem>) {
     setItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
 
+  function removeItem(id: string) {
+    setItems((current) => current.filter((item) => item.id !== id));
+  }
+
   function addFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
-    const newItems: RentalPageUploadItem[] = Array.from(fileList).map((file) => ({
-      id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
-      file,
-      status: "queued",
-      progress: 0,
-    }));
+    const newItems: RentalPageUploadItem[] = Array.from(fileList)
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }))
+      .map((file) => ({
+        id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+        file,
+        status: "queued",
+        progress: 0,
+      }));
     setItems((current) => [...current, ...newItems]);
   }
 
-  async function uploadItem(id: string) {
-    const item = items.find((i) => i.id === id);
-    if (!item || item.status === "uploading" || item.status === "done") return;
-
-    updateItem(id, { status: "uploading", progress: 0, error: undefined });
+  async function uploadItem(item: RentalPageUploadItem): Promise<boolean> {
+    updateItem(item.id, { status: "uploading", progress: 0, error: undefined });
     try {
       const compressed = await compressImageInBrowser(item.file);
       const key = rentalPathname(productId, item.file.name, 0);
@@ -1653,22 +1663,38 @@ function RentalPagesUploader({
         fileSize: compressed.size,
       });
       await uploadToPresignedUrl(uploadUrl, compressed, contentType, (percentage) =>
-        updateItem(id, { progress: percentage })
+        updateItem(item.id, { progress: percentage })
       );
       await finalizeRentalPage(productId, key, true, compressed !== item.file);
-      updateItem(id, { status: "done", progress: 100 });
-      onUploaded();
+      updateItem(item.id, { status: "done", progress: 100 });
+      return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Upload failed.";
-      updateItem(id, { status: "error", error: message });
+      updateItem(item.id, { status: "error", error: message });
       setError(message);
+      return false;
+    }
+  }
+
+  async function uploadQueue() {
+    if (isUploading || pendingItems.length === 0) return;
+    setIsUploading(true);
+    setError(null);
+    let uploadedAny = false;
+    try {
+      for (const item of pendingItems) {
+        if (await uploadItem(item)) uploadedAny = true;
+      }
+    } finally {
+      setIsUploading(false);
+      if (uploadedAny) onUploaded();
     }
   }
 
   return (
     <div>
       <label
-        className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+        className={`tap-target flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 bg-cream-50 px-4 py-3 text-sm text-ink-500 hover:border-sage-300 ${disabled || isUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
       >
         <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
         {disabled ? "Enable Rent & Read to upload reader pages" : "Choose page images to add"}
@@ -1676,7 +1702,7 @@ function RentalPagesUploader({
           type="file"
           accept="image/jpeg,image/png,image/webp"
           multiple
-          disabled={disabled}
+          disabled={disabled || isUploading}
           className="sr-only"
           onChange={(e) => {
             addFiles(e.target.files);
@@ -1686,51 +1712,75 @@ function RentalPagesUploader({
       </label>
 
       {items.length > 0 && (
-        <ol className="mt-2 flex flex-col gap-1.5">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center gap-3 rounded-lg bg-cream-100 px-3 py-2 text-xs text-ink-500"
+        <>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={uploadQueue}
+              disabled={disabled || isUploading || pendingItems.length === 0}
+              className="tap-target flex items-center gap-1.5 rounded-full bg-sage-600 px-4 py-1.5 text-xs font-semibold text-cream-50 hover:bg-sage-700 disabled:opacity-50"
             >
-              <span className="min-w-0 flex-1 truncate">{item.file.name}</span>
-              {item.status === "queued" && (
-                <button
-                  type="button"
-                  onClick={() => uploadItem(item.id)}
-                  className="tap-target shrink-0 rounded-full bg-sage-600 px-3 py-1 text-xs font-semibold text-cream-50 hover:bg-sage-700"
-                >
-                  Add
-                </button>
+              {isUploading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Upload className="h-3.5 w-3.5" aria-hidden="true" />
               )}
-              {item.status === "uploading" && (
-                <span className="flex shrink-0 items-center gap-1.5 font-semibold text-sage-700">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                  {Math.round(item.progress)}%
-                </span>
-              )}
-              {item.status === "done" && (
-                <span className="flex shrink-0 items-center gap-1 font-semibold text-sage-700">
-                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                  Done
-                </span>
-              )}
-              {item.status === "error" && (
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="font-semibold text-gold-700" title={item.error}>
+              {isUploading
+                ? `Uploading ${doneCount + 1}/${items.length}…`
+                : pendingItems.length > 0
+                  ? `Add ${pendingItems.length} page${pendingItems.length === 1 ? "" : "s"}`
+                  : "All pages added"}
+            </button>
+            {!isUploading && (
+              <button
+                type="button"
+                onClick={() => setItems([])}
+                className="text-xs font-semibold text-ink-400 hover:underline"
+              >
+                Clear list
+              </button>
+            )}
+          </div>
+          <ol className="mt-2 flex flex-col gap-1.5">
+            {items.map((item, index) => (
+              <li
+                key={item.id}
+                className="flex items-center gap-3 rounded-lg bg-cream-100 px-3 py-2 text-xs text-ink-500"
+              >
+                <span className="w-6 shrink-0 text-right font-semibold text-ink-300">{index + 1}.</span>
+                <span className="min-w-0 flex-1 truncate">{item.file.name}</span>
+                {item.status === "queued" && <span className="shrink-0 text-ink-300">Queued</span>}
+                {item.status === "uploading" && (
+                  <span className="flex shrink-0 items-center gap-1.5 font-semibold text-sage-700">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    {Math.round(item.progress)}%
+                  </span>
+                )}
+                {item.status === "done" && (
+                  <span className="flex shrink-0 items-center gap-1 font-semibold text-sage-700">
+                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    Done
+                  </span>
+                )}
+                {item.status === "error" && (
+                  <span className="shrink-0 font-semibold text-gold-700" title={item.error}>
                     Failed
                   </span>
+                )}
+                {(item.status === "queued" || item.status === "error") && !isUploading && (
                   <button
                     type="button"
-                    onClick={() => uploadItem(item.id)}
-                    className="tap-target rounded-full bg-sage-600 px-3 py-1 text-xs font-semibold text-cream-50 hover:bg-sage-700"
+                    onClick={() => removeItem(item.id)}
+                    aria-label={`Remove ${item.file.name} from queue`}
+                    className="tap-target shrink-0 rounded-full p-1 text-ink-400 hover:bg-gold-50 hover:text-gold-700"
                   >
-                    Retry
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
+                )}
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </div>
   );
@@ -1771,75 +1821,132 @@ function RentalPageThumbs({
   refresh: () => void;
   setError: (message: string | null) => void;
 }) {
+  // Local copy so a reorder/delete shows instantly instead of waiting on
+  // router.refresh(); resynced whenever the server sends a new list.
+  const [order, setOrder] = useState(images);
   const [isSaving, setIsSaving] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [failedIndexes, setFailedIndexes] = useState<Set<number>>(new Set());
+  const [failedSrcs, setFailedSrcs] = useState<Set<string>>(new Set());
 
-  if (images.length === 0) return null;
+  useEffect(() => {
+    setOrder(images);
+  }, [images]);
+
+  if (order.length === 0) return null;
 
   async function commitOrder(fromIndex: number, toIndex: number) {
-    if (fromIndex === toIndex) return;
+    if (isSaving || fromIndex === toIndex || toIndex < 0 || toIndex >= order.length) return;
 
-    const pathnames = images.map((src) => pathnameFromRentalUrl(src));
+    const previous = order;
+    const next = [...order];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+
+    const pathnames = next.map((src) => pathnameFromRentalUrl(src));
     if (pathnames.some((p) => !p)) {
       setError("Can't reorder — one or more pages are missing path info. Try refreshing the page.");
       return;
     }
-    const reordered = [...(pathnames as string[])];
-    const [moved] = reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, moved);
 
+    setOrder(next);
     setIsSaving(true);
     setError(null);
     try {
       const res = await fetch("/api/admin/products/upload-rental-pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, order: reordered }),
+        body: JSON.stringify({ productId, order: pathnames }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
+        setOrder(previous);
         setError(data?.error ?? "Could not reorder rental pages.");
         return;
       }
       refresh();
+    } catch {
+      setOrder(previous);
+      setError("Could not reorder rental pages.");
     } finally {
       setIsSaving(false);
     }
   }
 
+  async function deletePage(index: number) {
+    if (isSaving) return;
+    const src = order[index];
+    const pathname = pathnameFromRentalUrl(src);
+    if (!pathname) {
+      setError("Can't delete — this page is missing path info. Try refreshing the page.");
+      return;
+    }
+    if (!window.confirm(`Delete page ${index + 1} (${rentalPageDisplayName(src, index)}) permanently?`)) return;
+
+    const previous = order;
+    setOrder(order.filter((_, i) => i !== index));
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/products/upload-rental-pages", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, pathname }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setOrder(previous);
+        setError(data?.error ?? "Could not delete rental page.");
+        return;
+      }
+      refresh();
+    } catch {
+      setOrder(previous);
+      setError("Could not delete rental page.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function endDrag() {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  }
+
   return (
-    <ol className="grid grid-cols-4 gap-2.5 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
-      {images.map((src, index) => (
+    <ol className="grid grid-cols-3 gap-2.5 xs:grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+      {order.map((src, index) => (
         <li
-          key={src}
+          key={pathnameFromRentalUrl(src) ?? src}
           draggable={!isSaving}
-          onDragStart={() => setDragIndex(index)}
-          onDragEnter={() => {
-            if (dragIndex !== null && dragIndex !== index) setDragOverIndex(index);
+          onDragStart={(e) => {
+            // Firefox won't start a drag unless some data is set.
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", String(index));
+            setDragIndex(index);
           }}
-          onDragOver={(e) => e.preventDefault()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            if (dragIndex !== null && dragOverIndex !== index) setDragOverIndex(index);
+          }}
           onDrop={(e) => {
             e.preventDefault();
-            if (dragIndex !== null) commitOrder(dragIndex, index);
-            setDragIndex(null);
-            setDragOverIndex(null);
+            const from = dragIndex ?? Number(e.dataTransfer.getData("text/plain"));
+            endDrag();
+            if (Number.isInteger(from)) commitOrder(from, index);
           }}
-          onDragEnd={() => {
-            setDragIndex(null);
-            setDragOverIndex(null);
-          }}
+          onDragEnd={endDrag}
           className={`rounded-lg border p-1 transition-colors ${
-            dragOverIndex === index
+            dragOverIndex === index && dragIndex !== index
               ? "border-sage-500 bg-sage-50"
               : dragIndex === index
                 ? "border-ink-200 bg-cream-100 opacity-50"
                 : "border-ink-100 bg-cream-50"
           } ${isSaving ? "cursor-wait" : "cursor-grab active:cursor-grabbing"}`}
         >
-          <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
-            {failedIndexes.has(index) ? (
+          <div className="pointer-events-none relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
+            {failedSrcs.has(src) ? (
               <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-ink-300">
                 Failed to load
               </div>
@@ -1854,13 +1961,45 @@ function RentalPageThumbs({
                 loading="lazy"
                 draggable={false}
                 className="absolute inset-0 h-full w-full select-none object-cover"
-                onError={() => setFailedIndexes((current) => new Set(current).add(index))}
+                onError={() => setFailedSrcs((current) => new Set(current).add(src))}
               />
             )}
+            <span className="absolute left-1 top-1 rounded bg-ink-700/70 px-1 text-[10px] font-semibold text-cream-50">
+              {index + 1}
+            </span>
           </div>
           <p className="mt-1 truncate text-center text-[10px] font-semibold text-ink-400" title={rentalPageDisplayName(src, index)}>
             {rentalPageDisplayName(src, index)}
           </p>
+          <div className="mt-1 grid grid-cols-3 gap-1">
+            <button
+              type="button"
+              onClick={() => commitOrder(index, index - 1)}
+              disabled={isSaving || index === 0}
+              aria-label={`Move page ${index + 1} earlier`}
+              className="flex items-center justify-center rounded bg-cream-100 py-0.5 text-ink-500 hover:bg-sage-50 disabled:opacity-40"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => deletePage(index)}
+              disabled={isSaving}
+              aria-label={`Delete page ${index + 1}`}
+              className="flex items-center justify-center rounded bg-gold-50 py-0.5 text-gold-700 hover:bg-gold-100 disabled:opacity-40"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => commitOrder(index, index + 1)}
+              disabled={isSaving || index === order.length - 1}
+              aria-label={`Move page ${index + 1} later`}
+              className="flex items-center justify-center rounded bg-cream-100 py-0.5 text-ink-500 hover:bg-sage-50 disabled:opacity-40"
+            >
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
         </li>
       ))}
     </ol>
