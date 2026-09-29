@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AGE_MAX, AGE_MIN } from "@/lib/age-range";
 
 const regionalPriceSchema = z.object({
   currencyCode: z.enum(["INR", "USD", "GBP", "AED"]),
@@ -15,6 +16,17 @@ const regionalPriceSchema = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["saleEndDate"], message: "Sale end date must be after start date" });
   }
 });
+
+// Selects submit "" for "not chosen"; anything else must be a whole age.
+const ageSchema = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.coerce
+    .number({ invalid_type_error: "Choose a valid age" })
+    .int("Choose a valid age")
+    .min(AGE_MIN, "Age cannot be negative")
+    .max(AGE_MAX, `Age cannot be above ${AGE_MAX}`)
+    .nullable()
+);
 
 const stringListSchema = z
   .array(z.string().trim().min(1, "Remove empty items"))
@@ -39,9 +51,10 @@ export const productFormSchema = z.object({
   categoryIds: z.array(z.string()).min(1, "Select at least one category"),
   tags: stringListSchema,
   learningGoals: z.array(z.string()).default([]),
-  ageRange: z.enum(["0-3", "3-6", "6-9", "9-12", "12+"], {
-    errorMap: () => ({ message: "Choose an age range" }),
-  }),
+  hasAgeRange: z.boolean().default(true),
+  ageFrom: ageSchema,
+  ageTo: ageSchema,
+  ageOpenEnded: z.boolean().default(false),
   language: z.enum(["English", "Arabic", "Hindi", "Marathi"]),
   format: z.enum(["PDF", "Printable PDF", "Interactive PDF"]),
   pageCount: z.coerce.number().int().min(1, "Must be at least 1 page"),
@@ -64,6 +77,21 @@ export const productFormSchema = z.object({
   seoDescription: z.string().trim().max(180, "Keep meta descriptions close to 160 characters").optional(),
   seoKeywords: stringListSchema,
   prices: z.array(regionalPriceSchema).min(1, "Add at least an INR price"),
+}).superRefine((value, ctx) => {
+  if (!value.hasAgeRange) return;
+  if (value.ageFrom == null) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["ageFrom"], message: "Choose a From Age" });
+  }
+  if (value.ageTo == null && !value.ageOpenEnded) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["ageTo"], message: "Choose a To Age" });
+  }
+  if (value.ageFrom != null && value.ageTo != null && !value.ageOpenEnded && value.ageFrom > value.ageTo) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["ageTo"],
+      message: "To Age must be greater than or equal to From Age.",
+    });
+  }
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

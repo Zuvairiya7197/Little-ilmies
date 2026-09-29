@@ -15,7 +15,6 @@ export interface RentalUpgradeInfo {
   productSlug: string;
   coverImage: string;
   prices: ProductSummary["prices"];
-  ageRange: ProductSummary["ageRange"];
   pageCount: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;
@@ -62,7 +61,6 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
       title,
       coverImage: upgrade.coverImage,
       prices: upgrade.prices,
-      ageRange: upgrade.ageRange,
       pageCount: upgrade.pageCount,
       isBestseller: upgrade.isBestseller,
       isNewArrival: upgrade.isNewArrival,

@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, ArrowRight } from "lucide-react";
-import type { AgeRange } from "@/types/catalog";
+import type { AgeGroup } from "@/lib/age-range";
 
 const ageBands: {
-  range: AgeRange;
+  range: AgeGroup;
   label: string;
   tint: string;
   image?: string;

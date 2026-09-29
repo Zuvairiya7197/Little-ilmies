@@ -2,8 +2,10 @@ import Link from "next/link";
 import { ChevronRight, User, FileText, Globe } from "lucide-react";
 import { StarRating } from "@/components/store/star-rating";
 import type { ProductDetail } from "@/types/catalog";
+import { formatAgeRange } from "@/lib/age-range";
 
 export function ProductHeader({ product }: { product: ProductDetail }) {
+  const ageLabel = formatAgeRange(product) ?? "Age not specified";
   return (
     <div>
       <nav aria-label="Breadcrumb" className="mb-4 hidden items-center gap-1.5 text-xs text-ink-300 lg:flex">
@@ -30,7 +32,7 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
           {product.title}
         </h1>
         <p className="mt-5 text-xl text-ink-400">
-          Ages {formatAgeRange(product.ageRange)} · {product.pageCount}pg
+          {ageLabel} · {product.pageCount}pg
         </p>
         {product.author && <p className="mt-2 text-base font-semibold text-ink-500">By {product.author}</p>}
         {product.reviewCount > 0 && (
@@ -58,7 +60,7 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
           )}
           <span className="flex items-center gap-1.5 rounded-full bg-cream-100 px-3 py-1.5 text-ink-600">
             <User className="h-3.5 w-3.5 text-ink-400" aria-hidden="true" />
-            Ages {formatAgeRange(product.ageRange)}
+            {ageLabel}
           </span>
           <span className="flex items-center gap-1.5 rounded-full bg-cream-100 px-3 py-1.5 text-ink-600">
             <FileText className="h-3.5 w-3.5 text-ink-400" aria-hidden="true" />
@@ -91,8 +93,4 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
       </div>
     </div>
   );
-}
-
-function formatAgeRange(ageRange: string) {
-  return ageRange.replace(/-/g, "–");
 }

@@ -78,7 +78,6 @@ export default async function RentalReaderPage({ params }: PageProps) {
       productSlug: product.slug,
       coverImage: product.coverImage,
       prices: product.prices,
-      ageRange: product.ageRange,
       pageCount: product.pageCount,
       isBestseller: product.isBestseller,
       isNewArrival: product.isNewArrival,

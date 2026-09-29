@@ -8,10 +8,10 @@ import { getCategoryIcon } from "@/lib/category-icons";
 import { getBooksMenuSections } from "@/lib/store-navigation";
 import { activityTypes } from "@/lib/activity-types";
 import type { CurrencyCode } from "@/types/pricing";
-import type { AgeRange, Category, Language, ProductFormat } from "@/types/catalog";
+import type { Category, Language, ProductFormat } from "@/types/catalog";
+import { AGE_GROUPS, formatAgeGroup, formatAgeOption } from "@/lib/age-range";
 import { cn } from "@/lib/utils/cn";
 
-const ageRanges: AgeRange[] = ["0-3", "3-6", "6-9", "9-12", "12+"];
 const languages: Language[] = ["English", "Arabic", "Hindi", "Marathi"];
 const formats: ProductFormat[] = ["PDF", "Printable PDF", "Interactive PDF"];
 
@@ -107,10 +107,10 @@ export function FilterPanel({
 
       <FilterGroup title="Age range">
         <div className="flex flex-wrap gap-2">
-          {ageRanges.map((age) => (
+          {AGE_GROUPS.map((age) => (
             <FilterChip
               key={age}
-              label={age}
+              label={formatAgeGroup(age)}
               checked={isArrayValueActive("age", age)}
               onChange={() => {
                 toggleArrayValue("age", age);
@@ -269,8 +269,11 @@ function ActiveFilterChips({ categories }: { categories: Category[] }) {
       onRemove: () => toggleArrayValue("category", slug),
     });
   }
-  for (const age of filters.ageRanges ?? []) {
-    chips.push({ key: `age:${age}`, label: `Age ${age}`, onRemove: () => toggleArrayValue("age", age) });
+  for (const age of filters.ageGroups ?? []) {
+    chips.push({ key: `age:${age}`, label: `Age ${formatAgeGroup(age)}`, onRemove: () => toggleArrayValue("age", age) });
+  }
+  for (const age of filters.ages ?? []) {
+    chips.push({ key: `age:${age}`, label: `Age ${formatAgeOption(age)}`, onRemove: () => toggleArrayValue("age", String(age)) });
   }
   for (const type of filters.activityTypes ?? []) {
     chips.push({ key: `activity:${type}`, label: type, onRemove: () => toggleArrayValue("activity", type) });

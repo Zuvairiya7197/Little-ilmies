@@ -164,7 +164,15 @@ model Product {
   whatsIncluded String[] @default([])
   learningObjectives String[] @default([])
   suitableFor String[] @default([])
-  ageRange    String
+  /// Legacy fixed age band ("0-3", "3-6", …). No longer read or written by
+  /// the app — kept only so the 20260929000000 migration stays reversible.
+  /// Use ageFrom/ageTo/ageOpenEnded (see lib/age-range.ts).
+  ageRange    String?
+  /// Recommended age range; both null = no age recommendation.
+  ageFrom     Int?
+  ageTo       Int?
+  /// True = "ageFrom+" (ageTo is pinned to 18).
+  ageOpenEnded Boolean @default(false)
   language    String
   format      String
   pageCount   Int

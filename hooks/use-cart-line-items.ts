@@ -25,7 +25,6 @@ export interface CartLineItem {
   currencyCode: CurrencyCode;
   isFallbackPrice: boolean;
   isOnSale: boolean;
-  ageRange: string;
   pageCount: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;
@@ -72,7 +71,6 @@ export function useCartLineItems() {
             currencyCode: currency,
             isFallbackPrice: false,
             isOnSale: computed.salePrice < computed.regularPrice,
-            ageRange: item.ageRange ?? "",
             pageCount: item.pageCount ?? 0,
             selectedBooks: item.selectedBooks,
             bundleSize: item.bundleSize,
@@ -82,10 +80,9 @@ export function useCartLineItems() {
 
       const product = getProductBySlug(item.slug);
       const productSnapshot =
-        item.prices && item.ageRange && item.pageCount
+        item.prices && item.pageCount
           ? {
               prices: item.prices,
-              ageRange: item.ageRange,
               pageCount: item.pageCount,
               isBestseller: item.isBestseller,
               isNewArrival: item.isNewArrival,
@@ -114,7 +111,6 @@ export function useCartLineItems() {
             currencyCode: RENTAL_CURRENCY_CODE,
             isFallbackPrice: false,
             isOnSale: false,
-            ageRange: lineProduct.ageRange,
             pageCount: lineProduct.pageCount,
             isBestseller: lineProduct.isBestseller,
             isNewArrival: lineProduct.isNewArrival,
@@ -146,7 +142,6 @@ export function useCartLineItems() {
             currencyCode: RENTAL_CURRENCY_CODE,
             isFallbackPrice: false,
             isOnSale: false,
-            ageRange: lineProduct.ageRange,
             pageCount: lineProduct.pageCount,
             isBestseller: lineProduct.isBestseller,
             isNewArrival: lineProduct.isNewArrival,
@@ -172,7 +167,6 @@ export function useCartLineItems() {
           currencyCode: resolved.currencyCode,
           isFallbackPrice: resolved.isFallback,
           isOnSale: Boolean(resolved.salePrice),
-          ageRange: lineProduct.ageRange,
           pageCount: lineProduct.pageCount,
           isBestseller: lineProduct.isBestseller,
           isNewArrival: lineProduct.isNewArrival,

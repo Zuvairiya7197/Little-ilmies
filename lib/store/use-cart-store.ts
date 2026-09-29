@@ -11,7 +11,6 @@ export interface CartItem {
   title: string;
   coverImage: string;
   prices?: ProductSummary["prices"];
-  ageRange?: ProductSummary["ageRange"];
   pageCount?: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;

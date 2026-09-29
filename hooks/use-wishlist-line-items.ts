@@ -5,6 +5,7 @@ import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import type { ProductSummary } from "@/types/catalog";
+import { formatAgeRange } from "@/lib/age-range";
 import type { CurrencyCode } from "@/types/pricing";
 
 export interface WishlistLineItem {
@@ -16,7 +17,8 @@ export interface WishlistLineItem {
   price: number;
   currencyCode: CurrencyCode;
   categoryName: string;
-  ageRange: string;
+  /** "4–7 years", or null when the product has no age range. */
+  ageLabel: string | null;
   pageCount: number;
 }
 
@@ -40,7 +42,7 @@ export function useWishlistLineItems(products: ProductSummary[]) {
           price: resolved.salePrice ?? resolved.regularPrice,
           currencyCode: resolved.currencyCode,
           categoryName: product.category.name,
-          ageRange: product.ageRange,
+          ageLabel: formatAgeRange(product),
           pageCount: product.pageCount,
         },
       ];

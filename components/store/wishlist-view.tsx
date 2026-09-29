@@ -210,8 +210,12 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
                 <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-ink-400 sm:mt-4 sm:text-sm xl:mt-1 xl:line-clamp-1 xl:text-xs">{item.shortDescription}</p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs font-medium text-ink-400 sm:mt-5 sm:gap-4 sm:text-sm xl:mt-1.5 xl:gap-3 xl:text-[11px]">
                   <span>{item.pageCount} pages</span>
-                  <span aria-hidden="true">•</span>
-                  <span>Ages {item.ageRange}</span>
+                  {item.ageLabel && (
+                    <>
+                      <span aria-hidden="true">•</span>
+                      <span>{item.ageLabel}</span>
+                    </>
+                  )}
                 </div>
               </div>
 

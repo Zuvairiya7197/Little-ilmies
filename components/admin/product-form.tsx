@@ -28,6 +28,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
+import { AGE_MAX, AGE_OPTIONS, formatAgeOption, formatAgeRange, normalizeAgeRange } from "@/lib/age-range";
 import { learningGoals } from "@/lib/learning-goals";
 import { DEFAULT_PRODUCT_AUTHOR, LICENSE_INFO_DEFAULTS, isLicenseInfoDefaultOrEmpty } from "@/lib/license-defaults";
 import type { CurrencyCode } from "@/types/pricing";
@@ -101,13 +102,10 @@ function SectionHeading({
 }
 
 const CURRENCY_OPTIONS: CurrencyCode[] = ["INR", "USD", "GBP", "AED"];
-const AGE_OPTIONS = [
-  { value: "0-3", label: "0–3" },
-  { value: "3-6", label: "3–6" },
-  { value: "6-9", label: "6–9" },
-  { value: "9-12", label: "9–12" },
-  { value: "12+", label: "12+" },
-] as const;
+// Selects hand back strings ("" = not chosen) until zod coerces on submit.
+function toAge(value: unknown): number | null {
+  return value === "" || value == null ? null : Number(value);
+}
 
 export function ProductForm({
   categories,
@@ -137,7 +135,8 @@ export function ProductForm({
     handleSubmit,
     setValue,
     watch,
-    formState: { errors, dirtyFields },
+    trigger,
+    formState: { errors, dirtyFields, isSubmitted },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: defaultValues ?? {
@@ -145,7 +144,10 @@ export function ProductForm({
       hasFreePreview: true,
       rentAndReadEnabled: true,
       author: DEFAULT_PRODUCT_AUTHOR,
-      ageRange: "" as ProductFormValues["ageRange"],
+      hasAgeRange: true,
+      ageFrom: null,
+      ageTo: null,
+      ageOpenEnded: false,
       language: "English",
       format: "PDF",
       baseCurrency: "USD",
@@ -173,6 +175,26 @@ export function ProductForm({
     seoDescription || shortDescription || "A short description used by search engines and social previews.";
   const watchedPrices = watch("prices");
   const usageLicense = watch("usageLicense");
+  const hasAgeRange = watch("hasAgeRange") ?? true;
+  const ageOpenEnded = watch("ageOpenEnded") ?? false;
+  const ageRangePreview = formatAgeRange(
+    normalizeAgeRange({
+      hasAgeRange,
+      ageFrom: toAge(watch("ageFrom")),
+      ageTo: toAge(watch("ageTo")),
+      ageOpenEnded,
+    })
+  );
+
+  // The age fields' checkboxes are driven via setValue (not register), so
+  // after the first submit they need an explicit re-check to clear or
+  // raise their cross-field errors.
+  function setAgeValues(values: Partial<Pick<ProductFormValues, "hasAgeRange" | "ageTo" | "ageOpenEnded">>) {
+    for (const [key, value] of Object.entries(values)) {
+      setValue(key as keyof typeof values, value as never, { shouldDirty: true });
+    }
+    if (isSubmitted) void trigger(["ageFrom", "ageTo"]);
+  }
 
   useEffect(() => {
     if (productId || !title) return;
@@ -349,17 +371,72 @@ export function ProductForm({
           />
         </div>
 
+        <fieldset className="mt-4 max-w-xl">
+          <legend className="mb-1.5 block text-sm font-semibold text-ink-600">Age Range</legend>
+          <Checkbox
+            label="No age range"
+            checked={!hasAgeRange}
+            onChange={(e) => setAgeValues({ hasAgeRange: !e.target.checked })}
+          />
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="From Age" error={hasAgeRange ? errors.ageFrom?.message : undefined}>
+              <select
+                {...register("ageFrom", { deps: ["ageTo"] })}
+                disabled={!hasAgeRange}
+                aria-invalid={hasAgeRange && errors.ageFrom ? true : undefined}
+                className="admin-input focus-visible:ring-2 focus-visible:ring-sage-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Select age</option>
+                {AGE_OPTIONS.map((age) => (
+                  <option key={age} value={age}>
+                    {formatAgeOption(age)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field
+              label="To Age"
+              error={hasAgeRange ? errors.ageTo?.message : undefined}
+              hint={hasAgeRange && ageOpenEnded ? "Open-ended — no upper age limit" : undefined}
+            >
+              <select
+                {...register("ageTo", {
+                  deps: ["ageFrom"],
+                  onChange: (e) => {
+                    if (e.target.value === String(AGE_MAX)) setAgeValues({ ageOpenEnded: true });
+                  },
+                })}
+                disabled={!hasAgeRange || ageOpenEnded}
+                aria-invalid={hasAgeRange && errors.ageTo ? true : undefined}
+                className="admin-input focus-visible:ring-2 focus-visible:ring-sage-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Select age</option>
+                {AGE_OPTIONS.map((age) => (
+                  <option key={age} value={age}>
+                    {formatAgeOption(age)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <div className="mt-2">
+            <Checkbox
+              label="Open-ended age range (e.g. 12+ years)"
+              checked={hasAgeRange && ageOpenEnded}
+              disabled={!hasAgeRange}
+              onChange={(e) =>
+                setAgeValues(
+                  e.target.checked ? { ageOpenEnded: true, ageTo: AGE_MAX } : { ageOpenEnded: false, ageTo: null }
+                )
+              }
+            />
+          </div>
+          <p className="mt-1 text-sm text-ink-400" aria-live="polite">
+            Age range: <span className="font-semibold text-ink-600">{ageRangePreview ?? "Not specified"}</span>
+          </p>
+        </fieldset>
+
         <div className="mt-4 flex flex-wrap gap-3">
-          <Field label="Age Range" error={errors.ageRange?.message} className="w-36">
-            <select {...register("ageRange")} className="admin-input">
-              <option value="">Choose</option>
-              {AGE_OPTIONS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-          </Field>
           <Field label="Language" error={errors.language?.message} className="w-32">
             <select {...register("language")} className="admin-input">
               {["English", "Arabic", "Hindi", "Marathi"].map((l) => (

@@ -2,14 +2,7 @@ import type { ProductFilters, ProductSummary, SortOption } from "@/types/catalog
 import type { CurrencyCode } from "@/types/pricing";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import { productMatchesActivityType } from "@/lib/activity-types";
-
-const AGE_CATEGORY_TO_RANGE = {
-  "0-3-years": "0-3",
-  "3-6-years": "3-6",
-  "6-9-years": "6-9",
-  "9-12-years": "9-12",
-  "12-plus-years": "12+",
-} as const;
+import { AGE_CATEGORY_TO_GROUP, productMatchesAge, productMatchesAgeGroup } from "@/lib/age-range";
 
 export function filterProducts(
   items: ProductSummary[],
@@ -24,13 +17,17 @@ export function filterProducts(
 
     if (filters.categorySlugs?.length) {
       const matchesCategory = filters.categorySlugs.some((slug) => {
-        const ageRange = AGE_CATEGORY_TO_RANGE[slug as keyof typeof AGE_CATEGORY_TO_RANGE];
-        return ageRange ? p.ageRange === ageRange : productCategorySlugs.includes(slug);
+        const ageGroup = AGE_CATEGORY_TO_GROUP[slug];
+        return ageGroup ? productMatchesAgeGroup(p, ageGroup) : productCategorySlugs.includes(slug);
       });
       if (!matchesCategory) return false;
     }
-    if (filters.ageRanges?.length && !filters.ageRanges.includes(p.ageRange)) {
-      return false;
+    // Selected age groups/ages are OR'd together, like every other multi-select filter.
+    if (filters.ageGroups?.length || filters.ages?.length) {
+      const matchesAge =
+        (filters.ageGroups ?? []).some((group) => productMatchesAgeGroup(p, group)) ||
+        (filters.ages ?? []).some((age) => productMatchesAge(p, age));
+      if (!matchesAge) return false;
     }
     if (filters.languages?.length && !filters.languages.includes(p.language)) {
       return false;

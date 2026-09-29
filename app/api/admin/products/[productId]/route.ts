@@ -4,6 +4,7 @@ import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { productFormSchema } from "@/lib/validation/admin-product";
 import { deletePrivatePdf } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
+import { normalizeAgeRange } from "@/lib/age-range";
 
 interface RouteParams {
   params: Promise<{ productId: string }>;
@@ -18,7 +19,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid product data", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { categoryIds, prices, ...productData } = parsed.data;
+  const { categoryIds, prices, hasAgeRange, ageFrom, ageTo, ageOpenEnded, ...productData } = parsed.data;
+  const ageData = normalizeAgeRange({ hasAgeRange, ageFrom, ageTo, ageOpenEnded });
 
   const existingWithSlug = await prisma.product.findUnique({ where: { slug: productData.slug } });
   if (existingWithSlug && existingWithSlug.id !== productId) {
@@ -51,6 +53,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       where: { id: productId },
       data: {
         ...productData,
+        ...ageData,
         publishedAt:
           productData.status === "PUBLISHED" && !current.publishedAt ? new Date() : current.publishedAt,
         categories: { create: categoryIds.map((categoryId) => ({ categoryId })) },

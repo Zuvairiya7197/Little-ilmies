@@ -1,6 +1,5 @@
 import type { RegionalPrice } from "@/types/pricing";
-
-export type AgeRange = "0-3" | "3-6" | "6-9" | "9-12" | "12+";
+import type { AgeGroup } from "@/lib/age-range";
 
 export type Language = "English" | "Arabic" | "Hindi" | "Marathi";
 
@@ -42,7 +41,10 @@ export interface ProductSummary {
   category: Pick<Category, "slug" | "name">;
   categories?: Pick<Category, "slug" | "name">[];
   categorySlugs?: string[];
-  ageRange: AgeRange;
+  /** Recommended ages — both null when the product has no age range. See lib/age-range.ts. */
+  ageFrom: number | null;
+  ageTo: number | null;
+  ageOpenEnded: boolean;
   pageCount: number;
   language: Language;
   format: ProductFormat;
@@ -134,7 +136,10 @@ export type ActivityType =
 
 export interface ProductFilters {
   categorySlugs?: string[];
-  ageRanges?: AgeRange[];
+  /** "Shop by Age" filter groups — matched by overlap, not equality. */
+  ageGroups?: AgeGroup[];
+  /** Exact child ages — ageFrom <= age <= ageTo (or open-ended). */
+  ages?: number[];
   languages?: Language[];
   formats?: ProductFormat[];
   activityTypes?: ActivityType[];

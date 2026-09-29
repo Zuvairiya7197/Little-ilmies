@@ -4,6 +4,7 @@ import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { productFormSchema } from "@/lib/validation/admin-product";
 import { deletePrivatePdf } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
+import { normalizeAgeRange } from "@/lib/age-range";
 import { DEFAULT_PRODUCT_AUTHOR, LICENSE_INFO_DEFAULTS } from "@/lib/license-defaults";
 import { z } from "zod";
 
@@ -19,7 +20,8 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid product data", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { categoryIds, prices, ...productData } = parsed.data;
+  const { categoryIds, prices, hasAgeRange, ageFrom, ageTo, ageOpenEnded, ...productData } = parsed.data;
+  const ageData = normalizeAgeRange({ hasAgeRange, ageFrom, ageTo, ageOpenEnded });
 
   const existing = await prisma.product.findUnique({ where: { slug: productData.slug } });
   if (existing) {
@@ -43,6 +45,7 @@ export async function POST(request: NextRequest) {
   const product = await prisma.product.create({
     data: {
       ...productData,
+      ...ageData,
       author: productData.author?.trim() || DEFAULT_PRODUCT_AUTHOR,
       licenseInfo: productData.licenseInfo?.trim() || LICENSE_INFO_DEFAULTS[productData.usageLicense],
       coverImage: "/images/products/placeholder.svg",

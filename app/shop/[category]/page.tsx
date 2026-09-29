@@ -9,20 +9,13 @@ import { legacyCategoryGroupSlugs } from "@/data/category-groups";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
 import type { ProductSummary } from "@/types/catalog";
+import { AGE_CATEGORY_TO_GROUP, productMatchesAgeGroup } from "@/lib/age-range";
 
 interface PageProps {
   params: Promise<{ category: string }>;
 }
 
 export const revalidate = 60;
-
-const AGE_CATEGORY_TO_RANGE = {
-  "0-3-years": "0-3",
-  "3-6-years": "3-6",
-  "6-9-years": "6-9",
-  "9-12-years": "9-12",
-  "12-plus-years": "12+",
-} as const;
 
 // Legacy top-level group slugs from the old 3-group static system, mapped
 // to their closest equivalent in the new 8-group DB-driven hierarchy so
@@ -45,14 +38,14 @@ const resolveCategory = cache(async (slugParam: string) => {
 
   const category = categories.find((c) => c.slug === slug);
   if (category) {
-    const ageRange = AGE_CATEGORY_TO_RANGE[slug as keyof typeof AGE_CATEGORY_TO_RANGE];
+    const ageGroup = AGE_CATEGORY_TO_GROUP[slug];
     // Top-level categories in the new hierarchy (e.g. islamic-studies,
     // mathematics) aggregate products from all of their children, same UX
     // as the old category-groups.ts group pages.
     const childSlugs = categories.filter((c) => c.parentId === category.id).map((c) => c.slug);
     const isParentGroup = childSlugs.length > 0;
-    const matchedProducts = ageRange
-      ? products.filter((p) => p.ageRange === ageRange)
+    const matchedProducts = ageGroup
+      ? products.filter((p) => productMatchesAgeGroup(p, ageGroup))
       : isParentGroup
         ? products.filter((p) => productHasCategory(p, slug) || childSlugs.some((childSlug) => productHasCategory(p, childSlug)))
         : products.filter((p) => productHasCategory(p, slug));

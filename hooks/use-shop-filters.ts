@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { ActivityType, AgeRange, Language, ProductFilters, ProductFormat, SortOption } from "@/types/catalog";
+import type { ActivityType, Language, ProductFilters, ProductFormat, SortOption } from "@/types/catalog";
+import { AGE_MAX, AGE_MIN, isAgeGroup } from "@/lib/age-range";
 
 const ARRAY_KEYS = ["category", "age", "language", "format", "activity"] as const;
 const BOOLEAN_KEYS = ["new", "bestseller", "featured", "sale", "preview"] as const;
@@ -14,7 +15,14 @@ export function useShopFilters() {
 
   const filters: ProductFilters = useMemo(() => {
     const categorySlugs = searchParams.getAll("category");
-    const ageRanges = searchParams.getAll("age") as AgeRange[];
+    // ?age= takes either a Shop by Age group ("3-6", "12+") or an exact
+    // child age ("5"); anything else is ignored rather than matching nothing.
+    const ageParams = searchParams.getAll("age");
+    const ageGroups = ageParams.filter(isAgeGroup);
+    const ages = ageParams
+      .filter((value) => /^\d+$/.test(value))
+      .map(Number)
+      .filter((age) => age >= AGE_MIN && age <= AGE_MAX);
     const languages = searchParams.getAll("language") as Language[];
     const formats = searchParams.getAll("format") as ProductFormat[];
     const activityTypes = searchParams.getAll("activity") as ActivityType[];
@@ -24,7 +32,8 @@ export function useShopFilters() {
 
     return {
       categorySlugs: categorySlugs.length ? categorySlugs : undefined,
-      ageRanges: ageRanges.length ? ageRanges : undefined,
+      ageGroups: ageGroups.length ? ageGroups : undefined,
+      ages: ages.length ? ages : undefined,
       languages: languages.length ? languages : undefined,
       formats: formats.length ? formats : undefined,
       activityTypes: activityTypes.length ? activityTypes : undefined,

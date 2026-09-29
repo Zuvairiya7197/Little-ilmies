@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
 import type {
-  AgeRange,
   BundleSummary,
   Category,
   Language,
@@ -56,7 +55,9 @@ function toProductSummary(
       : { slug: product.slug, name: product.title },
     categories,
     categorySlugs: categories.map((category) => category.slug),
-    ageRange: product.ageRange as AgeRange,
+    ageFrom: product.ageFrom,
+    ageTo: product.ageTo,
+    ageOpenEnded: product.ageOpenEnded,
     pageCount: product.pageCount,
     language: product.language as Language,
     format: product.format as ProductFormat,
@@ -213,17 +214,6 @@ export async function getHomepageSampleProduct(): Promise<{
     pageCount: product.pageCount,
     previewImages: productPreviewUrls(product.id, product.previewImagePaths),
   };
-}
-
-export async function getProductsByAgeRange(ageRange: AgeRange, limit = 8): Promise<ProductSummary[]> {
-  const settings = await getPricingSettings();
-  const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED", archivedAt: null, ageRange },
-    orderBy: { publishedAt: "desc" },
-    take: limit,
-    ...productWithRelations,
-  });
-  return products.map((product) => toProductSummary(product, settings));
 }
 
 export async function getActiveBundles(): Promise<BundleSummary[]> {

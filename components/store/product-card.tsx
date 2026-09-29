@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Star, Heart, Eye, ShoppingBag } from "lucide-react";
 import type { ProductSummary } from "@/types/catalog";
 import { formatPrice } from "@/lib/utils/format";
+import { formatAgeRange } from "@/lib/age-range";
 import { cn } from "@/lib/utils/cn";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
@@ -25,6 +26,7 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
   void tintIndex;
   const [previewOpen, setPreviewOpen] = useState(false);
   const previewImages = product.previewImages ?? [];
+  const ageLabel = formatAgeRange(product);
   const previewAvailable = product.hasFreePreview && previewImages.length > 0;
 
   return (
@@ -114,8 +116,12 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
               <span aria-hidden="true">·</span>
             </>
           )}
-          <span>Ages {product.ageRange.replace(/-/g, "–")}</span>
-          <span aria-hidden="true">·</span>
+          {ageLabel && (
+            <>
+              <span>{ageLabel}</span>
+              <span aria-hidden="true">·</span>
+            </>
+          )}
           <span>{product.pageCount}pg</span>
         </div>
 
@@ -140,7 +146,6 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
                 title: product.title,
                 coverImage: product.coverImage,
                 prices: product.prices,
-                ageRange: product.ageRange,
                 pageCount: product.pageCount,
                 isBestseller: product.isBestseller,
                 isNewArrival: product.isNewArrival,
@@ -160,7 +165,6 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
                 title: product.title,
                 coverImage: product.coverImage,
                 prices: product.prices,
-                ageRange: product.ageRange,
                 pageCount: product.pageCount,
                 isBestseller: product.isBestseller,
                 isNewArrival: product.isNewArrival,
