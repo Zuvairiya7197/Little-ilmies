@@ -1,6 +1,6 @@
 "use client";
 
-import { X, type LucideIcon } from "lucide-react";
+import { ChevronDown, X, type LucideIcon } from "lucide-react";
 import { useShopFilters } from "@/hooks/use-shop-filters";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { formatPrice } from "@/lib/utils/format";
@@ -9,7 +9,7 @@ import { getBooksMenuSections } from "@/lib/store-navigation";
 import { activityTypes } from "@/lib/activity-types";
 import type { CurrencyCode } from "@/types/pricing";
 import type { Category, Language, ProductFormat } from "@/types/catalog";
-import { AGE_FILTER_OPTIONS, formatAgeGroup } from "@/lib/age-range";
+import { AGE_FILTER_OPTIONS, formatAgeGroup, isAgeGroup } from "@/lib/age-range";
 import { cn } from "@/lib/utils/cn";
 
 const languages: Language[] = ["English", "Arabic", "Hindi", "Marathi"];
@@ -49,10 +49,14 @@ export function FilterPanel({
     isBooleanActive,
     setBoolean,
     setPriceRange,
+    setAge,
     filters,
     clearAll,
     activeFilterCount,
   } = useShopFilters();
+  // Homepage Shop by Age cards link with a group (?age=3-6); surface it as
+  // its own option so the dropdown never reads "Any age" while filtering.
+  const selectedAge = filters.ages?.[0]?.toString() ?? filters.ageGroups?.[0] ?? "";
   const currency = useCurrencyStore((s) => s.currency);
   const priceBuckets = getPriceBuckets(currency);
   const categoryGroups = buildFilterCategoryGroups(categories);
@@ -106,18 +110,28 @@ export function FilterPanel({
       </FilterGroup>
 
       <FilterGroup title="Age range">
-        <div className="flex flex-wrap gap-2">
-          {AGE_FILTER_OPTIONS.map((age) => (
-            <FilterChip
-              key={age}
-              label={`Age ${age}`}
-              checked={isArrayValueActive("age", String(age))}
-              onChange={() => {
-                toggleArrayValue("age", String(age));
-                onApply?.();
-              }}
-            />
-          ))}
+        <div className="relative">
+          <select
+            value={selectedAge}
+            onChange={(e) => {
+              setAge(e.target.value || undefined);
+              onApply?.();
+            }}
+            aria-label="Child's age"
+            className="store-input cursor-pointer appearance-none rounded-xl pr-10 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-400"
+          >
+            <option value="">Any age</option>
+            {isAgeGroup(selectedAge) && <option value={selectedAge}>Ages {formatAgeGroup(selectedAge)}</option>}
+            {AGE_FILTER_OPTIONS.map((age) => (
+              <option key={age} value={age}>
+                Age {age}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300"
+            aria-hidden="true"
+          />
         </div>
       </FilterGroup>
 

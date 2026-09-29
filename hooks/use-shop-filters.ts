@@ -104,6 +104,17 @@ export function useShopFilters() {
     [updateParams]
   );
 
+  /** Single-select age dropdown — replaces any selected ages/groups; undefined clears. */
+  const setAge = useCallback(
+    (value: string | undefined) => {
+      updateParams((params) => {
+        if (value) params.set("age", value);
+        else params.delete("age");
+      });
+    },
+    [updateParams]
+  );
+
   const setSort = useCallback(
     (value: SortOption) => {
       updateParams((params) => {
@@ -149,6 +160,7 @@ export function useShopFilters() {
     setBoolean,
     setPriceRange,
     clearPriceRange,
+    setAge,
     setSort,
     setQuery,
     clearAll,
