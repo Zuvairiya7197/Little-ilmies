@@ -60,6 +60,15 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  // /favicon.ico comes from app/favicon.ico; the manifest from app/manifest.ts.
+  icons: {
+    icon: [
+      { url: "/images/favicon_io/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/images/favicon_io/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    // iOS fills transparency with black, so this copy is flattened onto white.
+    apple: [{ url: "/images/favicon_io/apple-touch-icon-solid.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
