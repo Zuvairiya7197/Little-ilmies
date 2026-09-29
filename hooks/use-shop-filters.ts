@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { ActivityType, Language, ProductFilters, ProductFormat, SortOption } from "@/types/catalog";
 import { AGE_MAX, AGE_MIN, isAgeGroup } from "@/lib/age-range";
 
@@ -9,7 +9,6 @@ const ARRAY_KEYS = ["category", "age", "language", "format", "activity"] as cons
 const BOOLEAN_KEYS = ["new", "bestseller", "featured", "sale", "preview"] as const;
 
 export function useShopFilters() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -58,13 +57,25 @@ export function useShopFilters() {
     return count;
   }, [searchParams]);
 
+  // Filtering runs entirely client-side over the products the page already
+  // has, so a shallow history update is enough — router.push would refetch
+  // the server page on every click and hold the UI until it returned.
+  // Next.js syncs useSearchParams with pushState, so everything re-renders.
+  const pushParams = useCallback(
+    (params: URLSearchParams) => {
+      const query = params.toString();
+      window.history.pushState(null, "", query ? `${pathname}?${query}` : pathname);
+    },
+    [pathname]
+  );
+
   const updateParams = useCallback(
     (mutate: (params: URLSearchParams) => void) => {
       const params = new URLSearchParams(searchParams.toString());
       mutate(params);
-      router.push(`${pathname}?${params.toString()}` as never, { scroll: false });
+      pushParams(params);
     },
-    [pathname, router, searchParams]
+    [pushParams, searchParams]
   );
 
   const toggleArrayValue = useCallback(
@@ -141,8 +152,8 @@ export function useShopFilters() {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (sortValue) params.set("sort", sortValue);
-    router.push(`${pathname}?${params.toString()}` as never, { scroll: false });
-  }, [pathname, router, searchParams]);
+    pushParams(params);
+  }, [pushParams, searchParams]);
 
   const removeArrayValue = useCallback(
     (key: (typeof ARRAY_KEYS)[number], value: string) => toggleArrayValue(key, value),
