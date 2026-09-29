@@ -12,21 +12,6 @@ const ageBands: {
   imageWrapperClass?: string;
   mobileImageWrapperClass?: string;
 }[] = [
-  // age-0-3.png has a wider aspect ratio than the other age illustrations, so
-  // it renders visibly smaller under object-contain in the same box — scaled
-  // up here to match the others' apparent size. The upward shift keeps it
-  // vertically centered against that scale-up; a smaller shift on mobile
-  // (shorter cards) keeps it level with the other cards in the row instead
-  // of floating noticeably higher.
-  {
-    range: "0-3",
-    label: "0–3 Years",
-    tint: "bg-ink-600",
-    image: "/images/age-0-3.png",
-    imageScale: "scale-125",
-    imageWrapperClass: "-translate-y-10",
-    mobileImageWrapperClass: "-translate-y-3",
-  },
   { range: "3-6", label: "3–6 Years", tint: "bg-sunny-500", image: "/images/age-3-6.png", imageWrapperClass: "-translate-y-2" },
   { range: "6-9", label: "6–9 Years", tint: "bg-lemon-600", image: "/images/age-6-9.png" },
   { range: "9-12", label: "9–12 Years", tint: "bg-teal-500", image: "/images/age-9-12.png" },
@@ -97,7 +82,7 @@ export function ShopByAge() {
         </ul>
 
         {/* Desktop: saturated cards with big number + label, unchanged */}
-        <ul className="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-5">
+        <ul className="hidden gap-4 md:grid md:grid-cols-4">
           {ageBands.map(({ range, label, tint, image, imageScale, imageWrapperClass }) => (
             <li key={range}>
               <Link

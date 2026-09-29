@@ -20,6 +20,9 @@ export interface ProductAgeRange {
   ageOpenEnded: boolean;
 }
 
+/** Single-age chips in the shop filter panel ("Age 3" … "Age 12"). */
+export const AGE_FILTER_OPTIONS = Array.from({ length: 10 }, (_, i) => 3 + i);
+
 export const AGE_GROUPS = ["0-3", "3-6", "6-9", "9-12", "12+"] as const;
 export type AgeGroup = (typeof AGE_GROUPS)[number];
 
