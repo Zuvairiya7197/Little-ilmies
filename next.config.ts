@@ -11,8 +11,10 @@ const nextConfig: NextConfig = {
     // WebP only: each extra format multiplies Vercel's billed Image
     // Optimization transformations (free tier = 5,000/month).
     formats: ["image/webp"],
-    // Fewer candidate widths = fewer distinct transformations per image.
-    deviceSizes: [640, 828, 1080, 1200, 1920],
+    // Fewer candidate widths = fewer distinct transformations per image
+    // (Next's defaults generate up to 16 widths of every image).
+    deviceSizes: [640, 1080, 1920],
+    imageSizes: [48, 96, 128, 256, 384],
     // Keep optimized images cached for 31 days instead of Next's 60s
     // default, so the same image isn't re-transformed (and re-billed).
     minimumCacheTTL: 2678400,

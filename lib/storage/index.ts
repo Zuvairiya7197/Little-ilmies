@@ -3,6 +3,7 @@ import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
+import sharp from "sharp";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   DeleteObjectCommand,
@@ -309,7 +310,29 @@ export async function deleteRentalPages(relativePaths: string[]): Promise<void> 
 // source of truth.
 // ---------------------------------------------------------------------------
 
-export async function saveCoverImage(fileBuffer: Buffer, originalName: string): Promise<string> {
+// Uploaded covers are often multi-hundred-KB PNGs. Every Vercel image
+// transformation re-fetches the original through our cover route (billed
+// as Fast Origin Transfer), so store a right-sized WebP instead.
+const COVER_MAX_DIMENSION = 1200;
+const COVER_WEBP_QUALITY = 82;
+
+async function compressCover(fileBuffer: Buffer, originalName: string) {
+  if (path.extname(originalName).toLowerCase() === ".svg") return { fileBuffer, originalName };
+  try {
+    const compressed = await sharp(fileBuffer)
+      .resize({ width: COVER_MAX_DIMENSION, height: COVER_MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: COVER_WEBP_QUALITY })
+      .toBuffer();
+    const webpName = `${path.basename(originalName, path.extname(originalName))}.webp`;
+    return { fileBuffer: compressed, originalName: webpName };
+  } catch (error) {
+    console.error(`Cover compression failed for ${originalName}, keeping original`, error);
+    return { fileBuffer, originalName };
+  }
+}
+
+export async function saveCoverImage(rawBuffer: Buffer, rawName: string): Promise<string> {
+  const { fileBuffer, originalName } = await compressCover(rawBuffer, rawName);
   if (USE_B2_STORAGE) {
     const ext = path.extname(originalName) || ".jpg";
     const key = `covers/${safeFilename(originalName, ext)}`;
