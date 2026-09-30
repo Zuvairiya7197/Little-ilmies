@@ -8,7 +8,14 @@ const cdnDomain = process.env.ASSETS_CDN_DOMAIN;
 
 const nextConfig: NextConfig = {
   images: {
-    formats: ["image/avif", "image/webp"],
+    // WebP only: each extra format multiplies Vercel's billed Image
+    // Optimization transformations (free tier = 5,000/month).
+    formats: ["image/webp"],
+    // Fewer candidate widths = fewer distinct transformations per image.
+    deviceSizes: [640, 828, 1080, 1200, 1920],
+    // Keep optimized images cached for 31 days instead of Next's 60s
+    // default, so the same image isn't re-transformed (and re-billed).
+    minimumCacheTTL: 2678400,
     dangerouslyAllowSVG: true,
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

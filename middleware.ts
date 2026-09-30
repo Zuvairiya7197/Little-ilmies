@@ -23,5 +23,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/((?!_next/static|_next/image|favicon.ico).*)",
+  // Page navigations only — the country cookie is read client-side, so
+  // running this on API routes, images and static files just burns
+  // serverless CPU.
+  matcher: "/((?!api|_next/static|_next/image|images|.*\\..*).*)",
 };
