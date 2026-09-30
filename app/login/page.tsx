@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { BuyerLoginForm } from "@/components/store/buyer-login-form";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default function LoginPage() {
   return (
     <div className="relative isolate overflow-hidden bg-gradient-to-br from-cream via-blossom-50/40 to-ink-50/30 py-5 xl:min-h-[calc(100vh-9rem)] xl:py-6">
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={46}
         height={46}
@@ -21,7 +21,7 @@ export default function LoginPage() {
         aria-hidden="true"
       />
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={30}
         height={30}
@@ -29,7 +29,7 @@ export default function LoginPage() {
         aria-hidden="true"
       />
       <Image
-        src="/images/rainbow.png"
+        src="/images/rainbow.webp"
         alt=""
         width={120}
         height={70}
@@ -37,7 +37,7 @@ export default function LoginPage() {
         aria-hidden="true"
       />
       <Image
-        src="/images/rainbow.png"
+        src="/images/rainbow.webp"
         alt=""
         width={120}
         height={70}
@@ -45,7 +45,7 @@ export default function LoginPage() {
         aria-hidden="true"
       />
       <Image
-        src="/images/heart.png"
+        src="/images/heart.webp"
         alt=""
         width={28}
         height={28}
@@ -61,7 +61,7 @@ export default function LoginPage() {
 
           <div className="relative hidden min-h-[28rem] overflow-hidden bg-gradient-to-br from-blossom-50 via-cream-50 to-ink-50 xl:block xl:min-h-[30rem]">
             <Image
-              src="/images/login page.png"
+              src="/images/login page.webp"
               alt="Lantern, Islamic book, heart, and plant"
               fill
               sizes="680px"
@@ -74,7 +74,7 @@ export default function LoginPage() {
         <div className="mx-auto mt-4 max-w-md text-center">
           <div className="mx-auto flex max-w-44 items-center justify-center gap-3 text-lemon-400" aria-hidden="true">
             <span className="h-px flex-1 bg-ink-100" />
-            <Image src="/images/star.png" alt="" width={22} height={22} className="h-5 w-5 object-contain" />
+            <Image src="/images/star.webp" alt="" width={22} height={22} className="h-5 w-5 object-contain" />
             <span className="h-px flex-1 bg-ink-100" />
           </div>
           <p className="mt-3 text-sm font-semibold leading-relaxed text-ink-600">

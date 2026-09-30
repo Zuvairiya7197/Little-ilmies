@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, ShoppingCart } from "lucide-react";
 import type { BundleSummary } from "@/types/catalog";
@@ -79,7 +79,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
       bundleId: bundle.id,
       slug: bundle.slug,
       title: bundle.name,
-      coverImage: bundle.coverImage ?? selectedBooks[0]?.coverImage ?? "/images/explore-bundles.png",
+      coverImage: bundle.coverImage ?? selectedBooks[0]?.coverImage ?? "/images/explore-bundles.webp",
       bundleSize: selectedSize.quantity,
       customBundleDiscountPercentage: bundle.customBundleDiscountPercentage,
       selectedProductIds: selectedIds,
@@ -130,7 +130,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
               </div>
             ) : (
               <Image
-                src={bundle.coverImage ?? "/images/explore-bundles.png"}
+                src={bundle.coverImage ?? "/images/explore-bundles.webp"}
                 alt=""
                 fill
                 sizes="(min-width: 1024px) 42vw, 100vw"

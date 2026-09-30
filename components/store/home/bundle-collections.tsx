@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { Gift, CheckCircle2, ArrowRight, Languages, Heart, Landmark, Moon, Sparkles, Star, type LucideIcon } from "lucide-react";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
@@ -178,7 +178,7 @@ export function BundleCollections({ bundles }: { bundles: BundleSummary[] }) {
           <div className="relative aspect-[707/819] h-28 shrink-0 xs:h-32">
             <Star className="absolute -left-2 top-1 h-3.5 w-3.5 fill-sunny-400 text-sunny-400" aria-hidden="true" />
             <Star className="absolute -right-1 top-0 h-3 w-3 fill-cream-50/80 text-cream-50/80" aria-hidden="true" />
-            <Image src="/images/explore-bundles.png" alt="" fill sizes="128px" className="object-contain" />
+            <Image src="/images/explore-bundles.webp" alt="" fill sizes="128px" className="object-contain" />
           </div>
         </Link>
 

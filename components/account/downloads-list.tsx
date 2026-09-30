@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { Download, MoreVertical, Search, ShoppingBag } from "lucide-react";
 import type { DownloadRecord } from "@/types/account";
@@ -40,7 +40,7 @@ export function DownloadsList({ downloads }: { downloads: DownloadRecord[] }) {
         <section className="mt-6 rounded-2xl bg-cream-50 px-5 pb-8 pt-6 text-center shadow-clay-sm xl:mt-3 xl:rounded-3xl xl:p-6">
           <div className="relative mx-auto aspect-[4/3] w-full max-w-[14rem] xl:max-w-[15rem]">
             <Image
-              src="/images/no download yet.png"
+              src="/images/no download yet.webp"
               alt="Empty download box illustration"
               fill
               sizes="224px"

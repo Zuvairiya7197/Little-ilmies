@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -83,7 +83,7 @@ export default async function PurchaseHistoryPage() {
               {orders.length === 0 && (
                 <span className="relative ml-2 hidden w-24 xl:inline-block" aria-hidden="true">
                 <span className="absolute left-0 top-1 h-px w-20 border-t border-dashed border-ink-200" />
-                <Image src="/images/star.png" alt="" width={26} height={26} className="absolute right-0 -top-3 h-6 w-6 object-contain" />
+                <Image src="/images/star.webp" alt="" width={26} height={26} className="absolute right-0 -top-3 h-6 w-6 object-contain" />
               </span>
               )}
             </p>
@@ -91,7 +91,7 @@ export default async function PurchaseHistoryPage() {
           {orders.length > 0 && (
             <div className="pointer-events-none absolute right-0 top-[-1.5rem] hidden h-40 w-96 xl:block">
               <Image
-                src="/images/purchase history.png"
+                src="/images/purchase history.webp"
                 alt=""
                 fill
                 sizes="384px"
@@ -108,7 +108,7 @@ export default async function PurchaseHistoryPage() {
           <div className="mx-auto mt-8 flex max-w-[47.5rem] flex-col items-center rounded-2xl bg-cream-50 px-5 pb-8 pt-6 text-center shadow-clay-sm xs:mt-14 xs:px-8 xs:pb-16 xs:pt-12 xl:mt-0 xl:max-w-md xl:bg-transparent xl:p-0 xl:shadow-none">
             <div className="relative aspect-[4/3] w-full max-w-[16rem] xs:max-w-[27rem] xl:max-w-xs">
               <Image
-                src="/images/no purchase yet.png"
+                src="/images/no purchase yet.webp"
                 alt="Clipboard illustration for no purchases yet"
                 fill
                 sizes="(max-width: 768px) 90vw, 576px"
@@ -295,7 +295,7 @@ export default async function PurchaseHistoryPage() {
             <section className="mt-4 flex flex-col gap-4 rounded-3xl bg-cream-50 p-5 shadow-clay-sm xl:flex-row xl:items-center xl:justify-between xl:px-10">
               <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left xl:gap-8">
                 <div className="relative h-20 w-28 shrink-0">
-                  <Image src="/images/check your email.png" alt="" fill sizes="128px" className="object-contain" aria-hidden="true" />
+                  <Image src="/images/check your email.webp" alt="" fill sizes="128px" className="object-contain" aria-hidden="true" />
                 </div>
                 <div className="hidden h-16 w-px bg-ink-100 sm:block" aria-hidden="true" />
                 <div>

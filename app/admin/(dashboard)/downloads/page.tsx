@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { Download } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 

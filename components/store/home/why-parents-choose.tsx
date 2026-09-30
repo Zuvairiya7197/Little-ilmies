@@ -1,40 +1,40 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 
 const reasons = [
   {
     title: "Authentic Islamic Content",
     description: "Carefully curated Islamic resources",
-    image: "/images/why-authentic-content.png",
+    image: "/images/why-authentic-content.webp",
     cardBg: "bg-ink-50",
   },
   {
     title: "Instant Digital Download",
     description: "Get your books right away",
-    image: "/images/why-instant-download.png",
+    image: "/images/why-instant-download.webp",
     cardBg: "bg-sunny-50",
   },
   {
     title: "Printable PDF",
     description: "Easy to print and use",
-    image: "/images/why-print-at-home.png",
+    image: "/images/why-print-at-home.webp",
     cardBg: "bg-teal-50",
   },
   {
     title: "Kid Friendly",
     description: "Designed for young Muslim minds",
-    image: "/images/why-loved-by-parents.png",
+    image: "/images/why-loved-by-parents.webp",
     cardBg: "bg-blossom-50",
   },
   {
     title: "Rent & Read",
     description: "Simple language and clear layout",
-    image: "/images/why-easy-to-read.png",
+    image: "/images/why-easy-to-read.webp",
     cardBg: "bg-sunny-50",
   },
   {
     title: "Secure Checkout",
     description: "Safe, secure & trusted payments",
-    image: "/images/why-secure-checkout.png",
+    image: "/images/why-secure-checkout.webp",
     cardBg: "bg-ink-50",
   },
 ] as const;

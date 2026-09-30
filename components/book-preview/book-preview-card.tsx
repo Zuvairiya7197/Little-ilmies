@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { BookOpen, Clock } from "lucide-react";
 import { BookPreviewModal } from "@/components/book-preview/book-preview-modal";
 import { cn } from "@/lib/utils/cn";

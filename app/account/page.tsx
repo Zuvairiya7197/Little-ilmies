@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -98,7 +98,7 @@ export default async function AccountPage() {
   return (
     <div className="relative isolate overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 pb-44 pt-10 xl:pb-16 xl:pt-10">
       <Image
-        src="/images/rainbow.png"
+        src="/images/rainbow.webp"
         alt=""
         width={120}
         height={70}
@@ -106,7 +106,7 @@ export default async function AccountPage() {
         aria-hidden="true"
       />
       <Image
-        src="/images/rainbow.png"
+        src="/images/rainbow.webp"
         alt=""
         width={120}
         height={70}
@@ -114,7 +114,7 @@ export default async function AccountPage() {
         aria-hidden="true"
       />
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={36}
         height={36}
@@ -122,7 +122,7 @@ export default async function AccountPage() {
         aria-hidden="true"
       />
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={36}
         height={36}

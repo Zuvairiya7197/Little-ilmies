@@ -13,7 +13,7 @@ export default function PaymentFailedPage() {
       eyebrow="Payment issue"
       title="Payment Failed"
       description="Something went wrong while processing your payment. You haven't been charged, so you can safely try again."
-      image="/images/Payment failed.png"
+      image="/images/Payment failed.webp"
       imageAlt="Payment failed illustration"
       actions={[
         { href: "/checkout", label: "Retry Payment", icon: RotateCcw },

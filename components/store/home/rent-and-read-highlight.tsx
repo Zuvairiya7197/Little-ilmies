@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, XCircle } from "lucide-react";
 import type { ProductSummary } from "@/types/catalog";
@@ -75,7 +75,7 @@ export function RentAndReadHighlight({ products }: { products: ProductSummary[] 
           ) : (
             <div className="relative mt-8 hidden aspect-[16/9] w-full md:mt-0 md:block" aria-hidden="true">
               <Image
-                src="/images/rent and read.png"
+                src="/images/rent and read.webp"
                 alt=""
                 fill
                 sizes="(max-width: 1024px) 40vw, 480px"

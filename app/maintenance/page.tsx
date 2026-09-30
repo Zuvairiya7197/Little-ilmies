@@ -13,7 +13,7 @@ export default function MaintenancePage() {
       eyebrow="Maintenance"
       title="We're making Little Ilmies better."
       description="The store may be briefly unavailable while updates are being completed. Please check again in a few minutes."
-      image="/images/contact support.png"
+      image="/images/contact support.webp"
       imageAlt="Support illustration"
       actions={[
         { href: "/", label: "Try Home", icon: RefreshCw },

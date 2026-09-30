@@ -13,7 +13,7 @@ export default function DownloadErrorPage() {
       eyebrow="Download issue"
       title="We couldn't prepare your download."
       description="Your purchase is still safe. Please try again from your downloads page, or contact support if the file still doesn't open."
-      image="/images/no download yet.png"
+      image="/images/no download yet.webp"
       imageAlt="Download illustration"
       actions={[
         { href: "/account/downloads", label: "View Downloads", icon: Download },

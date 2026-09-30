@@ -13,7 +13,7 @@ export default function LoginErrorPage() {
       eyebrow="Login link expired"
       title="That sign-in link no longer works."
       description="Magic links can expire or be used only once. Request a fresh link and use the newest email in your inbox."
-      image="/images/check your email.png"
+      image="/images/check your email.webp"
       imageAlt="Email illustration"
       actions={[
         { href: "/login", label: "Send New Link", icon: Mail },

@@ -1,13 +1,13 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 
 const trustBadges: { label: string; image: string; iconBg: string; imageScale?: string }[] = [
-  { label: "Authentic Islamic Content", image: "/images/why-authentic-content.png", iconBg: "bg-ink-50" },
-  { label: "Instant Digital Download", image: "/images/why-instant-download.png", iconBg: "bg-sunny-50" },
-  { label: "Printable PDF", image: "/images/why-print-at-home.png", iconBg: "bg-teal-50" },
-  { label: "Kid Friendly", image: "/images/why-loved-by-parents.png", iconBg: "bg-blossom-50" },
-  { label: "Rent & Read", image: "/images/why-easy-to-read.png", iconBg: "bg-sunny-50" },
+  { label: "Authentic Islamic Content", image: "/images/why-authentic-content.webp", iconBg: "bg-ink-50" },
+  { label: "Instant Digital Download", image: "/images/why-instant-download.webp", iconBg: "bg-sunny-50" },
+  { label: "Printable PDF", image: "/images/why-print-at-home.webp", iconBg: "bg-teal-50" },
+  { label: "Kid Friendly", image: "/images/why-loved-by-parents.webp", iconBg: "bg-blossom-50" },
+  { label: "Rent & Read", image: "/images/why-easy-to-read.webp", iconBg: "bg-sunny-50" },
   // Renders larger than the others at the same scale, so it gets a smaller override.
-  { label: "Secure Checkout", image: "/images/why-secure-checkout.png", iconBg: "bg-ink-50", imageScale: "scale-100" },
+  { label: "Secure Checkout", image: "/images/why-secure-checkout.webp", iconBg: "bg-ink-50", imageScale: "scale-100" },
 ];
 
 export function HeroCategoryStrip() {

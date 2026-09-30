@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { BookOpen, ArrowRight, Download, Printer, ShieldCheck, Heart } from "lucide-react";
 
@@ -15,7 +15,7 @@ export function ParentCta() {
       <div className="container-content">
         <div className="relative overflow-hidden rounded-3xl px-6 py-14 text-center xs:px-10 xs:py-16 md:py-20">
           <Image
-            src="/images/cta-section-bg.png"
+            src="/images/cta-section-bg.webp"
             alt=""
             fill
             sizes="(max-width: 1280px) 100vw, 1280px"

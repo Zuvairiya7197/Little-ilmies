@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { BookOpen, Clock, ShoppingBag } from "lucide-react";
 import { getRentAndReadProducts } from "@/lib/db/catalog";

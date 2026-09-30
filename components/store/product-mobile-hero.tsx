@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { Heart } from "lucide-react";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { cn } from "@/lib/utils/cn";

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { BookOpen, Star } from "lucide-react";
 import type { ProductSummary } from "@/types/catalog";
@@ -19,14 +19,14 @@ function MobileHero() {
     <section className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-b from-ink-600 via-ink-500 to-ink-600 px-6 pb-9 pt-8 text-center md:hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <Image
-          src="/images/star.png"
+          src="/images/star.webp"
           alt=""
           width={34}
           height={34}
           className="absolute left-[9%] top-[9%] h-8 w-8 object-contain opacity-90"
         />
         <Image
-          src="/images/rainbow.png"
+          src="/images/rainbow.webp"
           alt=""
           width={74}
           height={74}
@@ -68,7 +68,7 @@ function DesktopHero() {
   return (
     <section className="relative z-0 mb-0 hidden aspect-[1717/916] max-h-[calc(100vh-140px)] w-full overflow-hidden bg-cream-50 md:block">
       <Image
-        src="/images/hero-background.png"
+        src="/images/hero-background.webp"
         alt=""
         fill
         priority

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { cn } from "@/lib/utils/cn";
 
 export function Logo({ className }: { className?: string }) {
@@ -10,7 +10,7 @@ export function Logo({ className }: { className?: string }) {
       aria-label="Little Ilmies home"
     >
       <Image
-        src="/images/little_ilmies_logo_cropped.png"
+        src="/images/little_ilmies_logo_cropped.webp"
         alt="Little Ilmies"
         width={988}
         height={574}

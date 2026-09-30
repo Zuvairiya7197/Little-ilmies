@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -119,7 +119,7 @@ export default async function DownloadsPage() {
           <div className="flex min-w-0 items-center gap-3 text-left xl:gap-5">
             <div className="relative hidden h-16 w-24 shrink-0 xs:block xl:h-24 xl:w-40">
               <Image
-                src="/images/contact support.png"
+                src="/images/contact support.webp"
                 alt=""
                 fill
                 sizes="160px"

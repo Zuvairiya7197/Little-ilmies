@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useId, cloneElement } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

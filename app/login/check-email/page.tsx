@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { Lock, Mail } from "lucide-react";
 
@@ -18,7 +18,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
   return (
     <div className="relative isolate flex min-h-[calc(100vh-9rem)] items-start justify-center overflow-hidden bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20 px-4 py-3 xl:py-4">
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={44}
         height={44}
@@ -26,7 +26,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
         aria-hidden="true"
       />
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={44}
         height={44}
@@ -34,7 +34,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
         aria-hidden="true"
       />
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={32}
         height={32}
@@ -42,7 +42,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
         aria-hidden="true"
       />
       <Image
-        src="/images/heart.png"
+        src="/images/heart.webp"
         alt=""
         width={70}
         height={70}
@@ -56,7 +56,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
       <main className="w-full max-w-md rounded-[1.75rem] bg-cream-50/95 px-6 py-4 text-center shadow-lifted sm:px-8 xl:px-10 xl:py-5">
         <div className="relative mx-auto aspect-[4/3] max-w-[13.5rem] xl:max-w-[15rem]">
           <Image
-            src="/images/check your email.png"
+            src="/images/check your email.webp"
             alt="Envelope with a verified email"
             fill
             sizes="384px"

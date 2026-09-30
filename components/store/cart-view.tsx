@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -209,7 +209,7 @@ export function CartView() {
                 </div>
               </div>
               <div className="relative h-20 w-72">
-                <Image src="/images/safe & secure.png" alt="" fill sizes="288px" className="object-contain" />
+                <Image src="/images/safe & secure.webp" alt="" fill sizes="288px" className="object-contain" />
               </div>
             </div>
           </section>

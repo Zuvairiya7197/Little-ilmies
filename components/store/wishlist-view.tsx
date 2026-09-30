@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import {
   BookOpen,
@@ -58,7 +58,7 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
           <div className="mx-auto mt-1 flex max-w-xl flex-col items-center text-center">
             <div className="relative aspect-[16/9] w-full max-w-sm">
               <Image
-                src="/images/empty wishlist page.png"
+                src="/images/empty wishlist page.webp"
                 alt="Open book and lantern illustration for an empty wishlist"
                 fill
                 sizes="(max-width: 768px) 90vw, 384px"
@@ -128,7 +128,7 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
     <div className="bg-gradient-to-br from-cream via-blossom-50/30 to-ink-50/20">
     <div className="container-content relative overflow-hidden pb-44 pt-14 xl:pb-6 xl:pt-5">
       <Image
-        src="/images/star.png"
+        src="/images/star.webp"
         alt=""
         width={42}
         height={42}
@@ -136,7 +136,7 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
         aria-hidden="true"
       />
       <Image
-        src="/images/heart.png"
+        src="/images/heart.webp"
         alt=""
         width={42}
         height={42}
@@ -159,7 +159,7 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
         </div>
         <div className="relative h-40 sm:h-64 xl:h-36">
           <Image
-            src="/images/my wishlist.png"
+            src="/images/my wishlist.webp"
             alt="Books, lantern, plant, and hearts for wishlist"
             fill
             sizes="(max-width: 768px) 90vw, 560px"

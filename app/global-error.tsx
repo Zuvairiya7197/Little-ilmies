@@ -16,7 +16,7 @@ export default function GlobalError({
           eyebrow="Site error"
           title="Little Ilmies needs a quick refresh."
           description="A serious page error interrupted the site. Try refreshing once, or contact support if this keeps showing."
-          image="/images/contact support.png"
+          image="/images/contact support.webp"
           imageAlt="Customer support illustration"
           actions={[
             { label: "Refresh Page", icon: RotateCcw, onClick: reset },

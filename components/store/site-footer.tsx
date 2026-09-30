@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import {
   Instagram,
@@ -218,7 +218,7 @@ export function SiteFooter() {
 
             <div className="relative -mr-2 h-56 w-40 shrink-0 xs:-mr-4 xs:h-64 xs:w-48">
               <Image
-                src="/images/contact us.png"
+                src="/images/contact us.webp"
                 alt=""
                 fill
                 sizes="240px"

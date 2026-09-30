@@ -45,7 +45,7 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
           // other product cover (the route looks the cover up by id).
           coverImage: snapshot.selectedBooks[0]?.coverImage
             ? productCoverUrl(snapshot.selectedBooks[0].id, snapshot.selectedBooks[0].coverImage)
-            : "/images/explore-bundles.png",
+            : "/images/explore-bundles.webp",
           unitPrice: item.unitPrice,
           selectedBooks: snapshot.selectedBooks.map((book) => ({ id: book.id, title: book.title })),
         }];

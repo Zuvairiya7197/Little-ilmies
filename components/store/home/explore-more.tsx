@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { BookOpen, GraduationCap, Palette, Gift, Sparkles, ArrowRight } from "lucide-react";
 
@@ -8,7 +8,7 @@ const explore = [
     description: "Discover stories, learning, and Qur'an resources for every age.",
     href: "/shop/islamic-books",
     icon: BookOpen,
-    image: "/images/explore-islamic-books.png",
+    image: "/images/explore-islamic-books.webp",
     cardBg: "bg-ink-50",
     badgeBg: "bg-cream-50",
     iconColor: "text-ink-400",
@@ -19,7 +19,7 @@ const explore = [
     description: "Language, math, and core learning essentials.",
     href: "/shop/educational-books",
     icon: GraduationCap,
-    image: "/images/explore-educational-books.png",
+    image: "/images/explore-educational-books.webp",
     cardBg: "bg-teal-50",
     badgeBg: "bg-cream-50",
     iconColor: "text-teal-500",
@@ -30,7 +30,7 @@ const explore = [
     description: "Creative pages and hands-on activities to make learning fun.",
     href: "/shop/activities-and-printables",
     icon: Palette,
-    image: "/images/explore-printable-activities.png",
+    image: "/images/explore-printable-activities.webp",
     cardBg: "bg-sunny-50",
     badgeBg: "bg-cream-50",
     iconColor: "text-sunny-500",
@@ -41,7 +41,7 @@ const explore = [
     description: "Curated collections to learn more and save more.",
     href: "/shop?bundle=all",
     icon: Gift,
-    image: "/images/explore-bundles.png",
+    image: "/images/explore-bundles.webp",
     cardBg: "bg-blossom-50",
     badgeBg: "bg-cream-50",
     iconColor: "text-blossom-400",

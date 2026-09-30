@@ -14,7 +14,7 @@ export default function Error({
       eyebrow="Something went wrong"
       title="We couldn't load this page."
       description="Please try again. If it keeps happening, head back to the shop and continue browsing from there."
-      image="/images/contact support.png"
+      image="/images/contact support.webp"
       imageAlt="Customer support illustration"
       actions={[
         { label: "Try Again", icon: RotateCcw, onClick: reset },

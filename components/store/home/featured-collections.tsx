@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { getFeaturedCategoryIcon, getFeaturedCategoryAccent } from "@/lib/category-display";
@@ -19,7 +19,7 @@ export const FALLBACK_COLLECTIONS: CollectionTileData[] = [
     description:
       "Build a meaningful foundation with books about faith, manners, Qur'an, duas, and everyday Islamic learning.",
     href: "/shop/islamic-studies",
-    image: "/images/islamic-learning.png",
+    image: "/images/islamic-learning.webp",
     ...getFeaturedCategoryAccent("ink"),
     icon: getFeaturedCategoryIcon("book-heart"),
   },
@@ -29,7 +29,7 @@ export const FALLBACK_COLLECTIONS: CollectionTileData[] = [
     description:
       "Make the early years more engaging with ABCs, numbers, shapes, vocabulary, and preschool learning.",
     href: "/shop/early-learning",
-    image: "/images/early-learning.png",
+    image: "/images/early-learning.webp",
     ...getFeaturedCategoryAccent("sunny"),
     icon: getFeaturedCategoryIcon("graduation-cap"),
   },
@@ -39,7 +39,7 @@ export const FALLBACK_COLLECTIONS: CollectionTileData[] = [
     description:
       "Help little learners discover rain, plants, space, weather, and the fascinating world around them.",
     href: "/shop/science-and-nature",
-    image: "/images/science-and-nature.png",
+    image: "/images/science-and-nature.webp",
     ...getFeaturedCategoryAccent("teal"),
     icon: getFeaturedCategoryIcon("sparkles"),
   },
@@ -49,7 +49,7 @@ export const FALLBACK_COLLECTIONS: CollectionTileData[] = [
     description:
       "Keep little hands learning with colouring, worksheets, tracing, activities, and creative printables.",
     href: "/shop/activities-and-printables",
-    image: "/images/activities-and-printables.png",
+    image: "/images/activities-and-printables.webp",
     ...getFeaturedCategoryAccent("sage"),
     icon: getFeaturedCategoryIcon("pen-tool"),
   },
@@ -59,7 +59,7 @@ export const FALLBACK_COLLECTIONS: CollectionTileData[] = [
     description:
       "Introduce useful everyday skills through simple resources for cooking, healthy habits, practical learning, and independence.",
     href: "/shop/life-skills",
-    image: "/images/life-skills.png",
+    image: "/images/life-skills.webp",
     ...getFeaturedCategoryAccent("blossom"),
     icon: getFeaturedCategoryIcon("heart"),
   },

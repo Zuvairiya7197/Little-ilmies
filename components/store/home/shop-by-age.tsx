@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import type { AgeGroup } from "@/lib/age-range";
@@ -12,10 +12,10 @@ const ageBands: {
   imageWrapperClass?: string;
   mobileImageWrapperClass?: string;
 }[] = [
-  { range: "3-6", label: "3–6 Years", tint: "bg-sunny-500", image: "/images/age-3-6.png", imageWrapperClass: "-translate-y-2" },
-  { range: "6-9", label: "6–9 Years", tint: "bg-lemon-600", image: "/images/age-6-9.png" },
-  { range: "9-12", label: "9–12 Years", tint: "bg-teal-500", image: "/images/age-9-12.png" },
-  { range: "12+", label: "12+ Years", tint: "bg-blossom-500", image: "/images/age-12-plus.png" },
+  { range: "3-6", label: "3–6 Years", tint: "bg-sunny-500", image: "/images/age-3-6.webp", imageWrapperClass: "-translate-y-2" },
+  { range: "6-9", label: "6–9 Years", tint: "bg-lemon-600", image: "/images/age-6-9.webp" },
+  { range: "9-12", label: "9–12 Years", tint: "bg-teal-500", image: "/images/age-9-12.webp" },
+  { range: "12+", label: "12+ Years", tint: "bg-blossom-500", image: "/images/age-12-plus.webp" },
 ];
 
 export function ShopByAge() {

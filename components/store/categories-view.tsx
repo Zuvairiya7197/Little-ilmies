@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import {
   Sparkles,
   Star,
@@ -134,7 +134,7 @@ export function CategoriesView({ categories }: { categories: Category[] }) {
         <Star className="absolute right-4 top-4 h-3.5 w-3.5 fill-sunny-400/80 text-sunny-400/80" aria-hidden="true" />
 
         <div aria-hidden="true" className="relative h-16 w-20 shrink-0 xs:h-20 xs:w-24">
-          <Image src="/images/age-6-9.png" alt="" fill sizes="96px" className="object-contain object-center" />
+          <Image src="/images/age-6-9.webp" alt="" fill sizes="96px" className="object-contain object-center" />
         </div>
 
         <div className="min-w-0 flex-1">

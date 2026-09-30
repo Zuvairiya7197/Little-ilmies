@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
@@ -76,7 +76,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                   ? productCoverUrl(firstBook.id, firstBook.coverImage)
                   : item.product
                     ? productCoverUrl(item.product.id, item.product.coverImage)
-                    : "/images/explore-bundles.png";
+                    : "/images/explore-bundles.webp";
                 return (
                 <li key={item.id} className="flex items-center gap-3 py-3">
                   <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-md bg-cream-200">

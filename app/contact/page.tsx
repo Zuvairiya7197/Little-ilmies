@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import {
   Send,
@@ -78,7 +78,7 @@ export default function ContactPage() {
                   aria-hidden="true"
                 >
                   <Image
-                    src="/images/heart.png"
+                    src="/images/heart.webp"
                     alt=""
                     fill
                     sizes="36px"
@@ -98,7 +98,7 @@ export default function ContactPage() {
 
             <div className="relative -mr-6 h-40 w-24 shrink-0 xs:h-48 xs:w-40">
               <Image
-                src="/images/contact us.png"
+                src="/images/contact us.webp"
                 alt=""
                 fill
                 sizes="200px"
@@ -122,7 +122,7 @@ export default function ContactPage() {
               aria-hidden="true"
             >
               <Image
-                src="/images/star.png"
+                src="/images/star.webp"
                 alt=""
                 fill
                 sizes="20px"
@@ -182,7 +182,7 @@ export default function ContactPage() {
             <div className="flex items-center gap-3">
               <div className="relative h-16 w-24 shrink-0">
                 <Image
-                  src="/images/cant find what you are looking for.png"
+                  src="/images/cant find what you are looking for.webp"
                   alt=""
                   fill
                   sizes="96px"
@@ -237,7 +237,7 @@ export default function ContactPage() {
                     aria-hidden="true"
                   >
                     <Image
-                      src="/images/heart.png"
+                      src="/images/heart.webp"
                       alt=""
                       fill
                       sizes="44px"
@@ -272,7 +272,7 @@ export default function ContactPage() {
                   aria-hidden="true"
                 >
                   <Image
-                    src="/images/star.png"
+                    src="/images/star.webp"
                     alt=""
                     fill
                     sizes="20px"
@@ -284,7 +284,7 @@ export default function ContactPage() {
 
             <div className="relative aspect-[3/2] w-full">
               <Image
-                src="/images/contact us.png"
+                src="/images/contact us.webp"
                 alt=""
                 fill
                 sizes="640px"
@@ -350,7 +350,7 @@ export default function ContactPage() {
             <div className="mt-6 flex flex-row items-center gap-2 rounded-3xl bg-ink-100 p-2 py-0 pl-2 pr-3 text-left">
               <div className="relative -mt-14 h-40 w-56 shrink-0">
                 <Image
-                  src="/images/cant find what you are looking for.png"
+                  src="/images/cant find what you are looking for.webp"
                   alt=""
                   fill
                   sizes="208px"
