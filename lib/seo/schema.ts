@@ -6,7 +6,7 @@ export function organizationSchema() {
     "@type": "Organization",
     name: "Little Ilmies",
     url: siteUrl,
-    logo: `${siteUrl}/images/little_ilmies_logo.png`,
+    logo: `${siteUrl}/images/little_ilmies_logo_cropped.png`,
     description:
       "Little Ilmies helps Muslim parents nurture young hearts with authentic Islamic and educational e-books.",
     sameAs: ["https://instagram.com/littleilmies", "https://facebook.com/littleilmies"],

@@ -47,14 +47,14 @@ export const metadata: Metadata = {
     description:
       "Authentic, printable, child-friendly Islamic and educational e-books for young Muslim hearts.",
     url: siteUrl,
-    images: [{ url: "/images/little_ilmies_logo.png", width: 1000, height: 1000, alt: "Little Ilmies" }],
+    images: [{ url: "/images/og-image.png", width: 1200, height: 630, alt: "Little Ilmies" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Little Ilmies — Islamic & Educational E-Books for Young Hearts",
     description:
       "Authentic, printable, child-friendly Islamic and educational e-books for young Muslim hearts.",
-    images: ["/images/little_ilmies_logo.png"],
+    images: ["/images/og-image.png"],
   },
   robots: {
     index: true,
