@@ -103,13 +103,13 @@ export function ProductBuyBox({
       {/* Mobile & tablet: just Add to Cart + Add to Wishlist, matches app-style PDP design */}
       <div className="grid grid-cols-2 gap-5 lg:hidden">
         {owns ? (
-          <Link
+          <a
             href={`/api/download/${product.id}`}
             className="tap-target col-span-2 flex items-center justify-center gap-2 rounded-2xl bg-ink-600 px-2 py-3 text-sm font-semibold text-cream-50 shadow-clay-primary transition-all active:scale-95 xs:text-base sm:gap-3 sm:py-4 sm:text-lg"
           >
             <Download className="h-5 w-5 shrink-0" aria-hidden="true" />
             <span className="truncate">You own this — Download</span>
-          </Link>
+          </a>
         ) : (
           <button
             type="button"
@@ -250,10 +250,10 @@ export function ProductBuyBox({
       )}
 
       {owns ? (
-        <Link href={`/api/download/${product.id}`} className="btn-primary mt-5 w-full justify-center">
+        <a href={`/api/download/${product.id}`} className="btn-primary mt-5 w-full justify-center">
           <Download className="h-4 w-4" aria-hidden="true" />
           Download
-        </Link>
+        </a>
       ) : (
         <>
           <div className="mt-5 flex gap-3">

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { Readable } from "node:stream";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { prisma } from "@/lib/db/prisma";
-import { streamPrivatePdf } from "@/lib/storage";
+import { getPrivatePdfDownloadUrl, streamPrivatePdf } from "@/lib/storage";
 
 interface RouteParams {
   params: Promise<{ productId: string }>;
@@ -54,6 +54,23 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       { error: "This product's file is not yet available" },
       { status: 404 }
     );
+  }
+
+  const signedUrl = await getPrivatePdfDownloadUrl(
+    download.product.privatePdfPath,
+    `${download.product.slug}.pdf`
+  ).catch(() => null);
+
+  if (signedUrl) {
+    await prisma.download.update({
+      where: { id: download.id },
+      data: { downloadCount: { increment: 1 }, lastDownloadedAt: new Date() },
+    });
+    // The URL expires in 5 minutes and is never cached, so it can't be
+    // reused or shared beyond a single download.
+    const response = NextResponse.redirect(signedUrl, 302);
+    response.headers.set("Cache-Control", "private, no-store");
+    return response;
   }
 
   let file: Awaited<ReturnType<typeof streamPrivatePdf>>;

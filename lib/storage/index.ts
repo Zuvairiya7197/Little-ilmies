@@ -3,6 +3,7 @@ import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -144,6 +145,25 @@ export async function streamPrivatePdf(relativePath: string) {
   const fullPath = assertWithin(PDFS_DIR, path.join(PRIVATE_ROOT, relativePath));
   const stats = await stat(fullPath); // throws if missing — route treats as 404
   return { stream: createReadStream(fullPath), size: stats.size };
+}
+
+/**
+ * Short-lived signed B2 URL for a private PDF, so the browser downloads
+ * straight from B2 instead of the file streaming through a Vercel
+ * Function (which counts against Fast Origin Transfer and CPU). Only
+ * call after every access check has passed. Returns null in local-disk
+ * mode, where the caller should stream instead.
+ */
+export async function getPrivatePdfDownloadUrl(relativePath: string, downloadName: string): Promise<string | null> {
+  if (!USE_B2_STORAGE) return null;
+
+  const command = new GetObjectCommand({
+    Bucket: getB2Bucket(),
+    Key: relativePath,
+    ResponseContentType: "application/pdf",
+    ResponseContentDisposition: `attachment; filename="${downloadName}"`,
+  });
+  return getSignedUrl(getB2Client(), command, { expiresIn: 300 });
 }
 
 export async function deletePrivatePdf(relativePath: string): Promise<void> {
