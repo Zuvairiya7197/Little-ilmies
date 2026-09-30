@@ -41,7 +41,11 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
           bundleId: snapshot.bundleId,
           slug: "",
           title: `${snapshot.bundleName} (${snapshot.quantity} books)`,
-          coverImage: snapshot.selectedBooks[0]?.coverImage ?? "/images/explore-bundles.png",
+          // Snapshots store the raw storage key, so resolve it like any
+          // other product cover (the route looks the cover up by id).
+          coverImage: snapshot.selectedBooks[0]?.coverImage
+            ? productCoverUrl(snapshot.selectedBooks[0].id, snapshot.selectedBooks[0].coverImage)
+            : "/images/explore-bundles.png",
           unitPrice: item.unitPrice,
           selectedBooks: snapshot.selectedBooks.map((book) => ({ id: book.id, title: book.title })),
         }];

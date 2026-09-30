@@ -9,6 +9,7 @@ import { RefundOrderButton } from "@/components/admin/refund-order-button";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
+import { productCoverUrl } from "@/lib/catalog-assets";
 
 export const metadata: Metadata = {
   title: "Order Details",
@@ -70,7 +71,12 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               {order.items.map((item) => {
                 const snapshot = item.itemType === "CUSTOM_BUNDLE" ? parseCustomBundleSnapshot(item.bundleSnapshot) : null;
                 const title = snapshot ? `${snapshot.bundleName} (${snapshot.quantity} books)` : item.product?.title ?? "Unavailable item";
-                const coverImage = snapshot?.selectedBooks[0]?.coverImage ?? item.product?.coverImage ?? "/images/explore-bundles.png";
+                const firstBook = snapshot?.selectedBooks[0];
+                const coverImage = firstBook?.coverImage
+                  ? productCoverUrl(firstBook.id, firstBook.coverImage)
+                  : item.product
+                    ? productCoverUrl(item.product.id, item.product.coverImage)
+                    : "/images/explore-bundles.png";
                 return (
                 <li key={item.id} className="flex items-center gap-3 py-3">
                   <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-md bg-cream-200">
