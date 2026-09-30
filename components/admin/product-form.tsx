@@ -1742,7 +1742,7 @@ function RentalPagesUploader({
       await uploadToPresignedUrl(uploadUrl, compressed, contentType, (percentage) =>
         updateItem(item.id, { progress: percentage })
       );
-      await finalizeRentalPage(productId, key, true, compressed !== item.file);
+      await finalizeRentalPage(productId, key, true, !needsServerCompression(item.file, compressed));
       updateItem(item.id, { status: "done", progress: 100 });
       return true;
     } catch (err) {
@@ -2320,7 +2320,7 @@ async function uploadRentalPages(
     await uploadToPresignedUrl(uploadUrl, file, contentType, (percentage) => {
       onProgress(((index + percentage / 100) / files.length) * 100);
     });
-    await finalizeRentalPage(productId, key, index > 0, file !== original);
+    await finalizeRentalPage(productId, key, index > 0, !needsServerCompression(original, file));
     onProgress(((index + 1) / files.length) * 100);
   }
 }
@@ -2362,6 +2362,14 @@ function rentalPathname(productId: string, filename: string, index: number) {
 const COMPRESS_ABOVE_BYTES_CLIENT = 1.5 * 1024 * 1024;
 const MAX_DIMENSION_CLIENT = 2400;
 const JPEG_QUALITY_CLIENT = 0.85;
+
+// The server only needs to read a page back from B2 and compress it when
+// the browser couldn't: the original was too big and came back untouched.
+// Pages already under the threshold need nothing, so skipping the finalize
+// step's B2 download for them saves a function run + B2 read per page.
+function needsServerCompression(original: File, uploaded: File) {
+  return uploaded === original && original.size > COMPRESS_ABOVE_BYTES_CLIENT;
+}
 
 async function compressImageInBrowser(file: File): Promise<File> {
   if (file.size <= COMPRESS_ABOVE_BYTES_CLIENT || !file.type.startsWith("image/")) return file;
