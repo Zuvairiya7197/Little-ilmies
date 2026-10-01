@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getActiveRentalEntitlement } from "@/lib/rentals/entitlement";
-import { getRentalPage } from "@/lib/storage";
+import { getRentalPage, getRentalPageUrl } from "@/lib/storage";
 
 interface RouteParams {
   params: Promise<{ productId: string; page: string }>;
@@ -33,6 +33,16 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   const pagePath = rental.product.rentalPageImagePaths[pageIndex];
   if (!pagePath) {
     return NextResponse.json({ error: "Page not found" }, { status: 404 });
+  }
+
+  const signedUrl = await getRentalPageUrl(pagePath).catch(() => null);
+  if (signedUrl) {
+    // The page bytes come straight from B2; this route only authorizes.
+    // The link expires in 2 minutes and is never cached.
+    const response = NextResponse.redirect(signedUrl, 302);
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
   }
 
   let buffer: Buffer;

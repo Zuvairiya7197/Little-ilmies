@@ -268,6 +268,25 @@ export async function saveRentalPages(
   return paths;
 }
 
+/**
+ * Short-lived signed B2 URL for one rental page image, so the reader's
+ * browser loads it straight from B2 instead of through a Vercel Function
+ * on every page turn. Only call after getActiveRentalEntitlement has
+ * passed. Returns null in local-disk mode, where the caller streams.
+ */
+export async function getRentalPageUrl(relativePath: string): Promise<string | null> {
+  if (!USE_B2_STORAGE) return null;
+
+  const command = new GetObjectCommand({
+    Bucket: getB2Bucket(),
+    Key: relativePath,
+    ResponseContentType: contentTypeFor(relativePath, "image/jpeg"),
+    ResponseContentDisposition: "inline",
+    ResponseCacheControl: "private, no-store",
+  });
+  return getSignedUrl(getB2Client(), command, { expiresIn: 120 });
+}
+
 export async function getRentalPage(relativePath: string): Promise<Buffer> {
   if (USE_B2_STORAGE) {
     return getObjectBuffer(relativePath);
