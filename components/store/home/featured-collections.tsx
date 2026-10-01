@@ -142,18 +142,18 @@ function CollectionTile({ title, href, image, cardBg, titleColor }: CollectionTi
   return (
     <Link
       href={href}
-      className={`group flex aspect-[4/5] w-[42vw] shrink-0 snap-start flex-col overflow-hidden rounded-2xl pb-3 shadow-clay-sm xs:w-36 ${cardBg}`}
+      className={`group flex aspect-[4/5] w-[29vw] shrink-0 snap-start flex-col overflow-hidden rounded-2xl pb-2.5 shadow-clay-sm xs:w-[6.75rem] sm:w-32 ${cardBg}`}
     >
       <div className="relative min-h-0 flex-1">
         <Image
           src={image}
           alt=""
           fill
-          sizes="45vw"
-          className="scale-125 object-contain p-1 transition-transform duration-300 group-hover:scale-[1.35]"
+          sizes="128px"
+          className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
         />
       </div>
-      <p className={`px-2 text-center text-sm font-semibold leading-tight ${titleColor}`}>{title}</p>
+      <p className={`px-1.5 text-center text-xs font-semibold leading-tight ${titleColor}`}>{title}</p>
     </Link>
   );
 }
