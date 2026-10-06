@@ -32,14 +32,22 @@ import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
 
-type PaymentMethod = "upi" | "card" | "netbanking" | "wallet";
+type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "paypal";
 
 const paymentMethods: { id: PaymentMethod; label: string; description: string; icon: typeof Smartphone; badge?: string }[] = [
-  { id: "upi", label: "UPI", description: "Pay using any UPI app", icon: Smartphone, badge: "Recommended" },
+  { id: "upi", label: "UPI", description: "Pay using any UPI app", icon: Smartphone },
   { id: "card", label: "Credit / Debit Card", description: "Visa, Mastercard, RuPay", icon: CreditCard },
   { id: "netbanking", label: "Net Banking", description: "All major banks supported", icon: Landmark },
   { id: "wallet", label: "Paytm Wallet", description: "Fast and secure payment", icon: Wallet },
+  { id: "paypal", label: "PayPal", description: "Pay with your PayPal account", icon: Wallet },
 ];
+
+// PayPal can only collect international currencies (Razorpay rejects it for
+// INR), so it's offered to non-INR buyers only. It leads that list because
+// our account isn't eligible for international bank transfers, making
+// PayPal the most reliable route for overseas buyers.
+const inrPaymentMethodIds: PaymentMethod[] = ["upi", "card", "netbanking", "wallet"];
+const internationalPaymentMethodIds: PaymentMethod[] = ["paypal", "card"];
 
 const mobileTrustPoints = [
   { label: "Instant Download", description: "Start reading right away", icon: Download, iconColor: "text-ink-500" },
@@ -53,13 +61,32 @@ function getRazorpayMethodConfig(method: PaymentMethod) {
     netbanking: method === "netbanking",
     card: method === "card",
     upi: method === "upi",
-    wallet: method === "wallet",
+    // Razorpay treats PayPal as a wallet, not a method of its own.
+    wallet: method === "wallet" || method === "paypal",
   };
 }
 
 function getRazorpayDisplayConfig(method: PaymentMethod) {
+  if (method === "paypal") {
+    return {
+      blocks: {
+        paypal: {
+          name: "Pay with PayPal",
+          instruments: [{ method: "wallet", wallets: ["paypal"] }],
+        },
+      },
+      sequence: ["block.paypal"],
+      preferences: {
+        show_default_blocks: false,
+      },
+    };
+  }
+
   return {
     sequence: [method],
+    // Enabling wallets would otherwise also surface PayPal, which can't
+    // collect INR and fails at payment time.
+    hide: [{ method: "wallet", wallets: ["paypal"] }],
     preferences: {
       show_default_blocks: false,
     },
@@ -86,9 +113,12 @@ export function CheckoutForm({
   const savings = Math.max(0, regularSubtotal - subtotal);
   const currencyCode = lineItems[0]?.currencyCode;
   const isInrCheckout = currencyCode === "INR";
-  const availablePaymentMethods = isInrCheckout
-    ? paymentMethods
-    : paymentMethods.filter((method) => method.id === "card");
+  const allowedPaymentMethodIds = isInrCheckout ? inrPaymentMethodIds : internationalPaymentMethodIds;
+  // Ordered by the allowed list, with its first entry marked as recommended.
+  const availablePaymentMethods = allowedPaymentMethodIds.map((id, index) => {
+    const method = paymentMethods.find((m) => m.id === id)!;
+    return index === 0 ? { ...method, badge: "Recommended" } : method;
+  });
 
   const { data: session, status: sessionStatus } = useSession();
   const isLoggedIn = sessionStatus === "authenticated";
@@ -161,7 +191,10 @@ export function CheckoutForm({
         return;
       }
 
-      const selectedPaymentMethod: PaymentMethod = createData.currencyCode === "INR" ? paymentMethod : "card";
+      // The server decides the final currency, so re-check the selection
+      // against it rather than trusting what the UI showed.
+      const allowedForOrder = createData.currencyCode === "INR" ? inrPaymentMethodIds : internationalPaymentMethodIds;
+      const selectedPaymentMethod: PaymentMethod = allowedForOrder.includes(paymentMethod) ? paymentMethod : allowedForOrder[0];
 
       const razorpay = new window.Razorpay({
         key: createData.razorpayKeyId,
