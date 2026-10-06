@@ -6,7 +6,10 @@ const RAZORPAY_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
 declare global {
   interface Window {
-    Razorpay: new (options: Record<string, unknown>) => { open: () => void };
+    Razorpay: new (options: Record<string, unknown>) => {
+      open: () => void;
+      on: (event: "payment.failed", handler: () => void) => void;
+    };
   }
 }
 

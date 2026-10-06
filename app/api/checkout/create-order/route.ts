@@ -5,6 +5,7 @@ import { createOrderRequestSchema } from "@/lib/validation/checkout";
 import { resolveProductPriceFromDb } from "@/lib/pricing/resolve-price-db";
 import { resolveVerifiedCurrency } from "@/lib/pricing/verify-region";
 import { createRazorpayOrder, getRazorpayClient } from "@/lib/payments/razorpay";
+import { PAYPAL_FALLBACK_CURRENCY, PAYPAL_UNSUPPORTED_CURRENCIES } from "@/lib/payments/paypal";
 import { validateCustomBundleSelection } from "@/lib/bundles/custom-bundle";
 import { isRentalEligibleRequest } from "@/lib/rentals/eligibility";
 import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { buyerName, buyerEmail, items } = parsed.data;
+  const { buyerName, buyerEmail, items, paypalFallback } = parsed.data;
 
   const hasRentalItems = items.some((item) => item.type === "RENTAL");
   const hasUpgradeItems = items.some((item) => item.type === "UPGRADE");
@@ -85,7 +86,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const currency = hasRentalItems ? RENTAL_CURRENCY_CODE : resolveVerifiedCurrency(request);
+  const verifiedCurrency = resolveVerifiedCurrency(request);
+  // A PayPal fallback only ever swaps a PayPal-unsupported currency (AED)
+  // for USD; any other region keeps its own verified price.
+  const currency = hasRentalItems
+    ? RENTAL_CURRENCY_CODE
+    : paypalFallback && PAYPAL_UNSUPPORTED_CURRENCIES.has(verifiedCurrency)
+      ? PAYPAL_FALLBACK_CURRENCY
+      : verifiedCurrency;
 
   let subtotal = 0;
   const orderItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = [];

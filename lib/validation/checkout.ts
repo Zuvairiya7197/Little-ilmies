@@ -52,6 +52,10 @@ export const createOrderRequestSchema = z.object({
   buyerEmail: z.string().trim().email(),
   items: z.array(checkoutItemSchema).min(1),
   couponCode: z.string().trim().optional(),
+  // Buyer chose PayPal after their card failed in a currency PayPal can't
+  // collect. Only a request to switch to the USD price — the server decides
+  // whether that's allowed (see lib/payments/paypal.ts).
+  paypalFallback: z.boolean().optional(),
 });
 
 export type CreateOrderRequest = z.infer<typeof createOrderRequestSchema>;

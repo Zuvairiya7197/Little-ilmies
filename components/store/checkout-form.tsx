@@ -31,6 +31,7 @@ import { useRazorpayScript } from "@/hooks/use-razorpay-script";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
+import { isPaypalSupportedCurrency, PAYPAL_UNSUPPORTED_CURRENCIES } from "@/lib/payments/paypal";
 
 type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "paypal";
 
@@ -49,13 +50,13 @@ const paymentMethods: { id: PaymentMethod; label: string; description: string; i
 const inrPaymentMethodIds: PaymentMethod[] = ["upi", "card", "netbanking", "wallet"];
 const internationalPaymentMethodIds: PaymentMethod[] = ["paypal", "card"];
 // PayPal doesn't support every currency we price in (AED isn't one of its
-// currencies), so those checkouts fall back to cards only.
+// currencies), so those checkouts start with cards only. If the card fails,
+// the buyer is offered PayPal at the USD price instead.
 const cardOnlyPaymentMethodIds: PaymentMethod[] = ["card"];
-const paypalUnsupportedCurrencies = new Set(["AED"]);
 
 function getPaymentMethodIdsForCurrency(currencyCode: string | undefined): PaymentMethod[] {
   if (currencyCode === "INR") return inrPaymentMethodIds;
-  if (currencyCode && paypalUnsupportedCurrencies.has(currencyCode)) return cardOnlyPaymentMethodIds;
+  if (currencyCode && !isPaypalSupportedCurrency(currencyCode)) return cardOnlyPaymentMethodIds;
   return internationalPaymentMethodIds;
 }
 
@@ -115,6 +116,7 @@ export function CheckoutForm({
   const clearCart = useCartStore((s) => s.clear);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showPaypalFallback, setShowPaypalFallback] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
   const isRazorpayReady = useRazorpayScript();
 
@@ -160,7 +162,7 @@ export function CheckoutForm({
     onMobilePhaseChange("payment");
   }
 
-  async function onSubmit(values: CheckoutFormValues) {
+  async function onSubmit(values: CheckoutFormValues, { paypalFallback = false } = {}) {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -173,6 +175,7 @@ export function CheckoutForm({
         body: JSON.stringify({
           buyerName: values.fullName,
           buyerEmail: values.email,
+          paypalFallback,
           items: lineItems.map((item) =>
             item.type === "CUSTOM_BUNDLE"
               ? {
@@ -204,7 +207,10 @@ export function CheckoutForm({
       // The server decides the final currency, so re-check the selection
       // against it rather than trusting what the UI showed.
       const allowedForOrder = getPaymentMethodIdsForCurrency(createData.currencyCode);
-      const selectedPaymentMethod: PaymentMethod = allowedForOrder.includes(paymentMethod) ? paymentMethod : allowedForOrder[0];
+      const requestedPaymentMethod: PaymentMethod = paypalFallback ? "paypal" : paymentMethod;
+      const selectedPaymentMethod: PaymentMethod = allowedForOrder.includes(requestedPaymentMethod)
+        ? requestedPaymentMethod
+        : allowedForOrder[0];
 
       const razorpay = new window.Razorpay({
         key: createData.razorpayKeyId,
@@ -252,6 +258,12 @@ export function CheckoutForm({
         },
       });
 
+      // A failed card in a currency PayPal can't collect (AED) unlocks the
+      // PayPal-in-USD fallback once the buyer closes the Razorpay window.
+      if (selectedPaymentMethod === "card" && PAYPAL_UNSUPPORTED_CURRENCIES.has(createData.currencyCode)) {
+        razorpay.on("payment.failed", () => setShowPaypalFallback(true));
+      }
+
       razorpay.open();
     } catch {
       setSubmitError("Something went wrong. Please check your connection and try again.");
@@ -261,7 +273,7 @@ export function CheckoutForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
+    <form onSubmit={handleSubmit((values) => onSubmit(values))} className="flex flex-col gap-6" noValidate>
       {/* Contact Information — single registered instance shared by both breakpoints
           (two DOM inputs bound to the same react-hook-form field name would fight
           over which one's value wins at validation time), just restyled per size. */}
@@ -436,6 +448,25 @@ export function CheckoutForm({
               <p className="mt-3 rounded-2xl bg-ink-50 px-3.5 py-3 text-xs font-semibold text-ink-500">
                 International orders are processed by card for {currencyCode ?? "your selected currency"} checkout.
               </p>
+            )}
+
+            {showPaypalFallback && (
+              <div className="mt-3 rounded-2xl bg-gold-50 px-3.5 py-3 text-sm text-gold-700">
+                <p className="font-semibold">Card not going through?</p>
+                <p className="mt-1 text-xs">
+                  You can pay with PayPal instead. PayPal doesn&apos;t support {currencyCode}, so you&apos;ll be
+                  charged our US dollar price — PayPal shows the exact amount before you confirm.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSubmit((values) => onSubmit(values, { paypalFallback: true }))}
+                  disabled={isSubmitting}
+                  className="btn-primary mt-3 w-full disabled:opacity-60"
+                >
+                  <Wallet className="h-4 w-4" aria-hidden="true" />
+                  Pay with PayPal (USD)
+                </button>
+              </div>
             )}
 
             <div className="mt-4 flex items-center gap-2.5 rounded-2xl bg-sage-50 p-3.5 text-xs font-semibold text-sage-800">
