@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { currencyFromCountryCode } from "@/lib/pricing/detect-currency";
+import { getRequestCountry } from "@/lib/pricing/request-country";
 import type { CurrencyCode } from "@/types/pricing";
 
 /**
@@ -22,8 +23,7 @@ export function resolveVerifiedCurrency(
     return currencyFromCountryCode(billingCountryCode);
   }
 
-  const ipCountry =
-    request.headers.get("x-vercel-ip-country") ?? request.headers.get("cf-ipcountry");
+  const ipCountry = getRequestCountry(request.headers);
 
   return currencyFromCountryCode(ipCountry);
 }

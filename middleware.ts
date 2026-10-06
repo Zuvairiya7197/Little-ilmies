@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getRequestCountry } from "@/lib/pricing/request-country";
 
 const COUNTRY_COOKIE = "li_detected_country";
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  const country =
-    request.headers.get("x-vercel-ip-country") ?? request.headers.get("cf-ipcountry") ?? null;
+  const country = getRequestCountry(request.headers);
 
   // Refresh whenever the visitor's IP country changes (travel, new network)
   // so the displayed currency keeps matching the one checkout will charge,
