@@ -48,6 +48,16 @@ const paymentMethods: { id: PaymentMethod; label: string; description: string; i
 // PayPal the most reliable route for overseas buyers.
 const inrPaymentMethodIds: PaymentMethod[] = ["upi", "card", "netbanking", "wallet"];
 const internationalPaymentMethodIds: PaymentMethod[] = ["paypal", "card"];
+// PayPal doesn't support every currency we price in (AED isn't one of its
+// currencies), so those checkouts fall back to cards only.
+const cardOnlyPaymentMethodIds: PaymentMethod[] = ["card"];
+const paypalUnsupportedCurrencies = new Set(["AED"]);
+
+function getPaymentMethodIdsForCurrency(currencyCode: string | undefined): PaymentMethod[] {
+  if (currencyCode === "INR") return inrPaymentMethodIds;
+  if (currencyCode && paypalUnsupportedCurrencies.has(currencyCode)) return cardOnlyPaymentMethodIds;
+  return internationalPaymentMethodIds;
+}
 
 const mobileTrustPoints = [
   { label: "Instant Download", description: "Start reading right away", icon: Download, iconColor: "text-ink-500" },
@@ -113,7 +123,7 @@ export function CheckoutForm({
   const savings = Math.max(0, regularSubtotal - subtotal);
   const currencyCode = lineItems[0]?.currencyCode;
   const isInrCheckout = currencyCode === "INR";
-  const allowedPaymentMethodIds = isInrCheckout ? inrPaymentMethodIds : internationalPaymentMethodIds;
+  const allowedPaymentMethodIds = getPaymentMethodIdsForCurrency(currencyCode);
   // Ordered by the allowed list, with its first entry marked as recommended.
   const availablePaymentMethods = allowedPaymentMethodIds.map((id, index) => {
     const method = paymentMethods.find((m) => m.id === id)!;
@@ -193,7 +203,7 @@ export function CheckoutForm({
 
       // The server decides the final currency, so re-check the selection
       // against it rather than trusting what the UI showed.
-      const allowedForOrder = createData.currencyCode === "INR" ? inrPaymentMethodIds : internationalPaymentMethodIds;
+      const allowedForOrder = getPaymentMethodIdsForCurrency(createData.currencyCode);
       const selectedPaymentMethod: PaymentMethod = allowedForOrder.includes(paymentMethod) ? paymentMethod : allowedForOrder[0];
 
       const razorpay = new window.Razorpay({
@@ -422,7 +432,7 @@ export function CheckoutForm({
               ))}
             </div>
 
-            {!isInrCheckout && (
+            {!isInrCheckout && !allowedPaymentMethodIds.includes("paypal") && (
               <p className="mt-3 rounded-2xl bg-ink-50 px-3.5 py-3 text-xs font-semibold text-ink-500">
                 International orders are processed by card for {currencyCode ?? "your selected currency"} checkout.
               </p>
