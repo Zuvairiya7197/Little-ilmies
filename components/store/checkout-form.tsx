@@ -37,7 +37,7 @@ type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "paypal";
 
 const paymentMethods: { id: PaymentMethod; label: string; description: string; icon: typeof Smartphone; badge?: string }[] = [
   { id: "upi", label: "UPI", description: "Pay using any UPI app", icon: Smartphone },
-  { id: "card", label: "Credit / Debit Card", description: "Visa, Mastercard, RuPay", icon: CreditCard },
+  { id: "card", label: "Credit / Debit Card", description: "Visa, Mastercard, RuPay — or a card saved in Google Pay", icon: CreditCard },
   { id: "netbanking", label: "Net Banking", description: "All major banks supported", icon: Landmark },
   { id: "wallet", label: "Paytm Wallet", description: "Fast and secure payment", icon: Wallet },
   { id: "paypal", label: "PayPal", description: "Pay with your PayPal account", icon: Wallet },
