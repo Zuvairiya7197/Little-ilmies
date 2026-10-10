@@ -90,7 +90,8 @@ export async function validateCustomBundleSelection({
       currency
     ).regularPrice
   );
-  const price = calculateCustomBundlePrice(regularPrices, settings.customBundleDiscountPercentage);
+  const settings = await getPricingSettings();
+  const price = calculateCustomBundlePrice(regularPrices, settings.customBundleDiscountPercentage, currency);
 
   return {
     bundleId: bundle.id,
@@ -114,4 +115,3 @@ export async function validateCustomBundleSelection({
     })),
   };
 }
-  const settings = await getPricingSettings();
