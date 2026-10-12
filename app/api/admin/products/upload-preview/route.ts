@@ -12,6 +12,8 @@ const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const attachedPreviewSchema = z.object({
   productId: z.string().min(1),
   pathnames: z.array(z.string().min(1)).min(1).max(20),
+  /** Add these pages after the current ones instead of replacing them. */
+  append: z.boolean().optional(),
 });
 const removePreviewSchema = z.object({ productId: z.string().min(1) });
 const updatePreviewSchema = z.object({
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Invalid uploaded preview data" }, { status: 400 });
       }
 
-      const { productId, pathnames } = parsed.data;
+      const { productId, pathnames, append } = parsed.data;
       if (
         pathnames.some(
           (pathname) =>
@@ -51,11 +53,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
       }
 
-      await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: pathnames } });
-      await deletePreviewPages(product.previewImagePaths);
+      const nextPaths = append ? [...product.previewImagePaths, ...pathnames] : pathnames;
+      await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: nextPaths } });
+      if (!append) await deletePreviewPages(product.previewImagePaths);
       revalidateCatalogPaths(product.slug);
       return NextResponse.json({
-        previewImagePaths: productPreviewUrls(productId, pathnames),
+        previewImagePaths: productPreviewUrls(productId, nextPaths),
       });
     }
 

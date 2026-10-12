@@ -894,7 +894,12 @@ export function ProductForm({
                     </button>
                   </div>
                 ) : null}
-                <DirectPreviewUploader productId={productId} refresh={router.refresh} setError={setSubmitError} />
+                <DirectPreviewUploader
+                  productId={productId}
+                  existingCount={currentFiles?.previewPageCount ?? 0}
+                  refresh={router.refresh}
+                  setError={setSubmitError}
+                />
               </CurrentFileStatus>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-ink-300">
@@ -1813,10 +1818,13 @@ function PreviewThumbs({
  */
 function DirectPreviewUploader({
   productId,
+  existingCount,
   refresh,
   setError,
 }: {
   productId: string;
+  /** Pages already uploaded — new ones are added after them. */
+  existingCount: number;
   refresh: () => void;
   setError: (message: string | null) => void;
 }) {
@@ -1833,7 +1841,7 @@ function DirectPreviewUploader({
       const pathnames: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const compressed = await compressImageInBrowser(files[i]);
-        const key = previewPathname(productId, files[i].name, i);
+        const key = previewPathname(productId, files[i].name, existingCount + i);
         const contentType = compressed.type || "image/jpeg";
         const { uploadUrl } = await getPresignedUploadUrl({
           kind: "preview",
@@ -1850,7 +1858,7 @@ function DirectPreviewUploader({
       const res = await fetch("/api/admin/products/upload-preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, pathnames }),
+        body: JSON.stringify({ productId, pathnames, append: true }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -1872,7 +1880,9 @@ function DirectPreviewUploader({
       {isUploading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />}
       {isUploading
         ? `Uploading ${progress?.done ?? 0}/${progress?.total ?? 0}…`
-        : "Upload preview pages (replaces current set)"}
+        : existingCount > 0
+          ? "Add more preview pages"
+          : "Upload preview pages"}
       <input
         type="file"
         accept="image/jpeg,image/png,image/webp"
