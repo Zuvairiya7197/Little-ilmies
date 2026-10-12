@@ -141,6 +141,10 @@ export function ProductForm({
   const [pdfUploadProgress, setPdfUploadProgress] = useState<number | null>(null);
   const [rentalUploadProgress, setRentalUploadProgress] = useState<number | null>(null);
   const [rentalFiles, setRentalFiles] = useState<File[]>([]);
+  // Rent & Read page thumbnails are full page images fetched from storage,
+  // and every load counts against Backblaze's daily download allowance —
+  // so they only load when the admin asks to see them.
+  const [showRentalPages, setShowRentalPages] = useState(false);
 
   const {
     register,
@@ -760,13 +764,25 @@ export function ProductForm({
               </p>
               {currentFiles?.rentalPageCount ? (
                 <div className="mt-2">
-                  <p className="mb-2 text-xs text-ink-300">Drag a page (or use the arrows) to reorder it; the bin deletes that page.</p>
-                  <RentalPageThumbs
-                    productId={productId}
-                    images={currentFiles.rentalPageImages ?? []}
-                    refresh={router.refresh}
-                    setError={setSubmitError}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRentalPages((v) => !v)}
+                    aria-expanded={showRentalPages}
+                    className="text-xs font-semibold text-sage-700 hover:underline"
+                  >
+                    {showRentalPages ? "Hide pages" : `Show ${currentFiles.rentalPageCount} pages (to reorder, delete or use as preview)`}
+                  </button>
+                  {showRentalPages && (
+                    <>
+                      <p className="mb-2 mt-2 text-xs text-ink-300">Drag a page (or use the arrows) to reorder it; the bin deletes that page.</p>
+                      <RentalPageThumbs
+                        productId={productId}
+                        images={currentFiles.rentalPageImages ?? []}
+                        refresh={router.refresh}
+                        setError={setSubmitError}
+                      />
+                    </>
+                  )}
                   <button
                     type="button"
                     onClick={() => removeUploadedAsset("rental", productId, router.refresh, setSubmitError)}
@@ -774,12 +790,14 @@ export function ProductForm({
                   >
                     Remove all rental pages
                   </button>
-                  <UseRentalPagesAsPreview
-                    productId={productId}
-                    images={currentFiles.rentalPageImages ?? []}
-                    refresh={router.refresh}
-                    setError={setSubmitError}
-                  />
+                  {showRentalPages && (
+                    <UseRentalPagesAsPreview
+                      productId={productId}
+                      images={currentFiles.rentalPageImages ?? []}
+                      refresh={router.refresh}
+                      setError={setSubmitError}
+                    />
+                  )}
                 </div>
               ) : null}
             </div>
@@ -2404,7 +2422,7 @@ function UseRentalPagesAsPreview({
               >
                 <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-cream-100">
                   {/* eslint-disable-next-line @next/next/no-img-element -- see RentalPageThumbs above */}
-                  <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <img src={src} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
                 </div>
                 <p className="mt-1 text-center text-[10px] font-semibold text-ink-400">Page {index + 1}</p>
                 {isSelected && (
