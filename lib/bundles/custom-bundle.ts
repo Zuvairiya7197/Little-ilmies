@@ -3,6 +3,7 @@ import type { CurrencyCode } from "@/types/pricing";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
+import { FORMAT_SOURCE_SELECT, pricesForFormat, primaryPdfFormat } from "@/lib/product-formats";
 
 export type CustomBundleValidationResult = {
   bundleId: string;
@@ -63,16 +64,23 @@ export async function validateCustomBundleSelection({
   const selectedProducts = await prisma.product.findMany({
     where: { id: { in: selectedProductIds }, status: "PUBLISHED", archivedAt: null },
     select: {
-      id: true,
+      ...FORMAT_SOURCE_SELECT,
       slug: true,
       title: true,
       coverImage: true,
-      prices: true,
     },
   });
   if (selectedProducts.length !== selectedProductIds.length) throw new Error("One or more selected books are unavailable");
 
-  const selectedById = new Map(selectedProducts.map((product) => [product.id, product]));
+  // Each bundled book is priced (and later fulfilled, see fulfill-order.ts)
+  // as its primary PDF format — colour, else black & white.
+  const pricedProducts = selectedProducts.map((product) => {
+    const format = primaryPdfFormat(product);
+    if (!format) throw new Error("One or more selected books are unavailable");
+    return { ...product, prices: pricesForFormat(product, format) };
+  });
+
+  const selectedById = new Map(pricedProducts.map((product) => [product.id, product]));
   const orderedProducts = selectedProductIds.map((productId) => selectedById.get(productId)!);
   const regularPrices = orderedProducts.map((product) =>
     resolveProductPrice(

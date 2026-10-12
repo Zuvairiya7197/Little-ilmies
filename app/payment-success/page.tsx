@@ -28,7 +28,7 @@ export default async function PaymentSuccessPage({ searchParams }: PageProps) {
         <p className="mt-2 text-sm font-semibold text-sage-700">Payment Successful</p>
         {isRental ? (
           <p className="mt-3 text-base leading-relaxed text-ink-500">
-            Your Rent &amp; Read access is ready — 7 days of online reading, no download. Log in with the same
+            Your Rent &amp; Read access is ready — online reading only, no download. Log in with the same
             email{email ? ` (${email})` : ""} anytime to continue reading.
           </p>
         ) : (

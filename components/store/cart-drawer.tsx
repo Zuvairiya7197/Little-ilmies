@@ -107,6 +107,9 @@ export function CartDrawer() {
                           <p className="text-sm font-semibold text-ink-600">
                             {item.title}
                           </p>
+                          {item.formatLabel && (
+                            <p className="mt-0.5 text-xs font-semibold text-violet-700">{item.formatLabel}</p>
+                          )}
                           <p className="mt-1 text-sm text-ink-400">
                             {formatPrice(item.unitPrice, item.currencyCode)}
                           </p>

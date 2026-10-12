@@ -3,6 +3,7 @@ import type { CurrencyCode } from "@/types/pricing";
 import type { OrderRecord, DownloadRecord, OrderSummaryItem, RentalRecord } from "@/types/account";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 import { productCoverUrl } from "@/lib/catalog-assets";
+import { downloadHref, formatName, isPdfFormat, type PdfFormat } from "@/lib/formats";
 
 /**
  * Purchase history and downloads must only ever be looked up by verified
@@ -62,6 +63,7 @@ export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
         title: item.product.title,
         coverImage: productCoverUrl(item.product.id, item.product.coverImage),
         unitPrice: item.unitPrice,
+        formatName: formatName(isRental ? "RENT_AND_READ" : item.format),
         rentalExpiresAt: rental?.rentalExpiresAt.toISOString(),
         rentalIsActive: rental ? rental.rentalExpiresAt > now : undefined,
       }];
@@ -93,10 +95,10 @@ export async function getRentalsForUser(userId: string): Promise<RentalRecord[]>
  * product page's "You already own this" / "You are currently renting
  * this" states so we don't re-sell what they already have. */
 export async function getProductEntitlementForUser(userId: string, productId: string) {
-  const [download, rental] = await Promise.all([
-    prisma.download.findFirst({
+  const [downloads, rental] = await Promise.all([
+    prisma.download.findMany({
       where: { productId, order: { userId, status: "PAID" } },
-      select: { id: true },
+      select: { format: true },
     }),
     prisma.rentalAccess.findFirst({
       where: { productId, rentalExpiresAt: { gt: new Date() }, order: { userId, status: "PAID" } },
@@ -104,8 +106,13 @@ export async function getProductEntitlementForUser(userId: string, productId: st
     }),
   ]);
 
+  const ownedFormats = Array.from(
+    new Set(downloads.map((d) => d.format).filter((format): format is PdfFormat => isPdfFormat(format)))
+  );
+
   return {
-    owns: Boolean(download),
+    /** PDF formats this buyer already owns — each is downloadable on its own. */
+    ownedFormats,
     activeRentalExpiresAt: rental?.rentalExpiresAt.toISOString() ?? null,
   };
 }
@@ -124,6 +131,9 @@ export async function getDownloadsForUser(userId: string): Promise<DownloadRecor
     title: download.product.title,
     coverImage: productCoverUrl(download.product.id, download.product.coverImage),
     fileType: download.product.format as DownloadRecord["fileType"],
+    format: isPdfFormat(download.format) ? download.format : "COLOUR_PDF",
+    formatName: formatName(download.format),
+    downloadHref: downloadHref(download.productId, isPdfFormat(download.format) ? download.format : "COLOUR_PDF"),
     purchasedAt: download.order.createdAt.toISOString(),
     downloadCount: download.downloadCount,
   }));

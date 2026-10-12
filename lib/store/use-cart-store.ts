@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ProductSummary } from "@/types/catalog";
+import { variantId, type PdfFormat } from "@/lib/formats";
 
 export interface CartItem {
   cartItemId?: string;
@@ -10,7 +11,14 @@ export interface CartItem {
   slug: string;
   title: string;
   coverImage: string;
+  /** PDF format for PRODUCT/UPGRADE lines. Missing on carts saved before
+   * formats existed — those lines are the colour PDF. */
+  format?: PdfFormat;
+  /** Display prices of the selected variant (checkout re-prices). */
   prices?: ProductSummary["prices"];
+  /** RENTAL lines: display price (INR minor units) and access length. */
+  rentalPrice?: number;
+  rentalDurationDays?: number;
   pageCount?: number;
   isBestseller?: boolean;
   isNewArrival?: boolean;
@@ -54,6 +62,15 @@ function matchesCartItem(item: CartItem, cartItemId: string) {
   );
 }
 
+/** One cart line per variant: the same book in colour and in black &
+ * white are separate lines, a rental is its own line. */
+function lineKey(item: Pick<CartItem, "type" | "productId" | "cartItemId" | "format">) {
+  if (item.type === "RENTAL") return `rental:${item.productId}`;
+  if (item.type === "UPGRADE") return `upgrade:${item.productId}`;
+  if (item.type === "CUSTOM_BUNDLE") return item.cartItemId ?? item.productId;
+  return variantId(item.productId, item.format ?? "COLOUR_PDF");
+}
+
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
@@ -62,25 +79,13 @@ export const useCartStore = create<CartState>()(
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       addItem: (item) => {
-        const itemWithId = {
-          ...item,
-          cartItemId:
-            item.cartItemId ??
-            (item.type === "RENTAL"
-              ? `rental:${item.productId}`
-              : item.type === "UPGRADE"
-                ? `upgrade:${item.productId}`
-                : item.productId),
-        };
-        const existing = get().items.find(
-          (i) => (i.cartItemId ?? i.productId) === itemWithId.cartItemId,
-        );
+        const key = lineKey(item);
+        const itemWithId = { ...item, cartItemId: item.cartItemId ?? key };
+        const existing = get().items.find((i) => lineKey(i) === key);
         if (existing) {
           set({
             items: get().items.map((i) =>
-              (i.cartItemId ?? i.productId) === itemWithId.cartItemId
-                ? { ...i, ...itemWithId }
-                : i,
+              lineKey(i) === key ? { ...i, ...itemWithId, cartItemId: i.cartItemId ?? itemWithId.cartItemId } : i,
             ),
             isOpen: true,
           });

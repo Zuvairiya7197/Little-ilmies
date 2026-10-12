@@ -260,7 +260,9 @@ export default async function PurchaseHistoryPage() {
                           <p className="text-[11px] text-ink-400 xl:text-sm">
                             {isRental
                               ? `Rent & Read${expiresAtLabel ? ` · ${rentalExpired ? "Expired" : "Expires"} ${expiresAtLabel}` : ""}`
-                              : `${order.items.length} e-book`}
+                              : order.items.length === 1 && firstItem?.formatName
+                                ? firstItem.formatName
+                                : `${order.items.length} e-book`}
                           </p>
                         </div>
                       </div>

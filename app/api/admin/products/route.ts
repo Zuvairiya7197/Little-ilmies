@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid product data", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { categoryIds, prices, hasAgeRange, ageFrom, ageTo, ageOpenEnded, ...productData } = parsed.data;
+  const { categoryIds, prices, bwPrices, rentalPrice, hasAgeRange, ageFrom, ageTo, ageOpenEnded, ...productData } =
+    parsed.data;
   const ageData = normalizeAgeRange({ hasAgeRange, ageFrom, ageTo, ageOpenEnded });
 
   const existing = await prisma.product.findUnique({ where: { slug: productData.slug } });
@@ -52,8 +53,13 @@ export async function POST(request: NextRequest) {
       previewImagePaths: [],
       publishedAt: productData.status === "PUBLISHED" ? new Date() : null,
       categories: { create: categoryIds.map((categoryId) => ({ categoryId })) },
+      rentalPrice: rentalPrice == null ? null : Math.round(rentalPrice * 100),
       prices: {
-        create: prices.map((p) => ({
+        create: [
+          ...prices.map((p) => ({ ...p, format: "COLOUR_PDF" as const })),
+          ...bwPrices.map((p) => ({ ...p, format: "BW_PDF" as const })),
+        ].map((p) => ({
+          format: p.format,
           currencyCode: p.currencyCode,
           pricingRegion: p.currencyCode === "INR" ? "India" : "International",
           regularPrice: Math.round(p.regularPrice * 100),
@@ -108,8 +114,8 @@ export async function DELETE(request: NextRequest) {
   }
 
   for (const product of productsToDelete) {
-    if (product.privatePdfPath) {
-      await deletePrivatePdf(product.privatePdfPath);
+    for (const pdfPath of [product.privatePdfPath, product.bwPrivatePdfPath]) {
+      if (pdfPath) await deletePrivatePdf(pdfPath);
     }
   }
 

@@ -11,8 +11,17 @@ import type { CurrencyCode } from "@/types/pricing";
 import { Prisma } from "@prisma/client";
 import { defaultExtra, detailExtras } from "@/data/product-details";
 import { categoryCoverUrl, productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
-import { calculateBookSalePrice, calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
+import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { getPricingSettings, type PricingSettings } from "@/lib/settings/pricing-settings";
+import { getStorefrontSettings, type StorefrontSettings } from "@/lib/settings/storefront-settings";
+import { buildProductVariants, pricesForFormat, primaryPdfFormat, toRegionalPrices } from "@/lib/product-formats";
+
+type CatalogSettings = PricingSettings & StorefrontSettings;
+
+async function getCatalogSettings(): Promise<CatalogSettings> {
+  const [pricing, storefront] = await Promise.all([getPricingSettings(), getStorefrontSettings()]);
+  return { ...pricing, ...storefront };
+}
 
 const productWithRelations = Prisma.validator<Prisma.ProductDefaultArgs>()({
   include: { prices: true, categories: { include: { category: true } } },
@@ -22,7 +31,7 @@ type ProductWithRelations = Prisma.ProductGetPayload<typeof productWithRelations
 
 function toProductSummary(
   product: ProductWithRelations,
-  settings: PricingSettings
+  settings: CatalogSettings
 ): ProductSummary {
   const primaryCategory = product.categories[0]?.category;
   const categories = product.categories.map(({ category }) => ({
@@ -39,17 +48,14 @@ function toProductSummary(
     sku: product.sku ?? undefined,
     shortDescription: product.shortDescription,
     coverImage: productCoverUrl(product.id, product.coverImage),
-    prices: product.prices
-      .filter((p) => p.isActive)
-      .map((p) => ({
-        currencyCode: p.currencyCode as CurrencyCode,
-        regularPrice: p.regularPrice,
-        salePrice: calculateBookSalePrice(p.regularPrice, settings.bookSaleDiscountPercentage, p.currencyCode as CurrencyCode),
-        saleStartDate: p.saleStartDate?.toISOString(),
-        saleEndDate: p.saleEndDate?.toISOString(),
-        isDefault: p.isDefault,
-        isActive: p.isActive,
-      })),
+    // The "from" price for cards, sorting and bundles: the primary PDF
+    // format's prices (colour, else black & white).
+    prices: toRegionalPrices(
+      pricesForFormat(product, primaryPdfFormat(product) ?? "COLOUR_PDF"),
+      settings.bookSaleDiscountPercentage
+    ),
+    variants: buildProductVariants(product, settings.bookSaleDiscountPercentage),
+    showHardcoverComingSoon: settings.hardcoverComingSoonEnabled && product.hardcoverComingSoon,
     category: primaryCategory
       ? { slug: primaryCategory.slug, name: primaryCategory.name }
       : { slug: product.slug, name: product.title },
@@ -89,7 +95,7 @@ function toProductSummary(
 }
 
 export async function getRentAndReadProducts(limit?: number): Promise<ProductSummary[]> {
-  const settings = await getPricingSettings();
+  const settings = await getCatalogSettings();
   const products = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
@@ -106,7 +112,7 @@ export async function getRentAndReadProducts(limit?: number): Promise<ProductSum
 }
 
 export async function getPublishedProducts(): Promise<ProductSummary[]> {
-  const settings = await getPricingSettings();
+  const settings = await getCatalogSettings();
   const products = await prisma.product.findMany({
     where: { status: "PUBLISHED", archivedAt: null },
     orderBy: { publishedAt: "desc" },
@@ -116,7 +122,7 @@ export async function getPublishedProducts(): Promise<ProductSummary[]> {
 }
 
 export async function getPublishedProductBySlug(slug: string): Promise<ProductSummary | null> {
-  const settings = await getPricingSettings();
+  const settings = await getCatalogSettings();
   const product = await prisma.product.findFirst({
     where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
@@ -128,7 +134,7 @@ export async function getRelatedProducts(
   product: Pick<ProductSummary, "id" | "category" | "categorySlugs">,
   limit = 4
 ): Promise<ProductSummary[]> {
-  const settings = await getPricingSettings();
+  const settings = await getCatalogSettings();
   const categorySlugs = product.categorySlugs?.length ? product.categorySlugs : [product.category.slug];
   const products = await prisma.product.findMany({
     where: {
@@ -145,7 +151,7 @@ export async function getRelatedProducts(
 }
 
 export async function getPublishedProductDetailBySlug(slug: string): Promise<ProductDetail | null> {
-  const settings = await getPricingSettings();
+  const settings = await getCatalogSettings();
   const product = await prisma.product.findFirst({
     where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
@@ -169,7 +175,7 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
 }
 
 export async function getRelatedProductsBySlug(slug: string, limit = 4): Promise<ProductSummary[]> {
-  const settings = await getPricingSettings();
+  const settings = await getCatalogSettings();
   const product = await prisma.product.findFirst({
     where: { slug, status: "PUBLISHED", archivedAt: null },
     ...productWithRelations,
@@ -217,7 +223,7 @@ export async function getHomepageSampleProduct(): Promise<{
 }
 
 export async function getActiveBundles(): Promise<BundleSummary[]> {
-  const settings = await getPricingSettings();
+  const settings = await getCatalogSettings();
   const bundles = await prisma.bundle.findMany({
     where: { isActive: true },
     orderBy: { createdAt: "desc" },

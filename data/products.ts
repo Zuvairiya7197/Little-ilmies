@@ -50,7 +50,7 @@ function regionalPrices({
   return prices;
 }
 
-export const products: ProductSummary[] = [
+const demoProducts: Omit<ProductSummary, "variants">[] = [
   {
     id: "prod_asma_ul_husna",
     slug: "asma-ul-husna-99-names-of-allah",
@@ -381,6 +381,12 @@ export const products: ProductSummary[] = [
     publishedAt: "2026-01-20",
   },
 ];
+
+/** Demo books are colour-PDF only. */
+export const products: ProductSummary[] = demoProducts.map((product) => ({
+  ...product,
+  variants: [{ id: `${product.id}:COLOUR_PDF`, format: "COLOUR_PDF", prices: product.prices }],
+}));
 
 export function getFeaturedProducts(limit = 8) {
   return products.slice(0, limit);

@@ -6,3 +6,7 @@ export const pricingSettingsSchema = z.object({
 });
 
 export type PricingSettingsFormValues = z.infer<typeof pricingSettingsSchema>;
+
+export const storefrontSettingsSchema = z.object({
+  hardcoverComingSoonEnabled: z.boolean(),
+});

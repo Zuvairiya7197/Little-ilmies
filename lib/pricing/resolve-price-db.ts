@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { FALLBACK_CURRENCY, type CurrencyCode } from "@/types/pricing";
 import { calculateBookSalePrice } from "@/lib/pricing/automatic-pricing";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
+import type { PdfFormat } from "@/lib/formats";
 
 export interface ResolvedDbPrice {
   currencyCode: CurrencyCode;
@@ -16,15 +17,17 @@ export interface ResolvedDbPrice {
  * resolveProductPrice, used at checkout where prices must come from the
  * live ProductPrice table rather than the static demo data in data/products.ts.
  * Same fallback order: exact currency match → USD/international →
- * another non-INR price → INR only for India.
+ * another non-INR price → INR only for India. Only the given format's
+ * prices are considered — formats never share a price.
  */
 export async function resolveProductPriceFromDb(
   productId: string,
-  requestedCurrency: CurrencyCode
+  requestedCurrency: CurrencyCode,
+  format: PdfFormat = "COLOUR_PDF"
 ): Promise<ResolvedDbPrice> {
   const settings = await getPricingSettings();
   const prices = await prisma.productPrice.findMany({
-    where: { productId, isActive: true },
+    where: { productId, format, isActive: true },
   });
 
   const exact = prices.find((p) => p.currencyCode === requestedCurrency);

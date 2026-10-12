@@ -187,8 +187,8 @@ export function CheckoutForm({
               : item.type === "RENTAL"
                 ? { type: "RENTAL", productId: item.productId, quantity: 1 }
               : item.type === "UPGRADE"
-                ? { type: "UPGRADE", productId: item.productId, quantity: 1 }
-              : { type: "PRODUCT", productId: item.productId, quantity: item.quantity }
+                ? { type: "UPGRADE", productId: item.productId, format: item.format, quantity: 1 }
+              : { type: "PRODUCT", productId: item.productId, format: item.format, quantity: item.quantity }
           ),
         }),
       });
@@ -344,7 +344,10 @@ export function CheckoutForm({
             <div className="flex items-start gap-2.5 rounded-2xl bg-sage-50 p-3.5 text-xs font-semibold text-sage-800">
               <BookOpen className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <span>
-                Order type: Rental. Rent &amp; Read gives {RENTAL_DURATION_DAYS} days of online reading access —
+                Order type: Rental. Rent &amp; Read gives{" "}
+                {lineItems.find((item) => item.type === "RENTAL")?.formatLabel?.replace("Rent & Read · ", "") ??
+                  `${RENTAL_DURATION_DAYS} days`}{" "}
+                of online reading access —
                 no download. This is separate from any Buy &amp; Download items in your cart.
               </span>
             </div>
@@ -368,8 +371,8 @@ export function CheckoutForm({
                     <p className="line-clamp-1 text-sm font-semibold text-ink-700">{item.title}</p>
                     <p className="mt-0.5 text-sm text-ink-400">
                       {item.type === "CUSTOM_BUNDLE" && item.bundleSize ? `${item.bundleSize} books - ` : ""}
-                      {item.type === "RENTAL" ? "Rent & Read - " : ""}
                       {item.type === "UPGRADE" ? "Upgrade to permanent ownership - " : ""}
+                      {item.formatLabel ? `${item.formatLabel} - ` : ""}
                       {formatPrice(item.unitPrice, item.currencyCode)}
                     </p>
                   </div>

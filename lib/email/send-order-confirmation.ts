@@ -4,6 +4,7 @@ import { sendMail } from "@/lib/email/send-mail";
 import type { CurrencyCode } from "@/types/pricing";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
+import { formatName } from "@/lib/formats";
 
 export async function sendOrderConfirmationEmail(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -30,7 +31,7 @@ export async function sendOrderConfirmationEmail(orderId: string) {
       }];
     }
     if (!item.product) return [];
-    return [{ title: item.product.title, detail: "", unitPrice: item.unitPrice }];
+    return [{ title: item.product.title, detail: formatName(item.format), unitPrice: item.unitPrice }];
   });
 
   const itemLines = displayItems
@@ -50,11 +51,12 @@ export async function sendOrderConfirmationEmail(orderId: string) {
       ? rental.rentalExpiresAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
       : null;
     const readNowUrl = rental ? `${siteUrl}/read/${rental.productId}` : `${siteUrl}/account/rentals`;
+    const durationDays = rental?.product.rentalDurationDays ?? RENTAL_DURATION_DAYS;
 
     await sendMail({
       to: order.buyerEmail,
       subject: "Your Rent & Read access is ready",
-      text: `Your Rent & Read access is ready, ${order.buyerName}!\n\nOrder #${order.id.slice(-8).toUpperCase()}\n\n${itemLines}\n\nTotal: ${formatPrice(order.totalAmount, currency)}\n\nAccess: ${RENTAL_DURATION_DAYS} days${expiresAtLabel ? `\nExpires: ${expiresAtLabel}` : ""}\n\nRead now: ${readNowUrl}\n\nThis rental provides online reading access only — no download or attachment is included, and access ends automatically when the rental expires.`,
+      text: `Your Rent & Read access is ready, ${order.buyerName}!\n\nOrder #${order.id.slice(-8).toUpperCase()}\n\n${itemLines}\n\nTotal: ${formatPrice(order.totalAmount, currency)}\n\nAccess: ${durationDays} days${expiresAtLabel ? `\nExpires: ${expiresAtLabel}` : ""}\n\nRead now: ${readNowUrl}\n\nThis rental provides online reading access only — no download or attachment is included, and access ends automatically when the rental expires.`,
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
           <h1 style="font-size:20px;">Your Rent & Read access is ready, ${order.buyerName}!</h1>
@@ -63,7 +65,7 @@ export async function sendOrderConfirmationEmail(orderId: string) {
             ${itemRows}
             <tr><td style="padding:12px 0 0;font-weight:bold;border-top:1px solid #eee;">Total</td><td style="padding:12px 0 0;text-align:right;font-weight:bold;border-top:1px solid #eee;">${formatPrice(order.totalAmount, currency)}</td></tr>
           </table>
-          <p>Access: ${RENTAL_DURATION_DAYS} days${expiresAtLabel ? `<br>Expires: ${expiresAtLabel}` : ""}</p>
+          <p>Access: ${durationDays} days${expiresAtLabel ? `<br>Expires: ${expiresAtLabel}` : ""}</p>
           <p><a href="${readNowUrl}" style="display:inline-block;background:#4B449D;color:#fff;padding:12px 24px;border-radius:999px;text-decoration:none;">Read Now</a></p>
           <p style="color:#777;font-size:12px;">This rental provides online reading access only. There is no download or attachment, and access ends automatically when the rental expires.</p>
         </div>

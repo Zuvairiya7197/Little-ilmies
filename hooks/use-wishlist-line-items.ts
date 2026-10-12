@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
-import type { ProductSummary } from "@/types/catalog";
+import type { ProductSummary, ProductVariant } from "@/types/catalog";
 import { formatAgeRange } from "@/lib/age-range";
 import type { CurrencyCode } from "@/types/pricing";
 
@@ -20,6 +20,9 @@ export interface WishlistLineItem {
   /** "4–7 years", or null when the product has no age range. */
   ageLabel: string | null;
   pageCount: number;
+  /** The variant "Add to cart" puts in the cart (primary PDF format), or
+   * undefined for Rent & Read-only books. */
+  cartVariant?: ProductVariant & { format: "COLOUR_PDF" | "BW_PDF" };
 }
 
 export function useWishlistLineItems(products: ProductSummary[]) {
@@ -44,6 +47,10 @@ export function useWishlistLineItems(products: ProductSummary[]) {
           categoryName: product.category.name,
           ageLabel: formatAgeRange(product),
           pageCount: product.pageCount,
+          cartVariant: product.variants.find(
+            (variant): variant is ProductVariant & { format: "COLOUR_PDF" | "BW_PDF" } =>
+              variant.format !== "RENT_AND_READ"
+          ),
         },
       ];
     });

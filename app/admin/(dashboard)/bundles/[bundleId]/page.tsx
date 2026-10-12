@@ -27,7 +27,7 @@ export default async function EditBundlePage({ params }: PageProps) {
         id: true,
         title: true,
         prices: {
-          where: { isActive: true },
+          where: { isActive: true, format: "COLOUR_PDF" },
           select: { currencyCode: true, regularPrice: true },
         },
       },

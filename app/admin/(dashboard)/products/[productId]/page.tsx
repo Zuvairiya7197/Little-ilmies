@@ -5,6 +5,7 @@ import { ProductForm } from "@/components/admin/product-form";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { productCoverUrl, productPreviewUrls, productRentalPageUrls } from "@/lib/catalog-assets";
 import type { CurrencyCode } from "@/types/pricing";
+import type { ProductPrice } from "@prisma/client";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export const metadata: Metadata = {
@@ -47,6 +48,9 @@ export default async function EditProductPage({ params }: PageProps) {
           hasPdf: Boolean(product.privatePdfPath),
           pdfFileName: product.pdfFileName ?? undefined,
           pdfFileSize: product.pdfFileSize ?? undefined,
+          hasBwPdf: Boolean(product.bwPrivatePdfPath),
+          bwPdfFileName: product.bwPdfFileName ?? undefined,
+          bwPdfFileSize: product.bwPdfFileSize ?? undefined,
           previewPageCount: product.previewImagePaths.length,
           previewImages: productPreviewUrls(product.id, product.previewImagePaths),
           rentalPageCount: product.rentalPageImagePaths.length,
@@ -87,16 +91,26 @@ export default async function EditProductPage({ params }: PageProps) {
           seoTitle: product.seoTitle ?? undefined,
           seoDescription: product.seoDescription ?? undefined,
           seoKeywords: product.seoKeywords,
-          prices: product.prices.map((p) => ({
-            currencyCode: p.currencyCode as CurrencyCode,
-            regularPrice: p.regularPrice / 100,
-            salePrice: p.salePrice ? p.salePrice / 100 : undefined,
-            saleStartDate: p.saleStartDate ? p.saleStartDate.toISOString().slice(0, 10) : undefined,
-            saleEndDate: p.saleEndDate ? p.saleEndDate.toISOString().slice(0, 10) : undefined,
-            isActive: p.isActive,
-          })),
+          prices: toFormPrices(product.prices.filter((p) => p.format === "COLOUR_PDF")),
+          bwPrices: toFormPrices(product.prices.filter((p) => p.format === "BW_PDF")),
+          colourPdfEnabled: product.colourPdfEnabled,
+          bwPdfEnabled: product.bwPdfEnabled,
+          hardcoverComingSoon: product.hardcoverComingSoon,
+          rentalPrice: product.rentalPrice != null ? product.rentalPrice / 100 : null,
+          rentalDurationDays: product.rentalDurationDays,
         }}
       />
     </div>
   );
+}
+
+function toFormPrices(prices: ProductPrice[]) {
+  return prices.map((p) => ({
+    currencyCode: p.currencyCode as CurrencyCode,
+    regularPrice: p.regularPrice / 100,
+    salePrice: p.salePrice ? p.salePrice / 100 : undefined,
+    saleStartDate: p.saleStartDate ? p.saleStartDate.toISOString().slice(0, 10) : undefined,
+    saleEndDate: p.saleEndDate ? p.saleEndDate.toISOString().slice(0, 10) : undefined,
+    isActive: p.isActive,
+  }));
 }

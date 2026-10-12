@@ -9,6 +9,7 @@ import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
 import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { getProductBySlug } from "@/data/products";
 import type { CurrencyCode } from "@/types/pricing";
+import { formatName, type PdfFormat } from "@/lib/formats";
 
 export interface CartLineItem {
   cartItemId: string;
@@ -18,6 +19,10 @@ export interface CartLineItem {
   slug: string;
   title: string;
   coverImage: string;
+  /** PDF format for PRODUCT/UPGRADE lines (colour for legacy lines). */
+  format?: PdfFormat;
+  /** Human label for the line's format, e.g. "Rent & Read · 7 days". */
+  formatLabel?: string;
   quantity: number;
   unitPrice: number;
   regularUnitPrice: number;
@@ -78,7 +83,8 @@ export function useCartLineItems() {
         ];
       }
 
-      const product = getProductBySlug(item.slug);
+      // The snapshot holds the selected variant's prices, so it wins over
+      // the static demo catalogue (which only knows colour prices).
       const productSnapshot =
         item.prices && item.pageCount
           ? {
@@ -88,19 +94,22 @@ export function useCartLineItems() {
               isNewArrival: item.isNewArrival,
             }
           : null;
-      const lineProduct = product ?? productSnapshot;
+      const lineProduct = productSnapshot ?? getProductBySlug(item.slug);
       if (!lineProduct) return [];
+      const format = item.format ?? "COLOUR_PDF";
 
       if (item.type === "RENTAL") {
-        const resolved = resolveProductPrice(lineProduct, RENTAL_CURRENCY_CODE);
-        const salePrice = resolved.salePrice ?? resolved.regularPrice;
-        const unitPrice = calculateRentalPrice(salePrice);
+        // Display only — create-order charges the server-side rental price.
+        const resolved = item.rentalPrice == null ? resolveProductPrice(lineProduct, RENTAL_CURRENCY_CODE) : null;
+        const unitPrice =
+          item.rentalPrice ?? calculateRentalPrice(resolved!.salePrice ?? resolved!.regularPrice);
 
         return [
           {
             productId: item.productId,
             cartItemId,
             type: "RENTAL",
+            formatLabel: `Rent & Read · ${item.rentalDurationDays ?? 7} days`,
             slug: item.slug,
             title: item.title,
             coverImage: item.coverImage,
@@ -124,7 +133,7 @@ export function useCartLineItems() {
         // order, since the amount already paid isn't available client-side.
         const resolvedInr = resolveProductPrice(lineProduct, RENTAL_CURRENCY_CODE);
         const salePriceInr = resolvedInr.salePrice ?? resolvedInr.regularPrice;
-        const rentalPricePaidEstimate = calculateRentalPrice(salePriceInr);
+        const rentalPricePaidEstimate = item.rentalPrice ?? calculateRentalPrice(salePriceInr);
         const unitPrice = Math.max(0, salePriceInr - rentalPricePaidEstimate);
 
         return [
@@ -132,6 +141,8 @@ export function useCartLineItems() {
             productId: item.productId,
             cartItemId,
             type: "UPGRADE",
+            format,
+            formatLabel: formatName(format),
             slug: item.slug,
             title: item.title,
             coverImage: item.coverImage,
@@ -157,6 +168,8 @@ export function useCartLineItems() {
           productId: item.productId,
           cartItemId,
           type: "PRODUCT",
+          format,
+          formatLabel: formatName(format),
           slug: item.slug,
           title: item.title,
           coverImage: item.coverImage,

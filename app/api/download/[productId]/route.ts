@@ -3,6 +3,7 @@ import { Readable } from "node:stream";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { prisma } from "@/lib/db/prisma";
 import { getPrivatePdfDownloadUrl, streamPrivatePdf } from "@/lib/storage";
+import { pdfPathForFormat } from "@/lib/product-formats";
 
 interface RouteParams {
   params: Promise<{ productId: string }>;
@@ -12,8 +13,11 @@ interface RouteParams {
  * Protected PDF download route. Every check below must pass before any
  * file is streamed — see README security notes.
  */
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const { productId } = await params;
+  // ?format=bw selects the black & white PDF; no param is the colour PDF,
+  // which keeps every pre-existing download link working.
+  const format = request.nextUrl.searchParams.get("format") === "bw" ? "BW_PDF" : "COLOUR_PDF";
 
   // 1. Customer is logged in
   const session = await getAuthSession();
@@ -31,10 +35,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Email not verified" }, { status: 403 });
   }
 
-  // 3 & 4. Customer owns the purchased product AND payment status is verified
+  // 3 & 4. Customer owns this exact format of the product AND payment
+  // status is verified. Rentals never create Download rows, so a renter
+  // can't get here.
   const download = await prisma.download.findFirst({
     where: {
       productId,
+      format,
       order: { userId, status: "PAID" },
     },
     include: { product: true },
@@ -49,17 +56,16 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Download access has expired" }, { status: 410 });
   }
 
-  if (!download.product.privatePdfPath) {
+  const pdfPath = pdfPathForFormat(download.product, format);
+  if (!pdfPath) {
     return NextResponse.json(
       { error: "This product's file is not yet available" },
       { status: 404 }
     );
   }
+  const fileName = format === "BW_PDF" ? `${download.product.slug}-black-and-white.pdf` : `${download.product.slug}.pdf`;
 
-  const signedUrl = await getPrivatePdfDownloadUrl(
-    download.product.privatePdfPath,
-    `${download.product.slug}.pdf`
-  ).catch(() => null);
+  const signedUrl = await getPrivatePdfDownloadUrl(pdfPath, fileName).catch(() => null);
 
   if (signedUrl) {
     await prisma.download.update({
@@ -75,7 +81,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
   let file: Awaited<ReturnType<typeof streamPrivatePdf>>;
   try {
-    file = await streamPrivatePdf(download.product.privatePdfPath);
+    file = await streamPrivatePdf(pdfPath);
   } catch {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
@@ -92,7 +98,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Length": String(file.size),
-      "Content-Disposition": `attachment; filename="${download.product.slug}.pdf"`,
+      "Content-Disposition": `attachment; filename="${fileName}"`,
       "Cache-Control": "private, no-store",
     },
   });

@@ -5,6 +5,27 @@ export type Language = "English" | "Arabic" | "Hindi" | "Marathi";
 
 export type ProductFormat = "PDF" | "Printable PDF" | "Interactive PDF";
 
+/** A purchasable format. Mirrors the Prisma BookFormat enum. Hardcover is
+ * never a BookFormat — it is only ever a "Coming Soon" card. */
+export type BookFormat = "COLOUR_PDF" | "BW_PDF" | "RENT_AND_READ";
+
+/**
+ * One purchasable format of a product. Only formats that are enabled AND
+ * complete (file/pages uploaded, price configured) are ever sent to the
+ * storefront, so anything in ProductSummary.variants can be bought.
+ * Prices here are for display; checkout re-prices everything server-side.
+ */
+export interface ProductVariant {
+  /** `${productId}:${format}` — see lib/formats.ts variantId(). */
+  id: string;
+  format: BookFormat;
+  /** Regional prices for the PDF formats. Empty for Rent & Read. */
+  prices: RegionalPrice[];
+  /** Rent & Read only: INR minor units, charged as-is (no sale discount). */
+  rentalPrice?: number;
+  rentalDurationDays?: number;
+}
+
 export interface Category {
   id: string;
   slug: string;
@@ -38,6 +59,13 @@ export interface ProductSummary {
    * the "international" fallback price shown when no country match exists).
    */
   prices: RegionalPrice[];
+  /** Purchasable formats for this book, in display order. `prices` above
+   * is the primary PDF variant's prices (colour, else black & white) so
+   * cards, sorting and filters keep a single "from" price. */
+  variants: ProductVariant[];
+  /** Show the muted "Hardcover · Coming Soon" card (global setting AND
+   * per-book switch). Never purchasable. */
+  showHardcoverComingSoon?: boolean;
   category: Pick<Category, "slug" | "name">;
   categories?: Pick<Category, "slug" | "name">[];
   categorySlugs?: string[];

@@ -35,7 +35,7 @@ export async function getStorageUsageReport(): Promise<StorageUsageReport> {
   const [entries, products, categories] = await Promise.all([
     listAllBlobStorageEntries(),
     prisma.product.findMany({
-      select: { privatePdfPath: true, previewImagePaths: true, rentalPageImagePaths: true, coverImage: true },
+      select: { privatePdfPath: true, bwPrivatePdfPath: true, previewImagePaths: true, rentalPageImagePaths: true, coverImage: true },
     }),
     prisma.category.findMany({ select: { coverImage: true } }),
   ]);
@@ -43,6 +43,7 @@ export async function getStorageUsageReport(): Promise<StorageUsageReport> {
   const referenced = new Set<string>();
   for (const product of products) {
     if (product.privatePdfPath) referenced.add(product.privatePdfPath);
+    if (product.bwPrivatePdfPath) referenced.add(product.bwPrivatePdfPath);
     if (product.coverImage) referenced.add(product.coverImage);
     for (const p of product.previewImagePaths) referenced.add(p);
     for (const p of product.rentalPageImagePaths) referenced.add(p);

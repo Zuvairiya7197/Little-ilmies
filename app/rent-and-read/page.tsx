@@ -4,8 +4,8 @@ import Link from "next/link";
 import { BookOpen, Clock, ShoppingBag } from "lucide-react";
 import { getRentAndReadProducts } from "@/lib/db/catalog";
 import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
-import { calculateRentalPrice } from "@/lib/rentals/pricing";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
+import { productHref } from "@/lib/formats";
 import { formatPrice } from "@/lib/utils/format";
 
 export const metadata: Metadata = {
@@ -16,10 +16,15 @@ export const metadata: Metadata = {
 };
 
 export default async function RentAndReadPage() {
-  const [eligible, products] = await Promise.all([
+  const [eligible, rentableProducts] = await Promise.all([
     isRentalEligibleFromHeaders(),
     getRentAndReadProducts(),
   ]);
+  // Only books whose Rent & Read format is actually purchasable.
+  const products = rentableProducts.flatMap((product) => {
+    const rental = product.variants.find((variant) => variant.format === "RENT_AND_READ");
+    return rental?.rentalPrice != null ? [{ product, rental, rentalPrice: rental.rentalPrice }] : [];
+  });
 
   return (
     <div className="container-content py-8 md:py-12">
@@ -58,10 +63,15 @@ export default async function RentAndReadPage() {
         </section>
       ) : (
         <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
-          {products.map((product) => {
-            const price = resolveProductPrice(product, "INR");
-            const salePrice = price.salePrice ?? price.regularPrice;
-            const rentalPrice = calculateRentalPrice(salePrice);
+          {products.map(({ product, rental, rentalPrice }) => {
+            const pdfVariant = product.variants.find((variant) => variant.format !== "RENT_AND_READ");
+            let price: ReturnType<typeof resolveProductPrice> | null = null;
+            try {
+              price = pdfVariant ? resolveProductPrice(pdfVariant, "INR") : null;
+            } catch {
+              price = null;
+            }
+            const salePrice = price ? (price.salePrice ?? price.regularPrice) : null;
 
             return (
               <article
@@ -86,19 +96,21 @@ export default async function RentAndReadPage() {
                       {product.title}
                     </Link>
                   </h2>
-                  <div className="mt-2 flex flex-wrap items-baseline gap-2">
-                    <span className="text-xs font-semibold text-ink-400">
-                      Buy
-                    </span>
-                    <span className="font-display text-base font-semibold text-ink-700">
-                      {formatPrice(salePrice, "INR")}
-                    </span>
-                    {price.regularPrice > salePrice && (
-                      <span className="text-sm text-ink-300 line-through">
-                        {formatPrice(price.regularPrice, "INR")}
+                  {price && salePrice != null && (
+                    <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                      <span className="text-xs font-semibold text-ink-400">
+                        Buy
                       </span>
-                    )}
-                  </div>
+                      <span className="font-display text-base font-semibold text-ink-700">
+                        {formatPrice(salePrice, price.currencyCode)}
+                      </span>
+                      {price.regularPrice > salePrice && (
+                        <span className="text-sm text-ink-300 line-through">
+                          {formatPrice(price.regularPrice, price.currencyCode)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <div className="mt-3 rounded-xl bg-sage-50 p-2.5 sm:p-3">
                     <p className="flex items-center justify-between gap-2 text-xs">
                       <span className="font-bold text-sage-800">
@@ -109,12 +121,12 @@ export default async function RentAndReadPage() {
                       </span>
                     </p>
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-sage-700">
-                      <Clock className="h-3.5 w-3.5" aria-hidden="true" />7 days
-                      online reading
+                      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                      {rental.rentalDurationDays ?? 7} days online reading
                     </p>
                   </div>
                   <Link
-                    href={`/product/${product.slug}`}
+                    href={productHref(product.slug, "RENT_AND_READ")}
                     className="btn-primary mt-3 justify-center px-3 py-2 text-sm"
                   >
                     <BookOpen className="h-4 w-4" aria-hidden="true" />

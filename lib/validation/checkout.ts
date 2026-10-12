@@ -7,14 +7,20 @@ export const checkoutSchema = z.object({
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
+/** PDF format of a purchase line. Defaults to colour so carts saved before
+ * formats existed still check out as what they were. */
+const pdfFormatSchema = z.enum(["COLOUR_PDF", "BW_PDF"]).default("COLOUR_PDF");
+
 /**
  * Request body for POST /api/checkout/create-order. Deliberately carries
- * only product identity + quantity — never a price or currency. The
- * backend resolves both itself from ProductPrice + verified region.
+ * only product identity, format + quantity — never a price or currency.
+ * The backend resolves both itself from ProductPrice + verified region,
+ * and rejects any format the product doesn't currently offer.
  */
 const productCheckoutItemSchema = z.object({
   type: z.literal("PRODUCT").default("PRODUCT"),
   productId: z.string().min(1),
+  format: pdfFormatSchema,
   quantity: z.number().int().min(1).max(10),
 });
 
@@ -30,6 +36,7 @@ const rentalCheckoutItemSchema = z.object({
 const upgradeCheckoutItemSchema = z.object({
   type: z.literal("UPGRADE"),
   productId: z.string().min(1),
+  format: pdfFormatSchema,
   quantity: z.literal(1).default(1),
 });
 

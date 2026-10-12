@@ -8,10 +8,13 @@ import { useCartStore } from "@/lib/store/use-cart-store";
 import { formatPrice } from "@/lib/utils/format";
 import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
 import type { ProductSummary } from "@/types/catalog";
+import type { PdfFormat } from "@/lib/formats";
 
 export interface RentalUpgradeInfo {
   price: number;
   rentalPricePaid: number;
+  /** PDF format the upgrade buys (the book's primary PDF). */
+  format: PdfFormat;
   productSlug: string;
   coverImage: string;
   prices: ProductSummary["prices"];
@@ -57,6 +60,7 @@ export function RentalReader({ productId, title, pageCount, expiresAt, watermark
       type: "UPGRADE",
       cartItemId: `upgrade:${productId}`,
       productId,
+      format: upgrade.format,
       slug: upgrade.productSlug,
       title,
       coverImage: upgrade.coverImage,

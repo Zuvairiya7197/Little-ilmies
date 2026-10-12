@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { formatPrice } from "@/lib/utils/format";
+import { productHref } from "@/lib/formats";
 
 const benefitItems = [
   {
@@ -112,14 +113,22 @@ export function CartView() {
                 >
                   <div className="grid gap-4 xl:grid-cols-[142px_minmax(0,1fr)_138px_108px_64px] xl:items-center">
                     <Link
-                      href={item.type === "CUSTOM_BUNDLE" ? `/bundle/${item.slug}?edit=${item.cartItemId}` : `/product/${item.slug}`}
+                      href={
+                        item.type === "CUSTOM_BUNDLE"
+                          ? `/bundle/${item.slug}?edit=${item.cartItemId}`
+                          : productHref(item.slug, item.type === "RENTAL" ? "RENT_AND_READ" : item.format)
+                      }
                       className="relative h-32 w-full overflow-hidden rounded-2xl bg-gradient-to-br from-lilac-50 via-white to-blossom-50 sm:w-36 xl:h-36"
                     >
                       <Image src={item.coverImage} alt="" fill sizes="144px" className="object-contain p-2.5" />
                     </Link>
 
                     <div className="min-w-0">
-                      <Link href={item.type === "CUSTOM_BUNDLE" ? `/bundle/${item.slug}?edit=${item.cartItemId}` : `/product/${item.slug}`}>
+                      <Link href={
+                        item.type === "CUSTOM_BUNDLE"
+                          ? `/bundle/${item.slug}?edit=${item.cartItemId}`
+                          : productHref(item.slug, item.type === "RENTAL" ? "RENT_AND_READ" : item.format)
+                      }>
                         <h2 className="max-w-xl font-display text-lg font-bold leading-tight text-ink-900 sm:text-xl">
                           {item.title}
                         </h2>
@@ -137,8 +146,11 @@ export function CartView() {
                       )}
                       <span className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-lilac-100 px-3 py-1.5 text-xs font-semibold text-violet-800">
                         <Tag className="h-4 w-4" aria-hidden="true" />
-                        Digital Download
+                        {item.formatLabel ?? "Digital Download"}
                       </span>
+                      {item.type === "RENTAL" && (
+                        <p className="mt-2 text-xs font-medium text-ink-400">Online reading only — no PDF download.</p>
+                      )}
                     </div>
 
                     {item.type === "CUSTOM_BUNDLE" ? (

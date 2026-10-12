@@ -14,7 +14,7 @@ export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({
     where: { archivedAt: null },
     orderBy: { createdAt: "desc" },
-    include: { prices: true, categories: { include: { category: true } } },
+    include: { prices: { where: { format: "COLOUR_PDF" } }, categories: { include: { category: true } } },
   });
 
   return (

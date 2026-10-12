@@ -7,13 +7,32 @@ import { z } from "zod";
 
 const MAX_SIZE = 100 * 1024 * 1024; // 100MB
 
+// Which of the book's PDFs this request is for. Omitted = the colour PDF
+// (the original single "main product PDF").
+const pdfFormatSchema = z.enum(["COLOUR_PDF", "BW_PDF"]).default("COLOUR_PDF");
+
 const attachedPdfSchema = z.object({
   productId: z.string().min(1),
   pathname: z.string().min(1),
   fileName: z.string().min(1).optional(),
   fileSize: z.number().int().min(0).optional(),
+  format: pdfFormatSchema,
 });
-const removePdfSchema = z.object({ productId: z.string().min(1) });
+const removePdfSchema = z.object({ productId: z.string().min(1), format: pdfFormatSchema });
+
+/** Product columns holding each format's PDF. */
+function pdfFields(format: "COLOUR_PDF" | "BW_PDF", path: string | null, fileName: string | null, fileSize: number | null) {
+  return format === "BW_PDF"
+    ? { bwPrivatePdfPath: path, bwPdfFileName: fileName, bwPdfFileSize: fileSize }
+    : { privatePdfPath: path, pdfFileName: fileName, pdfFileSize: fileSize };
+}
+
+function currentPdfPath(
+  product: { privatePdfPath: string | null; bwPrivatePdfPath: string | null },
+  format: "COLOUR_PDF" | "BW_PDF"
+) {
+  return format === "BW_PDF" ? product.bwPrivatePdfPath : product.privatePdfPath;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +46,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Invalid uploaded PDF data" }, { status: 400 });
       }
 
-      const { productId, pathname, fileName, fileSize } = parsed.data;
+      const { productId, pathname, fileName, fileSize, format } = parsed.data;
       if (!pathname.startsWith(`pdfs/${productId}/`) || !pathname.endsWith(".pdf")) {
         return NextResponse.json({ error: "Invalid uploaded PDF path" }, { status: 400 });
       }
@@ -37,13 +56,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
       }
 
-      if (product.privatePdfPath && product.privatePdfPath !== pathname) {
-        await deletePrivatePdf(product.privatePdfPath);
+      const previousPath = currentPdfPath(product, format);
+      if (previousPath && previousPath !== pathname) {
+        await deletePrivatePdf(previousPath);
       }
 
       await prisma.product.update({
         where: { id: productId },
-        data: { privatePdfPath: pathname, pdfFileName: fileName ?? pathname.split("/").at(-1), pdfFileSize: fileSize },
+        data: pdfFields(format, pathname, fileName ?? pathname.split("/").at(-1) ?? null, fileSize ?? null),
       });
       revalidateCatalogPaths(product.slug);
       return NextResponse.json({ status: "uploaded" });
@@ -52,6 +72,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file");
     const productId = formData.get("productId");
+    const format = formData.get("format") === "BW_PDF" ? "BW_PDF" : "COLOUR_PDF";
 
     if (!(file instanceof File) || typeof productId !== "string") {
       return NextResponse.json({ error: "Missing file or productId" }, { status: 400 });
@@ -71,13 +92,14 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const relativePath = await savePrivatePdf(buffer, file.name);
 
-    if (product.privatePdfPath) {
-      await deletePrivatePdf(product.privatePdfPath);
+    const previousPath = currentPdfPath(product, format);
+    if (previousPath) {
+      await deletePrivatePdf(previousPath);
     }
 
     await prisma.product.update({
       where: { id: productId },
-      data: { privatePdfPath: relativePath, pdfFileName: file.name, pdfFileSize: file.size },
+      data: pdfFields(format, relativePath, file.name, file.size),
     });
     revalidateCatalogPaths(product.slug);
 
@@ -106,12 +128,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    if (product.privatePdfPath) {
-      await deletePrivatePdf(product.privatePdfPath);
+    const previousPath = currentPdfPath(product, parsed.data.format);
+    if (previousPath) {
+      await deletePrivatePdf(previousPath);
     }
     await prisma.product.update({
       where: { id: product.id },
-      data: { privatePdfPath: null, pdfFileName: null, pdfFileSize: null },
+      data: pdfFields(parsed.data.format, null, null, null),
     });
     revalidateCatalogPaths(product.slug);
     return NextResponse.json({ status: "removed" });

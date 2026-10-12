@@ -91,7 +91,9 @@ async function main() {
 
     for (const price of product.prices) {
       await prisma.productPrice.upsert({
-        where: { productId_currencyCode: { productId: created.id, currencyCode: price.currencyCode } },
+        where: {
+          productId_format_currencyCode: { productId: created.id, format: "COLOUR_PDF", currencyCode: price.currencyCode },
+        },
         update: {
           regularPrice: price.regularPrice,
           salePrice: price.salePrice,

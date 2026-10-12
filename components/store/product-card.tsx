@@ -20,6 +20,25 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
     s.items.some((i) => i.productId === product.id)
   );
 
+  // Quick add puts the book's primary PDF (colour, else black & white) in
+  // the cart. Rent & Read-only books have no quick add — the card links to
+  // the product page where the rental is offered.
+  const quickAddVariant = product.variants?.find((variant) => variant.format !== "RENT_AND_READ");
+  function quickAdd() {
+    if (!quickAddVariant || quickAddVariant.format === "RENT_AND_READ") return;
+    addItem({
+      productId: product.id,
+      format: quickAddVariant.format,
+      slug: product.slug,
+      title: product.title,
+      coverImage: product.coverImage,
+      prices: quickAddVariant.prices,
+      pageCount: product.pageCount,
+      isBestseller: product.isBestseller,
+      isNewArrival: product.isNewArrival,
+    });
+  }
+
   const resolvedPrice = useProductPrice(product);
   const displayPrice = resolvedPrice.salePrice ?? resolvedPrice.regularPrice;
   const isOnSale = Boolean(resolvedPrice.salePrice);
@@ -137,44 +156,26 @@ export function ProductCard({ product, tintIndex = 0 }: { product: ProductSummar
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              addItem({
-                productId: product.id,
-                slug: product.slug,
-                title: product.title,
-                coverImage: product.coverImage,
-                prices: product.prices,
-                pageCount: product.pageCount,
-                isBestseller: product.isBestseller,
-                isNewArrival: product.isNewArrival,
-              })
-            }
-            className="tap-target relative z-10 hidden items-center gap-1.5 rounded-full bg-ink-600 px-4 py-2 text-xs font-semibold text-cream-50 transition-all hover:bg-ink-700 active:scale-95 lg:flex"
-          >
-            <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
-            Add
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              addItem({
-                productId: product.id,
-                slug: product.slug,
-                title: product.title,
-                coverImage: product.coverImage,
-                prices: product.prices,
-                pageCount: product.pageCount,
-                isBestseller: product.isBestseller,
-                isNewArrival: product.isNewArrival,
-              })
-            }
-            aria-label={`Add ${product.title} to cart`}
-            className="tap-target relative z-10 flex shrink-0 items-center justify-center rounded-full bg-ink-600 p-2.5 text-cream-50 transition-all active:scale-95 lg:hidden"
-          >
-            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-          </button>
+          {quickAddVariant && (
+            <>
+              <button
+                type="button"
+                onClick={quickAdd}
+                className="tap-target relative z-10 hidden items-center gap-1.5 rounded-full bg-ink-600 px-4 py-2 text-xs font-semibold text-cream-50 transition-all hover:bg-ink-700 active:scale-95 lg:flex"
+              >
+                <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
+                Add
+              </button>
+              <button
+                type="button"
+                onClick={quickAdd}
+                aria-label={`Add ${product.title} to cart`}
+                className="tap-target relative z-10 flex shrink-0 items-center justify-center rounded-full bg-ink-600 p-2.5 text-cream-50 transition-all active:scale-95 lg:hidden"
+              >
+                <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 

@@ -9,7 +9,9 @@ import { PAYPAL_FALLBACK_CURRENCY, PAYPAL_UNSUPPORTED_CURRENCIES } from "@/lib/p
 import { validateCustomBundleSelection } from "@/lib/bundles/custom-bundle";
 import { isRentalEligibleRequest } from "@/lib/rentals/eligibility";
 import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
-import { calculateRentalPrice } from "@/lib/rentals/pricing";
+import { isFormatAvailable, rentalPriceFor } from "@/lib/product-formats";
+import { formatName } from "@/lib/formats";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 import type { Prisma } from "@prisma/client";
 
 /**
@@ -62,7 +64,9 @@ export async function POST(request: NextRequest) {
   const productItems = items.filter((item) => item.type !== "CUSTOM_BUNDLE");
   const products = await prisma.product.findMany({
     where: { id: { in: productItems.map((i) => i.productId) }, status: "PUBLISHED", archivedAt: null },
+    include: { prices: true },
   });
+  const pricingSettings = await getPricingSettings();
 
   const missing = productItems.filter((i) => !products.some((p) => p.id === i.productId));
   if (missing.length > 0) {
@@ -72,18 +76,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const unrentable = items.filter(
-    (item) =>
-      item.type === "RENTAL" &&
-      !products.find(
-        (p) => p.id === item.productId && p.rentAndReadEnabled && p.rentalPageImagePaths.length > 0
-      )
-  );
-  if (unrentable.length > 0) {
-    return NextResponse.json(
-      { error: "Rent & Read is not available for one or more of these books yet." },
-      { status: 422 }
-    );
+  // Every line must be a format this book currently offers — the same
+  // rule the product page uses to decide which formats to show, so a
+  // disabled or incomplete format can't be bought by editing the cart.
+  for (const item of productItems) {
+    const product = products.find((p) => p.id === item.productId)!;
+    const format = item.type === "RENTAL" ? "RENT_AND_READ" : item.format;
+    if (!isFormatAvailable(product, format, pricingSettings.bookSaleDiscountPercentage)) {
+      return NextResponse.json(
+        {
+          error:
+            format === "RENT_AND_READ"
+              ? "Rent & Read is not available for one or more of these books yet."
+              : `The ${formatName(format)} of "${product.title}" is no longer available. Please remove it from your cart.`,
+          productIds: [item.productId],
+        },
+        { status: 422 }
+      );
+    }
   }
 
   const verifiedCurrency = resolveVerifiedCurrency(request);
@@ -144,9 +154,24 @@ export async function POST(request: NextRequest) {
       continue;
     }
 
+    if (item.type === "RENTAL") {
+      const product = products.find((p) => p.id === item.productId)!;
+      // Availability above guarantees a rental price exists.
+      const rentalPrice = rentalPriceFor(product, pricingSettings.bookSaleDiscountPercentage)!;
+      subtotal += rentalPrice;
+      orderItemsData.push({
+        product: { connect: { id: item.productId } },
+        itemType: "RENTAL",
+        format: "RENT_AND_READ",
+        unitPrice: rentalPrice,
+        quantity: 1,
+      });
+      continue;
+    }
+
     let resolved: Awaited<ReturnType<typeof resolveProductPriceFromDb>>;
     try {
-      resolved = await resolveProductPriceFromDb(item.productId, currency);
+      resolved = await resolveProductPriceFromDb(item.productId, currency, item.format);
     } catch {
       return NextResponse.json(
         { error: `This product does not have an active ${currency} or international price configured yet.` },
@@ -154,17 +179,6 @@ export async function POST(request: NextRequest) {
       );
     }
     const unitPrice = resolved.salePrice ?? resolved.regularPrice;
-    if (item.type === "RENTAL") {
-      const rentalPrice = calculateRentalPrice(unitPrice);
-      subtotal += rentalPrice;
-      orderItemsData.push({
-        product: { connect: { id: item.productId } },
-        itemType: "RENTAL",
-        unitPrice: rentalPrice,
-        quantity: 1,
-      });
-      continue;
-    }
 
     if (item.type === "UPGRADE") {
       // userId is guaranteed by the hasUpgradeItems check above.
@@ -187,11 +201,11 @@ export async function POST(request: NextRequest) {
         );
       }
       const alreadyOwns = await prisma.download.findFirst({
-        where: { productId: item.productId, order: { userId, status: "PAID" } },
+        where: { productId: item.productId, format: item.format, order: { userId, status: "PAID" } },
         select: { id: true },
       });
       if (alreadyOwns) {
-        return NextResponse.json({ error: "You already own this ebook." }, { status: 422 });
+        return NextResponse.json({ error: `You already own the ${formatName(item.format)}.` }, { status: 422 });
       }
 
       const upgradePrice = Math.max(0, unitPrice - rentalOrderItem.unitPrice);
@@ -199,6 +213,7 @@ export async function POST(request: NextRequest) {
       orderItemsData.push({
         product: { connect: { id: item.productId } },
         itemType: "PRODUCT",
+        format: item.format,
         unitPrice: upgradePrice,
         quantity: 1,
       });
@@ -209,6 +224,7 @@ export async function POST(request: NextRequest) {
     orderItemsData.push({
       product: { connect: { id: item.productId } },
       itemType: "PRODUCT",
+      format: item.format,
       unitPrice,
       quantity: item.quantity,
     });

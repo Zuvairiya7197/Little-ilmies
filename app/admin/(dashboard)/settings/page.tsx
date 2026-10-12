@@ -3,6 +3,8 @@ import { getAdminSession } from "@/lib/auth/get-admin-session";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
 import { PricingSettingsForm } from "@/components/admin/pricing-settings-form";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
+import { StorefrontSettingsForm } from "@/components/admin/storefront-settings-form";
+import { getStorefrontSettings } from "@/lib/settings/storefront-settings";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -10,7 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSettingsPage() {
-  const [session, pricingSettings] = await Promise.all([getAdminSession(), getPricingSettings()]);
+  const [session, pricingSettings, storefrontSettings] = await Promise.all([
+    getAdminSession(),
+    getPricingSettings(),
+    getStorefrontSettings(),
+  ]);
 
   return (
     <div>
@@ -23,6 +29,10 @@ export default async function AdminSettingsPage() {
 
       <div className="mb-8">
         <PricingSettingsForm settings={pricingSettings} />
+      </div>
+
+      <div className="mb-8">
+        <StorefrontSettingsForm settings={storefrontSettings} />
       </div>
 
       <div className="max-w-md">

@@ -76,8 +76,30 @@ export const productFormSchema = z.object({
   seoTitle: z.string().trim().max(70, "Keep SEO titles close to 60 characters").optional(),
   seoDescription: z.string().trim().max(180, "Keep meta descriptions close to 160 characters").optional(),
   seoKeywords: stringListSchema,
-  prices: z.array(regionalPriceSchema).min(1, "Add at least an INR price"),
+  // Formats — each one is switched on per book and priced independently.
+  colourPdfEnabled: z.boolean().default(true),
+  bwPdfEnabled: z.boolean().default(false),
+  hardcoverComingSoon: z.boolean().default(true),
+  /** Colour PDF regional prices. */
+  prices: z.array(regionalPriceSchema).default([]),
+  /** Black & white PDF regional prices. */
+  bwPrices: z.array(regionalPriceSchema).default([]),
+  /** Rent & Read price in rupees; empty = automatic price from the colour PDF. */
+  rentalPrice: z.preprocess(
+    (value) => (value === "" || value === undefined || value === null ? null : value),
+    z.coerce.number().min(1, "Rental price must be at least ₹1").nullable()
+  ),
+  rentalDurationDays: z.coerce.number().int().min(1, "At least 1 day").max(365, "At most 365 days").default(7),
 }).superRefine((value, ctx) => {
+  if (value.colourPdfEnabled && value.prices.length === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["prices"], message: "Add at least an INR price for the colour PDF" });
+  }
+  if (value.bwPdfEnabled && value.bwPrices.length === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["bwPrices"], message: "Add at least an INR price for the black & white PDF" });
+  }
+  if (!value.colourPdfEnabled && !value.bwPdfEnabled && !value.rentAndReadEnabled) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["colourPdfEnabled"], message: "Enable at least one format" });
+  }
   if (!value.hasAgeRange) return;
   if (value.ageFrom == null) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["ageFrom"], message: "Choose a From Age" });

@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 import { productCoverUrl } from "@/lib/catalog-assets";
+import { formatName } from "@/lib/formats";
 
 export const metadata: Metadata = {
   title: "Order Details",
@@ -87,11 +88,13 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                       <p className="truncate text-sm font-semibold text-ink-600">{title}</p>
                       {item.itemType === "RENTAL" && (
                         <span className="shrink-0 rounded-full bg-sage-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sage-700">
-                          Rental · 7 days
+                          Rental · {item.product?.rentalDurationDays ?? 7} days
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-ink-300">Qty {item.quantity}</p>
+                    <p className="text-xs text-ink-300">
+                      {item.itemType === "PRODUCT" && `${formatName(item.format)} · `}Qty {item.quantity}
+                    </p>
                     {item.itemType === "RENTAL" && (
                       <p className="mt-0.5 text-xs text-ink-300">Online reading only — no download</p>
                     )}

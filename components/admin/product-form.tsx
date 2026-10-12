@@ -3,7 +3,15 @@
 import { useEffect, useState, useId, cloneElement } from "react";
 import Image from "@/components/ui/app-image";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  Controller,
+  type Control,
+  type FieldErrors,
+  type UseFormRegister,
+  type UseFormSetValue,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Loader2,
@@ -25,6 +33,7 @@ import {
   FileStack,
   Coins,
   Search,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import { productFormSchema, type ProductFormValues } from "@/lib/validation/admin-product";
@@ -50,6 +59,9 @@ interface CurrentProductFiles {
   hasPdf?: boolean;
   pdfFileName?: string;
   pdfFileSize?: number;
+  hasBwPdf?: boolean;
+  bwPdfFileName?: string;
+  bwPdfFileSize?: number;
   previewPageCount?: number;
   previewImages?: string[];
   rentalPageCount?: number;
@@ -125,6 +137,7 @@ export function ProductForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [bwPdfFile, setBwPdfFile] = useState<File | null>(null);
   const [pdfUploadProgress, setPdfUploadProgress] = useState<number | null>(null);
   const [rentalUploadProgress, setRentalUploadProgress] = useState<number | null>(null);
   const [rentalFiles, setRentalFiles] = useState<File[]>([]);
@@ -161,10 +174,19 @@ export function ProductForm({
       seoKeywords: [],
       categoryIds: [],
       prices: [{ currencyCode: "INR", regularPrice: 0, isActive: true }],
+      colourPdfEnabled: true,
+      bwPdfEnabled: false,
+      hardcoverComingSoon: true,
+      bwPrices: [],
+      rentalPrice: null,
+      rentalDurationDays: 7,
     },
   });
   const title = watch("title");
   const rentAndReadEnabled = watch("rentAndReadEnabled");
+  const colourPdfEnabled = watch("colourPdfEnabled");
+  const bwPdfEnabled = watch("bwPdfEnabled");
+  const watchedBwPrices = watch("bwPrices");
   const slug = watch("slug");
   const shortDescription = watch("shortDescription") ?? "";
   const seoTitle = watch("seoTitle") ?? "";
@@ -218,11 +240,6 @@ export function ProductForm({
     }
   }, [usageLicense, setValue, watch]);
 
-  const { fields: priceFields, append: appendPrice, remove: removePrice } = useFieldArray({
-    control,
-    name: "prices",
-  });
-
   async function handlePdfFileChange(file: File | null) {
     setPdfFile(file);
     if (!file || dirtyFields.pageCount) return;
@@ -268,6 +285,11 @@ export function ProductForm({
         setPdfUploadProgress(0);
         const blob = await uploadPdfToBlob(savedId, pdfFile, setPdfUploadProgress);
         await attachUploadedPdf(savedId, blob.pathname, pdfFile);
+      }
+      if (bwPdfFile) {
+        setPdfUploadProgress(0);
+        const blob = await uploadPdfToBlob(savedId, bwPdfFile, setPdfUploadProgress);
+        await attachUploadedPdf(savedId, blob.pathname, bwPdfFile, "BW_PDF");
       }
       if (rentalFiles.length > 0) {
         setRentalUploadProgress(0);
@@ -536,7 +558,6 @@ export function ProductForm({
           <Checkbox label="New Arrival" {...register("isNewArrival")} />
           <Checkbox label="Featured" {...register("isFeatured")} />
           <Checkbox label="Has Free Preview" {...register("hasFreePreview")} />
-          <Checkbox label="Rent & Read" {...register("rentAndReadEnabled")} />
           <Checkbox label="Homepage sample" {...register("isHomepageSample")} />
         </div>
         <div className="mt-4 flex flex-wrap gap-4">
@@ -550,42 +571,140 @@ export function ProductForm({
         <p className="mt-2 text-xs text-ink-300">Homepage sample uses this book&apos;s uploaded preview pages.</p>
       </div>
 
+      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.ink.card}`}>
+        <SectionHeading icon={Layers} color="ink">Formats</SectionHeading>
+        <p className="mt-1 text-xs text-ink-400">
+          Each format is offered only when it is enabled here, its file or pages are uploaded and it has a price.
+          Disabled or incomplete formats never appear in the store and can&apos;t be bought.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <FormatToggle
+            title="Colour Printable PDF"
+            checkbox={<Checkbox label="Sell the colour PDF" {...register("colourPdfEnabled")} />}
+            enabled={colourPdfEnabled}
+            requirements={[
+              { label: "Colour PDF uploaded", met: Boolean(currentFiles?.hasPdf || pdfFile) },
+              { label: "Colour PDF price set", met: (watchedPrices?.length ?? 0) > 0 },
+            ]}
+          />
+          <FormatToggle
+            title="Black & White Printable PDF"
+            checkbox={<Checkbox label="Sell the black & white PDF" {...register("bwPdfEnabled")} />}
+            enabled={bwPdfEnabled}
+            requirements={[
+              { label: "B&W PDF uploaded", met: Boolean(currentFiles?.hasBwPdf || bwPdfFile) },
+              { label: "B&W PDF price set", met: (watchedBwPrices?.length ?? 0) > 0 },
+            ]}
+          >
+            {productId ? (
+              <div className="mt-3">
+                {currentFiles?.hasBwPdf && (
+                  <p className="text-xs text-ink-400">
+                    {currentFiles.bwPdfFileName ?? "Uploaded"}
+                    {currentFiles.bwPdfFileSize != null && ` · ${formatBytes(currentFiles.bwPdfFileSize)}`}
+                    <button
+                      type="button"
+                      onClick={() => removeUploadedAsset("bwPdf", productId, router.refresh, setSubmitError)}
+                      className="ml-2 font-semibold text-gold-700 hover:underline"
+                    >
+                      Remove file
+                    </button>
+                  </p>
+                )}
+                <div className="mt-2">
+                  <InstantFileUpload
+                    key={`bw-pdf-${productId}`}
+                    label={currentFiles?.hasBwPdf ? "Replace B&W PDF" : "Upload B&W PDF"}
+                    hideLabel
+                    accept="application/pdf"
+                    onUpload={async (file, onProgress) => {
+                      const blob = await uploadPdfToBlob(productId, file, onProgress);
+                      await attachUploadedPdf(productId, blob.pathname, file, "BW_PDF");
+                    }}
+                    onDone={router.refresh}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3">
+                <FileField label="B&W PDF" accept="application/pdf" file={bwPdfFile} onChange={setBwPdfFile} />
+              </div>
+            )}
+          </FormatToggle>
+          <FormatToggle
+            title="Rent & Read"
+            checkbox={<Checkbox label="Offer Rent & Read (India only)" {...register("rentAndReadEnabled")} />}
+            enabled={rentAndReadEnabled}
+            requirements={[
+              { label: "Rental pages uploaded", met: Boolean(currentFiles?.rentalPageCount || rentalFiles.length) },
+              {
+                label: "Rental price available",
+                met:
+                  Boolean(watch("rentalPrice")) ||
+                  [...(watchedPrices ?? []), ...(watchedBwPrices ?? [])].some((p) => p?.currencyCode === "INR"),
+              },
+            ]}
+          >
+            <p className="mt-2 text-xs text-ink-300">Price, duration and pages are set in the Rent &amp; Read section.</p>
+          </FormatToggle>
+          <FormatToggle
+            title="Hardcover Book · Coming Soon"
+            checkbox={<Checkbox label="Show the Coming Soon card" {...register("hardcoverComingSoon")} />}
+            enabled={watch("hardcoverComingSoon")}
+          >
+            <p className="mt-2 text-xs text-ink-300">
+              A muted, non-purchasable card. It only shows while the global hardcover setting (Settings) is on —
+              untick it for books that won&apos;t get a hardcover.
+            </p>
+          </FormatToggle>
+        </div>
+        {errors.colourPdfEnabled && (
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-gold-700">
+            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+            {errors.colourPdfEnabled.message}
+          </p>
+        )}
+      </div>
+
       <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.sunny.card}`}>
         <SectionHeading icon={Clock} color="sunny">Rent &amp; Read</SectionHeading>
         <p className="mt-1 text-xs text-ink-400">
-          India-only temporary online reading access. Rental price is automatically calculated — never entered
-          manually.
+          India-only online reading access — no PDF download. Leave the rental price empty to use the automatic
+          price ({RENTAL_PERCENTAGE}% of the colour PDF&apos;s INR sale price).
         </p>
 
         {(() => {
-          const inrIndex = watchedPrices?.findIndex((p) => p?.currencyCode === "INR") ?? -1;
-          const inrRegularRupees = inrIndex >= 0 ? Number(watchedPrices?.[inrIndex]?.regularPrice) || 0 : 0;
-          const inrRegularMinor = Math.round(inrRegularRupees * 100);
-          const inrSaleMinor = calculateBookSalePrice(inrRegularMinor, BOOK_SALE_DISCOUNT_PERCENTAGE, "INR");
-          const rentalPriceMinor = calculateRentalPrice(inrSaleMinor);
+          const inrPrice =
+            watchedPrices?.find((p) => p?.currencyCode === "INR") ?? watchedBwPrices?.find((p) => p?.currencyCode === "INR");
+          const inrRegularMinor = Math.round((Number(inrPrice?.regularPrice) || 0) * 100);
+          const inrSaleMinor = calculateBookSalePrice(inrRegularMinor, bookSaleDiscountPercentage, "INR");
+          const automaticRentalPrice = inrPrice ? formatPrice(calculateRentalPrice(inrSaleMinor), RENTAL_CURRENCY_CODE) : null;
 
           return (
-            <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-cream-50 p-4 shadow-clay-pressed sm:grid-cols-4">
-              <div>
-                <p className="text-xs font-semibold text-ink-300">Sale Price (INR)</p>
-                <p className="mt-0.5 font-display text-base font-semibold text-ink-700">
-                  {inrIndex >= 0 ? formatPrice(inrSaleMinor, RENTAL_CURRENCY_CODE) : "No INR price set"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-ink-300">Rental Percentage</p>
-                <p className="mt-0.5 font-display text-base font-semibold text-ink-700">{RENTAL_PERCENTAGE}%</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-ink-300">Rental Duration</p>
-                <p className="mt-0.5 font-display text-base font-semibold text-ink-700">{RENTAL_DURATION_DAYS} days</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-ink-300">Calculated Rental Price</p>
-                <p className="mt-0.5 font-display text-base font-semibold text-sage-700">
-                  {inrIndex >= 0 ? formatPrice(rentalPriceMinor, RENTAL_CURRENCY_CODE) : "—"}
-                </p>
-              </div>
+            <div className="mt-4 flex flex-wrap items-start gap-4 rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
+              <Field
+                label="Rental Price (₹)"
+                error={errors.rentalPrice?.message}
+                hint={automaticRentalPrice ? `Automatic: ${automaticRentalPrice}` : "No INR price to calculate from"}
+                className="w-44"
+              >
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  placeholder="Automatic"
+                  {...register("rentalPrice")}
+                  className="admin-input"
+                />
+              </Field>
+              <Field
+                label="Rental Duration (days)"
+                error={errors.rentalDurationDays?.message}
+                hint={`Default ${RENTAL_DURATION_DAYS} days`}
+                className="w-44"
+              >
+                <input type="number" step="1" min="1" max="365" {...register("rentalDurationDays")} className="admin-input" />
+              </Field>
             </div>
           );
         })()}
@@ -719,7 +838,7 @@ export function ProductForm({
                 </div>
               </CurrentFileStatus>
               <CurrentFileStatus
-                label="Main Product PDF"
+                label="Colour PDF"
                 status={currentFiles?.hasPdf ? currentFiles.pdfFileName ?? "Uploaded" : "Missing"}
               >
                 {currentFiles?.hasPdf && (
@@ -739,7 +858,7 @@ export function ProductForm({
                 <div className="mt-3">
                   <InstantFileUpload
                     key={`pdf-${productId}`}
-                    label="Replace main product PDF"
+                    label="Replace colour PDF"
                     hideLabel
                     accept="application/pdf"
                     onUpload={async (file, onProgress) => {
@@ -795,7 +914,7 @@ export function ProductForm({
                   onChange={setCoverFile}
                 />
                 <FileField
-                  label="Main Product PDF"
+                  label="Colour PDF"
                   accept="application/pdf"
                   file={pdfFile}
                   onChange={handlePdfFileChange}
@@ -823,119 +942,42 @@ export function ProductForm({
         </details>
       </div>
 
-      <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.blossomDeep.card}`}>
-        <div className="mb-4 flex items-center justify-between">
-          <SectionHeading icon={Coins} color="blossomDeep">Regional Prices</SectionHeading>
-          <button
-            type="button"
-            onClick={() =>
-              appendPrice({
-                currencyCode: "USD",
-                regularPrice: 0,
-                isActive: true,
-                saleStartDate: watchedPrices?.[0]?.saleStartDate,
-                saleEndDate: watchedPrices?.[0]?.saleEndDate,
-              })
-            }
-            className="text-sm font-semibold text-sage-700 hover:underline"
-          >
-            + Add currency
-          </button>
-        </div>
-        <div className="flex flex-wrap items-end gap-4">
-          <Field label="Base Currency" error={errors.baseCurrency?.message} hint="Shown when a requested regional price is unavailable" className="max-w-xs">
-            <select {...register("baseCurrency")} className="admin-input">
-              {CURRENCY_OPTIONS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Sale Start" className="w-40">
-            <input
-              type="date"
-              value={watchedPrices?.[0]?.saleStartDate ?? ""}
-              onChange={(e) => {
-                priceFields.forEach((_, index) =>
-                  setValue(`prices.${index}.saleStartDate`, e.target.value, { shouldDirty: true })
-                );
-              }}
-              className="admin-input"
-            />
-          </Field>
-          <Field label="Sale End" className="w-40" hint="Applies to every currency below">
-            <input
-              type="date"
-              value={watchedPrices?.[0]?.saleEndDate ?? ""}
-              onChange={(e) => {
-                priceFields.forEach((_, index) =>
-                  setValue(`prices.${index}.saleEndDate`, e.target.value, { shouldDirty: true })
-                );
-              }}
-              className="admin-input"
-            />
-          </Field>
-        </div>
-        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
-          {priceFields.map((field, index) => (
-            <div key={field.id} className="flex flex-wrap items-end gap-3 rounded-xl border border-ink-100 p-3">
-              <Field label="Currency" className="w-28">
-                <select {...register(`prices.${index}.currencyCode`)} className="admin-input">
-                  {CURRENCY_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Regular Price" className="w-32">
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register(`prices.${index}.regularPrice`)}
-                  className="admin-input"
-                />
-              </Field>
-              <Field label="Sale Price" className="w-40" hint={`Automatically calculated at ${bookSaleDiscountPercentage}% off`}>
-                <div className="rounded-xl bg-cream-100 px-3 py-2 text-sm font-semibold text-ink-600 shadow-clay-pressed">
-                  {formatPrice(
-                    calculateBookSalePrice(
-                      Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100),
-                      bookSaleDiscountPercentage,
-                      watchedPrices?.[index]?.currencyCode ?? "INR"
-                    ),
-                    watchedPrices?.[index]?.currencyCode ?? "INR"
-                  )}
-                </div>
-              </Field>
-              <Checkbox label="Active" {...register(`prices.${index}.isActive`)} />
-              {priceFields.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removePrice(index)}
-                  aria-label="Remove this price"
-                  className="tap-target ml-auto flex items-center justify-center rounded-full text-ink-300 hover:bg-gold-50 hover:text-gold-700"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        {errors.prices && (
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-gold-700">
-            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
-            {errors.prices.message ?? "Check your price entries"}
-          </p>
-        )}
-        {!priceFields.some((f) => f.currencyCode === "USD") && (
-          <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-gold-50 px-3 py-2 text-xs text-gold-700">
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            No USD price set. Customers outside India need an active USD/international price before checkout.
-          </p>
-        )}
-      </div>
+      <RegionalPriceEditor
+        name="prices"
+        title="Colour PDF Prices"
+        color="blossomDeep"
+        control={control}
+        register={register}
+        setValue={setValue}
+        errors={errors}
+        watchedPrices={watchedPrices}
+        bookSaleDiscountPercentage={bookSaleDiscountPercentage}
+        muted={!colourPdfEnabled}
+      >
+        <Field label="Base Currency" error={errors.baseCurrency?.message} hint="Shown when a requested regional price is unavailable" className="max-w-xs">
+          <select {...register("baseCurrency")} className="admin-input">
+            {CURRENCY_OPTIONS.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </RegionalPriceEditor>
+
+      {bwPdfEnabled && (
+        <RegionalPriceEditor
+          name="bwPrices"
+          title="Black & White PDF Prices"
+          color="inkPale"
+          control={control}
+          register={register}
+          setValue={setValue}
+          errors={errors}
+          watchedPrices={watchedBwPrices}
+          bookSaleDiscountPercentage={bookSaleDiscountPercentage}
+        />
+      )}
 
       <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS.inkPale.card}`}>
         <details open>
@@ -1123,6 +1165,187 @@ function buildCategoryGroups(categories: CategoryOption[]): CategoryOptionGroup[
   if (otherCategories.length > 0) groups.push({ title: "Other", categories: otherCategories });
 
   return groups;
+}
+
+function FormatToggle({
+  title,
+  checkbox,
+  enabled,
+  requirements = [],
+  children,
+}: {
+  title: string;
+  checkbox: React.ReactNode;
+  enabled?: boolean;
+  requirements?: { label: string; met: boolean }[];
+  children?: React.ReactNode;
+}) {
+  const ready = requirements.every((r) => r.met);
+  return (
+    <div className="rounded-2xl bg-cream-50 p-4 shadow-clay-pressed">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-display text-sm font-semibold text-ink-700">{title}</p>
+        {requirements.length > 0 && (
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+              !enabled ? "bg-ink-50 text-ink-300" : ready ? "bg-sage-50 text-sage-700" : "bg-gold-50 text-gold-700"
+            }`}
+          >
+            {!enabled ? "Off" : ready ? "In store" : "Incomplete"}
+          </span>
+        )}
+      </div>
+      <div className="mt-2">{checkbox}</div>
+      {enabled && requirements.length > 0 && (
+        <ul className="mt-2 flex flex-col gap-1 text-xs">
+          {requirements.map((r) => (
+            <li key={r.label} className={`flex items-center gap-1.5 ${r.met ? "text-sage-700" : "text-gold-700"}`}>
+              {r.met ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <X className="h-3.5 w-3.5" aria-hidden="true" />}
+              {r.label}
+            </li>
+          ))}
+        </ul>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/** One format's regional prices — used for the colour and the black &
+ * white PDF, which are priced independently. */
+function RegionalPriceEditor({
+  name,
+  title,
+  color,
+  control,
+  register,
+  setValue,
+  errors,
+  watchedPrices,
+  bookSaleDiscountPercentage,
+  muted = false,
+  children,
+}: {
+  name: "prices" | "bwPrices";
+  title: string;
+  color: SectionColor;
+  control: Control<ProductFormValues>;
+  register: UseFormRegister<ProductFormValues>;
+  setValue: UseFormSetValue<ProductFormValues>;
+  errors: FieldErrors<ProductFormValues>;
+  watchedPrices: ProductFormValues["prices"] | undefined;
+  bookSaleDiscountPercentage: number;
+  muted?: boolean;
+  children?: React.ReactNode;
+}) {
+  const { fields, append, remove } = useFieldArray({ control, name });
+  const fieldError = errors[name];
+
+  return (
+    <div className={`card-surface border-l-4 p-5 ${SECTION_COLORS[color].card} ${muted ? "opacity-60" : ""}`}>
+      <div className="mb-4 flex items-center justify-between">
+        <SectionHeading icon={Coins} color={color}>{title}</SectionHeading>
+        <button
+          type="button"
+          onClick={() =>
+            append({
+              currencyCode: fields.length === 0 ? "INR" : "USD",
+              regularPrice: 0,
+              isActive: true,
+              saleStartDate: watchedPrices?.[0]?.saleStartDate,
+              saleEndDate: watchedPrices?.[0]?.saleEndDate,
+            })
+          }
+          className="text-sm font-semibold text-sage-700 hover:underline"
+        >
+          + Add currency
+        </button>
+      </div>
+      {muted && (
+        <p className="mb-3 text-xs text-ink-400">This format is switched off — these prices are kept but not used.</p>
+      )}
+      <div className="flex flex-wrap items-end gap-4">
+        {children}
+        <Field label="Sale Start" className="w-40">
+          <input
+            type="date"
+            value={watchedPrices?.[0]?.saleStartDate ?? ""}
+            onChange={(e) => {
+              fields.forEach((_, index) =>
+                setValue(`${name}.${index}.saleStartDate`, e.target.value, { shouldDirty: true })
+              );
+            }}
+            className="admin-input"
+          />
+        </Field>
+        <Field label="Sale End" className="w-40" hint="Applies to every currency below">
+          <input
+            type="date"
+            value={watchedPrices?.[0]?.saleEndDate ?? ""}
+            onChange={(e) => {
+              fields.forEach((_, index) =>
+                setValue(`${name}.${index}.saleEndDate`, e.target.value, { shouldDirty: true })
+              );
+            }}
+            className="admin-input"
+          />
+        </Field>
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
+        {fields.map((field, index) => (
+          <div key={field.id} className="flex flex-wrap items-end gap-3 rounded-xl border border-ink-100 p-3">
+            <Field label="Currency" className="w-28">
+              <select {...register(`${name}.${index}.currencyCode`)} className="admin-input">
+                {CURRENCY_OPTIONS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Regular Price" className="w-32">
+              <input type="number" step="0.01" {...register(`${name}.${index}.regularPrice`)} className="admin-input" />
+            </Field>
+            <Field label="Sale Price" className="w-40" hint={`Automatically calculated at ${bookSaleDiscountPercentage}% off`}>
+              <div className="rounded-xl bg-cream-100 px-3 py-2 text-sm font-semibold text-ink-600 shadow-clay-pressed">
+                {formatPrice(
+                  calculateBookSalePrice(
+                    Math.round((Number(watchedPrices?.[index]?.regularPrice) || 0) * 100),
+                    bookSaleDiscountPercentage,
+                    watchedPrices?.[index]?.currencyCode ?? "INR"
+                  ),
+                  watchedPrices?.[index]?.currencyCode ?? "INR"
+                )}
+              </div>
+            </Field>
+            <Checkbox label="Active" {...register(`${name}.${index}.isActive`)} />
+            {fields.length > 1 && (
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                aria-label="Remove this price"
+                className="tap-target ml-auto flex items-center justify-center rounded-full text-ink-300 hover:bg-gold-50 hover:text-gold-700"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      {fieldError && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-gold-700">
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+          {fieldError.message ?? "Check your price entries"}
+        </p>
+      )}
+      {fields.length > 0 && !fields.some((f) => f.currencyCode === "USD") && (
+        <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-gold-50 px-3 py-2 text-xs text-gold-700">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          No USD price set. Customers outside India need an active USD/international price before checkout.
+        </p>
+      )}
+    </div>
+  );
 }
 
 function CurrentFileStatus({
@@ -1499,14 +1722,14 @@ function formatBytes(bytes: number) {
 }
 
 async function removeUploadedAsset(
-  kind: "pdf" | "cover" | "preview" | "rental",
+  kind: "pdf" | "bwPdf" | "cover" | "preview" | "rental",
   productId: string,
   refresh: () => void,
   setError: (message: string | null) => void
 ) {
   setError(null);
   const endpoint =
-    kind === "pdf"
+    kind === "pdf" || kind === "bwPdf"
       ? "/api/admin/products/upload-pdf"
       : kind === "cover"
         ? "/api/admin/products/upload-cover"
@@ -1516,7 +1739,7 @@ async function removeUploadedAsset(
   const res = await fetch(endpoint, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId }),
+    body: JSON.stringify(kind === "bwPdf" ? { productId, format: "BW_PDF" } : { productId }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => null);
@@ -2255,11 +2478,16 @@ async function uploadFile(endpoint: string, formData: FormData, label: string) {
   throw new Error(data?.error ?? `Could not upload ${label}${fallback ? ` (${fallback})` : ""}.`);
 }
 
-async function attachUploadedPdf(productId: string, pathname: string, file: File) {
+async function attachUploadedPdf(
+  productId: string,
+  pathname: string,
+  file: File,
+  format: "COLOUR_PDF" | "BW_PDF" = "COLOUR_PDF"
+) {
   const res = await fetch("/api/admin/products/upload-pdf", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ productId, pathname, fileName: file.name, fileSize: file.size }),
+    body: JSON.stringify({ productId, pathname, fileName: file.name, fileSize: file.size, format }),
   });
   if (res.ok) return;
 

@@ -17,7 +17,7 @@ export default async function NewBundlePage() {
         id: true,
         title: true,
         prices: {
-          where: { isActive: true },
+          where: { isActive: true, format: "COLOUR_PDF" },
           select: { currencyCode: true, regularPrice: true },
         },
       },

@@ -10,6 +10,8 @@ export interface OrderSummaryItem {
   title: string;
   coverImage: string;
   unitPrice: number;
+  /** Format display name, e.g. "Black & White Printable PDF". */
+  formatName?: string;
   selectedBooks?: { id: string; title: string }[];
   /** Only set when type === "RENTAL". */
   rentalExpiresAt?: string;
@@ -32,6 +34,9 @@ export interface DownloadRecord {
   title: string;
   coverImage: string;
   fileType: "PDF" | "Printable PDF" | "Interactive PDF";
+  format: "COLOUR_PDF" | "BW_PDF";
+  formatName: string;
+  downloadHref: string;
   purchasedAt: string; // ISO date
   downloadCount: number;
 }

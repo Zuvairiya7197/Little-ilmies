@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
         where: {
           OR: [
             { privatePdfPath: pathname },
+            { bwPrivatePdfPath: pathname },
             { coverImage: pathname },
             { previewImagePaths: { has: pathname } },
             { rentalPageImagePaths: { has: pathname } },

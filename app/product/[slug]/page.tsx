@@ -8,11 +8,11 @@ import {
 import { BookPreviewCard } from "@/components/book-preview/book-preview-card";
 import { ProductMobileHero } from "@/components/store/product-mobile-hero";
 import { ProductHeader } from "@/components/store/product-header";
-import { ProductBuyBox } from "@/components/store/product-buy-box";
+import { ProductFormatSelector } from "@/components/store/product-format-selector";
 import { ProductMobileAbout } from "@/components/store/product-mobile-about";
 import { RelatedBooks } from "@/components/store/related-books";
-import { ProductMobilePrice } from "@/components/store/product-mobile-price";
 import { findPrice } from "@/lib/pricing/resolve-price";
+import { formatName } from "@/lib/formats";
 import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getProductEntitlementForUser } from "@/lib/db/orders";
@@ -74,12 +74,22 @@ export default async function ProductPage({ params }: PageProps) {
   const session = await getAuthSession();
   const entitlement = session?.user
     ? await getProductEntitlementForUser(session.user.id, product.id)
-    : { owns: false, activeRentalExpiresAt: null };
+    : { ownedFormats: [], activeRentalExpiresAt: null };
 
-  const inrPrice = findPrice(product, "INR");
-  const schemaPrice = inrPrice
-    ? ((inrPrice.salePrice ?? inrPrice.regularPrice) / 100).toFixed(2)
-    : undefined;
+  // One offer per purchasable PDF format, each with its own INR price.
+  const offers = product.variants.flatMap((variant) => {
+    const inrPrice = variant.format === "RENT_AND_READ" ? undefined : findPrice(variant, "INR");
+    if (!inrPrice) return [];
+    return [
+      {
+        "@type": "Offer",
+        name: formatName(variant.format),
+        price: ((inrPrice.salePrice ?? inrPrice.regularPrice) / 100).toFixed(2),
+        priceCurrency: "INR",
+        availability: "https://schema.org/InStock",
+      },
+    ];
+  });
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -95,16 +105,7 @@ export default async function ProductPage({ params }: PageProps) {
       ratingValue: product.rating,
       reviewCount: product.reviewCount,
     },
-    ...(schemaPrice
-      ? {
-          offers: {
-            "@type": "Offer",
-            price: schemaPrice,
-            priceCurrency: "INR",
-            availability: "https://schema.org/InStock",
-          },
-        }
-      : {}),
+    ...(offers.length > 0 ? { offers } : {}),
   };
 
   const breadcrumb = breadcrumbSchema([
@@ -135,16 +136,12 @@ export default async function ProductPage({ params }: PageProps) {
           <div className="lg:mt-0">
             <ProductHeader product={product} />
 
-            <ProductMobilePrice product={product} />
-
-            <div className="mt-6">
-              <ProductBuyBox
-                product={product}
-                rentalEligible={rentalEligible}
-                owns={entitlement.owns}
-                activeRentalExpiresAt={entitlement.activeRentalExpiresAt}
-              />
-            </div>
+            <ProductFormatSelector
+              product={product}
+              rentalEligible={rentalEligible}
+              ownedFormats={entitlement.ownedFormats}
+              activeRentalExpiresAt={entitlement.activeRentalExpiresAt}
+            />
           </div>
         </div>
 

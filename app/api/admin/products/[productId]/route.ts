@@ -19,7 +19,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid product data", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { categoryIds, prices, hasAgeRange, ageFrom, ageTo, ageOpenEnded, ...productData } = parsed.data;
+  const { categoryIds, prices, bwPrices, rentalPrice, hasAgeRange, ageFrom, ageTo, ageOpenEnded, ...productData } =
+    parsed.data;
+  const formatPrices = [
+    ...prices.map((p) => ({ ...p, format: "COLOUR_PDF" as const })),
+    ...bwPrices.map((p) => ({ ...p, format: "BW_PDF" as const })),
+  ];
   const ageData = normalizeAgeRange({ hasAgeRange, ageFrom, ageTo, ageOpenEnded });
 
   const existingWithSlug = await prisma.product.findUnique({ where: { slug: productData.slug } });
@@ -54,14 +59,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       data: {
         ...productData,
         ...ageData,
+        rentalPrice: rentalPrice == null ? null : Math.round(rentalPrice * 100),
         publishedAt:
           productData.status === "PUBLISHED" && !current.publishedAt ? new Date() : current.publishedAt,
         categories: { create: categoryIds.map((categoryId) => ({ categoryId })) },
       },
     }),
-    ...prices.map((p) =>
+    ...formatPrices.map((p) =>
       prisma.productPrice.upsert({
-        where: { productId_currencyCode: { productId, currencyCode: p.currencyCode } },
+        where: { productId_format_currencyCode: { productId, format: p.format, currencyCode: p.currencyCode } },
         update: {
           regularPrice: Math.round(p.regularPrice * 100),
           salePrice: null,
@@ -72,6 +78,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         },
         create: {
           productId,
+          format: p.format,
           currencyCode: p.currencyCode,
           pricingRegion: p.currencyCode === "INR" ? "India" : "International",
           regularPrice: Math.round(p.regularPrice * 100),
@@ -124,8 +131,8 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     });
   }
 
-  if (product.privatePdfPath) {
-    await deletePrivatePdf(product.privatePdfPath);
+  for (const pdfPath of [product.privatePdfPath, product.bwPrivatePdfPath]) {
+    if (pdfPath) await deletePrivatePdf(pdfPath);
   }
 
   await prisma.product.delete({ where: { id: productId } });

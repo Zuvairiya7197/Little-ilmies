@@ -86,7 +86,7 @@ export function DownloadsList({ downloads }: { downloads: DownloadRecord[] }) {
 
                 return (
                   <div
-                    key={`${download.orderId}-${download.productId}`}
+                    key={`${download.orderId}-${download.productId}-${download.format}`}
                     className="flex items-center gap-3 py-3 xl:grid xl:grid-cols-[minmax(260px,1.5fr)_0.55fr_0.75fr_0.75fr] xl:items-center xl:gap-5"
                   >
                     <Link href={`/product/${download.slug}`} className="shrink-0">
@@ -100,7 +100,7 @@ export function DownloadsList({ downloads }: { downloads: DownloadRecord[] }) {
                       </Link>
                       <span className="mt-1 block text-[11px] font-black uppercase text-violet-700 xl:hidden">E-book</span>
                       <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-ink-400 xl:mt-1 xl:gap-2 xl:text-xs">
-                        <span>{download.fileType}</span>
+                        <span>{download.formatName}</span>
                         <span aria-hidden="true">•</span>
                         <span>{12 + (download.title.length % 13)} MB</span>
                       </span>
@@ -124,8 +124,8 @@ export function DownloadsList({ downloads }: { downloads: DownloadRecord[] }) {
 
                     <div className="flex shrink-0 items-center gap-1 xl:gap-4">
                       <a
-                        href={`/api/download/${download.productId}`}
-                        aria-label={`Download ${download.title}`}
+                        href={download.downloadHref}
+                        aria-label={`Download ${download.title} (${download.formatName})`}
                         className="tap-target flex items-center justify-center rounded-full border border-violet-300 bg-white p-2.5 text-violet-700 hover:bg-lilac-50 xs:gap-2 xs:rounded-xl xs:px-4 xs:py-2.5 xl:gap-2 xl:border-lilac-200 xl:px-4 xl:py-2"
                       >
                         <Download className="h-4 w-4 xl:h-4 xl:w-4" aria-hidden="true" />

@@ -5,7 +5,7 @@ import { getAuthSession } from "@/lib/auth/get-session";
 import { getActiveRentalEntitlement } from "@/lib/rentals/entitlement";
 import { getPublishedProductBySlug } from "@/lib/db/catalog";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
-import { calculateRentalPrice } from "@/lib/rentals/pricing";
+import { prisma } from "@/lib/db/prisma";
 import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
 import { RentalReader, type RentalUpgradeInfo } from "@/components/rentals/rental-reader";
 
@@ -29,7 +29,7 @@ export default async function RentalReaderPage({ params }: PageProps) {
       <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-ink-700 px-6 text-center">
         <h1 className="font-display text-2xl font-bold text-cream-50">Your rental has expired</h1>
         <p className="max-w-sm text-sm text-cream-100/80">
-          This 7-day Rent &amp; Read access has ended. Buy this ebook to keep it permanently.
+          This Rent &amp; Read access has ended. Buy this ebook to keep it permanently.
         </p>
         <Link href="/account/rentals" className="btn-primary mt-2">
           Back to My Rentals
@@ -63,21 +63,26 @@ export default async function RentalReaderPage({ params }: PageProps) {
   // page image just for that, and showing it was needlessly identifying.
   const watermarkLabel = `Little Ilmies • Order #${rental.orderId.slice(-8).toUpperCase()}`;
 
-  // Same upgrade-credit calculation as ProductBuyBox on the product page —
-  // display-only, so it's fine to compute here too; /checkout re-derives
-  // the real charge itself from the paid rental order regardless of what
-  // the client shows.
+  // Same upgrade-credit calculation as create-order: the price of the
+  // book's primary PDF minus what this rental actually cost. Display-only —
+  // /checkout re-derives the real charge itself from the paid rental order.
   const product = await getPublishedProductBySlug(rental.product.slug);
+  const upgradeVariant = product?.variants.find((variant) => variant.format !== "RENT_AND_READ");
+  const rentalOrderItem = await prisma.orderItem.findFirst({
+    where: { orderId: rental.orderId, productId, itemType: "RENTAL" },
+    select: { unitPrice: true },
+  });
   let upgrade: RentalUpgradeInfo | null = null;
-  if (product) {
-    const resolvedPrice = resolveProductPrice(product, RENTAL_CURRENCY_CODE);
-    const rentalPricePaid = calculateRentalPrice(resolvedPrice.salePrice ?? resolvedPrice.regularPrice);
+  if (product && upgradeVariant && upgradeVariant.format !== "RENT_AND_READ" && rentalOrderItem) {
+    const resolvedPrice = resolveProductPrice(upgradeVariant, RENTAL_CURRENCY_CODE);
+    const rentalPricePaid = rentalOrderItem.unitPrice;
     upgrade = {
       price: Math.max(0, (resolvedPrice.salePrice ?? resolvedPrice.regularPrice) - rentalPricePaid),
       rentalPricePaid,
+      format: upgradeVariant.format,
       productSlug: product.slug,
       coverImage: product.coverImage,
-      prices: product.prices,
+      prices: upgradeVariant.prices,
       pageCount: product.pageCount,
       isBestseller: product.isBestseller,
       isNewArrival: product.isNewArrival,

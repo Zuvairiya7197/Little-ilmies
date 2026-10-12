@@ -223,21 +223,26 @@ export function WishlistView({ products }: { products: ProductSummary[] }) {
                 <p className="font-display text-sm font-bold text-ink-700 sm:text-sm xl:mr-2">
                   {formatPrice(item.price, item.currencyCode)}
                 </p>
-                <button
-                  type="button"
-                  onClick={() =>
-                    addToCart({
-                      productId: item.productId,
-                      slug: item.slug,
-                      title: item.title,
-                      coverImage: item.coverImage,
-                    })
-                  }
-                  aria-label={`Add ${item.title} to cart`}
-                  className="tap-target flex h-11 w-11 items-center justify-center rounded-full bg-blossom-50 text-blossom-600 shadow-soft sm:h-14 sm:w-14 xl:h-auto xl:w-auto"
-                >
-                  <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 xl:h-4 xl:w-4" aria-hidden="true" />
-                </button>
+                {item.cartVariant && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      addToCart({
+                        productId: item.productId,
+                        format: item.cartVariant!.format,
+                        prices: item.cartVariant!.prices,
+                        pageCount: item.pageCount,
+                        slug: item.slug,
+                        title: item.title,
+                        coverImage: item.coverImage,
+                      })
+                    }
+                    aria-label={`Add ${item.title} to cart`}
+                    className="tap-target flex h-11 w-11 items-center justify-center rounded-full bg-blossom-50 text-blossom-600 shadow-soft sm:h-14 sm:w-14 xl:h-auto xl:w-auto"
+                  >
+                    <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 xl:h-4 xl:w-4" aria-hidden="true" />
+                  </button>
+                )}
                 <Link
                   href={`/product/${item.slug}`}
                   className="tap-target flex items-center justify-center rounded-full bg-ink-600 px-5 py-2.5 text-sm font-bold text-cream-50 shadow-clay-primary sm:px-9 sm:py-3 xl:px-4 xl:py-2 xl:text-xs"

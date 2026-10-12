@@ -185,6 +185,23 @@ model Product {
   displayOrder Int?
   hasFreePreview Boolean @default(true)
   rentAndReadEnabled Boolean @default(true)
+  /// Per-format availability (see lib/formats.ts). The colour PDF is the
+  /// original single PDF (privatePdfPath above), so existing books stay
+  /// colour-only until an admin enables black & white.
+  colourPdfEnabled Boolean @default(true)
+  bwPdfEnabled     Boolean @default(false)
+  /// Ink-friendly black & white PDF — same private-storage rules as
+  /// privatePdfPath, never sent to the client.
+  bwPrivatePdfPath String?
+  bwPdfFileName    String?
+  bwPdfFileSize    Int?
+  /// Rent & Read price in INR minor units. Null keeps the automatic price
+  /// (lib/rentals/pricing.ts) derived from the colour PDF's INR sale price.
+  rentalPrice        Int?
+  rentalDurationDays Int @default(7)
+  /// Per-book switch for the "Hardcover · Coming Soon" card. The card only
+  /// shows when the global HARDCOVER_COMING_SOON_ENABLED setting is also on.
+  hardcoverComingSoon Boolean @default(true)
   /// Full-book page images for the Rent & Read reader — admin-uploaded,
   /// same private-storage pattern as previewImagePaths but covering every
   /// page. Never derived from privatePdfPath at request time: the reader
@@ -229,6 +246,14 @@ enum UsageLicense {
   PERSONAL_USE
   PERSONAL_CLASSROOM
   COMMERCIAL_USE
+}
+
+/// A purchasable format of a book. Hardcover is deliberately absent — it is
+/// a display-only "Coming Soon" card, never something that can be sold.
+enum BookFormat {
+  COLOUR_PDF
+  BW_PDF
+  RENT_AND_READ
 }
 
 enum ProductStatus {
@@ -314,6 +339,9 @@ model CustomBundlePrice {
 model ProductPrice {
   id            String   @id @default(cuid())
   productId     String
+  /// Which format this price belongs to — each PDF format has its own
+  /// regional prices. Rent & Read uses Product.rentalPrice instead.
+  format        BookFormat @default(COLOUR_PDF)
   pricingRegion String // e.g. "India", "International"
   countryCode   String? // ISO 3166-1 alpha-2; null for the international/default row
   currencyCode  String // ISO 4217: INR, USD (GBP/AED reserved for later regions)
@@ -328,7 +356,7 @@ model ProductPrice {
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, currencyCode])
+  @@unique([productId, format, currencyCode])
   @@map("product_prices")
 }
 
@@ -441,6 +469,9 @@ model OrderItem {
   unitPrice    Int
   quantity     Int    @default(1)
   itemType      OrderItemType @default(PRODUCT)
+  /// Format bought for PRODUCT/RENTAL lines. Null on custom bundle lines
+  /// (each book gets its primary PDF format).
+  format        BookFormat?
   /// Historical custom bundle snapshot, including selected product IDs and
   /// selected book metadata at purchase time.
   bundleSnapshot Json?
@@ -527,6 +558,8 @@ model Download {
   id            String   @id @default(cuid())
   orderId       String
   productId     String
+  /// Which PDF this grants — buying colour never unlocks black & white.
+  format        BookFormat @default(COLOUR_PDF)
   downloadCount Int      @default(0)
   lastDownloadedAt DateTime?
   /// Signed-URL expiry when using Cloudflare R2 in production; null for
@@ -538,7 +571,7 @@ model Download {
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
 
-  @@unique([orderId, productId])
+  @@unique([orderId, productId, format])
   @@map("downloads")
 }
 
