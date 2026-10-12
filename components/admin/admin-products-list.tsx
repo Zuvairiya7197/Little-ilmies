@@ -2,7 +2,7 @@
 
 import Image from "@/components/ui/app-image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Loader2, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
@@ -26,6 +26,13 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [onlyIncomplete, setOnlyIncomplete] = useState(false);
+
+  // Coming back to this list (e.g. browser Back after uploading files on a
+  // product) restores Next's cached copy, so the "Missing" checklist would
+  // show the state from before the upload. Re-fetch once on every visit.
+  useEffect(() => {
+    router.refresh();
+  }, [router]);
   const incompleteCount = products.filter((product) => product.missing.length > 0).length;
   const visibleProducts = onlyIncomplete ? products.filter((product) => product.missing.length > 0) : products;
 
