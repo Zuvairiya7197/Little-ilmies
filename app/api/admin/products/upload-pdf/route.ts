@@ -27,6 +27,17 @@ function pdfFields(format: "COLOUR_PDF" | "BW_PDF", path: string | null, fileNam
     : { privatePdfPath: path, pdfFileName: fileName, pdfFileSize: fileSize };
 }
 
+/** True when the book's other PDF format points at the same file (e.g. a
+ * colouring book whose B&W PDF reuses the colour file) — that file must
+ * not be deleted when this format's PDF is replaced or removed. */
+function sharedWithOtherFormat(
+  product: { privatePdfPath: string | null; bwPrivatePdfPath: string | null },
+  format: "COLOUR_PDF" | "BW_PDF",
+  path: string
+) {
+  return currentPdfPath(product, format === "BW_PDF" ? "COLOUR_PDF" : "BW_PDF") === path;
+}
+
 function currentPdfPath(
   product: { privatePdfPath: string | null; bwPrivatePdfPath: string | null },
   format: "COLOUR_PDF" | "BW_PDF"
@@ -57,7 +68,7 @@ export async function POST(request: NextRequest) {
       }
 
       const previousPath = currentPdfPath(product, format);
-      if (previousPath && previousPath !== pathname) {
+      if (previousPath && previousPath !== pathname && !sharedWithOtherFormat(product, format, previousPath)) {
         await deletePrivatePdf(previousPath);
       }
 
@@ -93,7 +104,7 @@ export async function POST(request: NextRequest) {
     const relativePath = await savePrivatePdf(buffer, file.name);
 
     const previousPath = currentPdfPath(product, format);
-    if (previousPath) {
+    if (previousPath && !sharedWithOtherFormat(product, format, previousPath)) {
       await deletePrivatePdf(previousPath);
     }
 
@@ -129,7 +140,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const previousPath = currentPdfPath(product, parsed.data.format);
-    if (previousPath) {
+    if (previousPath && !sharedWithOtherFormat(product, parsed.data.format, previousPath)) {
       await deletePrivatePdf(previousPath);
     }
     await prisma.product.update({

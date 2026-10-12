@@ -131,7 +131,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     });
   }
 
-  for (const pdfPath of [product.privatePdfPath, product.bwPrivatePdfPath]) {
+  for (const pdfPath of new Set([product.privatePdfPath, product.bwPrivatePdfPath])) {
     if (pdfPath) await deletePrivatePdf(pdfPath);
   }
 
