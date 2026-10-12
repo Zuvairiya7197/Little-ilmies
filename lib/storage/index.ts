@@ -8,6 +8,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   getB2Bucket,
@@ -165,6 +166,29 @@ export async function getPrivatePdfDownloadUrl(relativePath: string, downloadNam
     ResponseContentDisposition: `attachment; filename="${downloadName}"`,
   });
   return getSignedUrl(getB2Client(), command, { expiresIn: 300 });
+}
+
+/**
+ * Size in bytes of an uploaded private PDF, or null when it doesn't exist.
+ * Used to refuse attaching a direct browser upload that never finished
+ * (B2 can end up with an empty object), so a book never points buyers at a
+ * blank file.
+ */
+export async function getPrivatePdfSize(relativePath: string): Promise<number | null> {
+  if (USE_B2_STORAGE) {
+    try {
+      const result = await getB2Client().send(new HeadObjectCommand({ Bucket: getB2Bucket(), Key: relativePath }));
+      return result.ContentLength ?? 0;
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    return (await stat(assertWithin(PDFS_DIR, path.join(PRIVATE_ROOT, relativePath)))).size;
+  } catch {
+    return null;
+  }
 }
 
 export async function deletePrivatePdf(relativePath: string): Promise<void> {

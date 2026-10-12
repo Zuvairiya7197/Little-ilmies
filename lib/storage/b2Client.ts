@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
@@ -43,4 +44,4 @@ export function getB2Client(): S3Client {
   return cachedClient;
 }
 
-export { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand };
+export { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand };

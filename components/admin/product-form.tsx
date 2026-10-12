@@ -283,13 +283,11 @@ export function ProductForm({
       }
       if (pdfFile) {
         setPdfUploadProgress(0);
-        const blob = await uploadPdfToBlob(savedId, pdfFile, setPdfUploadProgress);
-        await attachUploadedPdf(savedId, blob.pathname, pdfFile);
+        await uploadAndAttachPdf(savedId, pdfFile, setPdfUploadProgress);
       }
       if (bwPdfFile) {
         setPdfUploadProgress(0);
-        const blob = await uploadPdfToBlob(savedId, bwPdfFile, setPdfUploadProgress);
-        await attachUploadedPdf(savedId, blob.pathname, bwPdfFile, "BW_PDF");
+        await uploadAndAttachPdf(savedId, bwPdfFile, setPdfUploadProgress, "BW_PDF");
       }
       if (rentalFiles.length > 0) {
         setRentalUploadProgress(0);
@@ -618,8 +616,7 @@ export function ProductForm({
                     hideLabel
                     accept="application/pdf"
                     onUpload={async (file, onProgress) => {
-                      const blob = await uploadPdfToBlob(productId, file, onProgress);
-                      await attachUploadedPdf(productId, blob.pathname, file, "BW_PDF");
+                      await uploadAndAttachPdf(productId, file, onProgress, "BW_PDF");
                     }}
                     onDone={router.refresh}
                   />
@@ -862,8 +859,7 @@ export function ProductForm({
                     hideLabel
                     accept="application/pdf"
                     onUpload={async (file, onProgress) => {
-                      const blob = await uploadPdfToBlob(productId, file, onProgress);
-                      await attachUploadedPdf(productId, blob.pathname, file);
+                      await uploadAndAttachPdf(productId, file, onProgress);
                     }}
                     onDone={router.refresh}
                   />
@@ -2515,25 +2511,53 @@ async function attachUploadedPdf(
   throw new Error(data?.error ?? "Could not attach uploaded PDF to this product.");
 }
 
-async function uploadPdfToBlob(
+/**
+ * Uploads a PDF straight to storage, then attaches it to the book. If
+ * either step fails, the uploaded file is removed again so failed attempts
+ * don't leave empty or unused PDFs behind in storage (the server refuses
+ * to attach a file that didn't arrive in full).
+ */
+async function uploadAndAttachPdf(
   productId: string,
   file: File,
-  onProgress: (percentage: number) => void
+  onProgress: (percentage: number) => void,
+  format: "COLOUR_PDF" | "BW_PDF" = "COLOUR_PDF"
 ) {
+  const key = pdfPathname(productId, file.name);
+  let uploadUrl: string;
   try {
-    const key = pdfPathname(productId, file.name);
-    const { uploadUrl } = await getPresignedUploadUrl({
+    ({ uploadUrl } = await getPresignedUploadUrl({
       kind: "pdf",
       productId,
       key,
       contentType: "application/pdf",
       fileSize: file.size,
-    });
-    await uploadToPresignedUrl(uploadUrl, file, "application/pdf", onProgress);
-    return { pathname: key };
+    }));
   } catch (error) {
     throw new Error(`Could not upload PDF: ${blobUploadErrorMessage(error)}`);
   }
+
+  try {
+    await uploadToPresignedUrl(uploadUrl, file, "application/pdf", onProgress);
+    await attachUploadedPdf(productId, key, file, format);
+  } catch (error) {
+    await removeUnattachedUpload(key);
+    throw new Error(
+      error instanceof Error && error.message.startsWith("The PDF")
+        ? error.message
+        : `Could not upload PDF: ${blobUploadErrorMessage(error)}`
+    );
+  }
+}
+
+/** Best-effort removal of an upload that never got attached. The server
+ * re-checks that nothing uses the file before deleting it. */
+async function removeUnattachedUpload(pathname: string) {
+  await fetch("/api/admin/storage/delete-orphan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pathname }),
+  }).catch(() => {});
 }
 
 /**

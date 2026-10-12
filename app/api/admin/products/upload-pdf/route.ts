@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
-import { savePrivatePdf, deletePrivatePdf } from "@/lib/storage";
+import { savePrivatePdf, deletePrivatePdf, getPrivatePdfSize } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { z } from "zod";
 
@@ -67,6 +67,26 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
       }
 
+      // The browser uploads straight to storage, so check the file really
+      // arrived in full before a book points buyers at it. An interrupted
+      // upload can leave an empty file behind — remove it rather than keep it.
+      const storedSize = await getPrivatePdfSize(pathname);
+      const incomplete = storedSize == null || storedSize === 0 || (fileSize != null && storedSize !== fileSize);
+      if (incomplete) {
+        if (storedSize != null && pathname !== product.privatePdfPath && pathname !== product.bwPrivatePdfPath) {
+          await deletePrivatePdf(pathname);
+        }
+        return NextResponse.json(
+          {
+            error:
+              storedSize == null
+                ? "The PDF didn't reach storage. Please upload it again."
+                : "The PDF upload didn't finish (the stored file is incomplete). Please upload it again.",
+          },
+          { status: 422 }
+        );
+      }
+
       const previousPath = currentPdfPath(product, format);
       if (previousPath && previousPath !== pathname && !sharedWithOtherFormat(product, format, previousPath)) {
         await deletePrivatePdf(previousPath);
@@ -74,7 +94,7 @@ export async function POST(request: NextRequest) {
 
       await prisma.product.update({
         where: { id: productId },
-        data: pdfFields(format, pathname, fileName ?? pathname.split("/").at(-1) ?? null, fileSize ?? null),
+        data: pdfFields(format, pathname, fileName ?? pathname.split("/").at(-1) ?? null, storedSize),
       });
       revalidateCatalogPaths(product.slug);
       return NextResponse.json({ status: "uploaded" });
