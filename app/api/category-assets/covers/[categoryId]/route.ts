@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { getCoverImage } from "@/lib/storage";
+import { assetNotFound, storageReadFailure } from "@/lib/storage/responses";
 
 interface RouteParams {
   params: Promise<{ categoryId: string }>;
@@ -21,7 +22,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   });
 
   if (!category?.coverImage || !category.coverImage.startsWith("covers/")) {
-    return NextResponse.json({ error: "Cover not found" }, { status: 404 });
+    return assetNotFound("Cover not found");
   }
 
   try {
@@ -34,7 +35,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         "Cache-Control": "public, max-age=31536000, immutable, s-maxage=31536000",
       },
     });
-  } catch {
-    return NextResponse.json({ error: "Cover not found" }, { status: 404 });
+  } catch (error) {
+    return storageReadFailure(error, "Category cover");
   }
 }

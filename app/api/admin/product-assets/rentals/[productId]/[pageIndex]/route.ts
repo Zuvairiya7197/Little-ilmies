@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { getRentalPage } from "@/lib/storage";
+import { assetNotFound, storageReadFailure } from "@/lib/storage/responses";
 
 interface RouteParams {
   params: Promise<{ productId: string; pageIndex: string }>;
@@ -20,7 +21,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { productId, pageIndex } = await params;
   const index = Number(pageIndex);
   if (!Number.isInteger(index) || index < 0) {
-    return NextResponse.json({ error: "Rental page not found" }, { status: 404 });
+    return assetNotFound("Rental page not found");
   }
 
   const product = await prisma.product.findUnique({
@@ -30,7 +31,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
   const pagePath = product?.rentalPageImagePaths[index];
   if (!product || !pagePath?.startsWith("rentals/")) {
-    return NextResponse.json({ error: "Rental page not found" }, { status: 404 });
+    return assetNotFound("Rental page not found");
   }
 
   try {
@@ -51,7 +52,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         "Cache-Control": "private, max-age=2592000, immutable",
       },
     });
-  } catch {
-    return NextResponse.json({ error: "Rental page not found" }, { status: 404 });
+  } catch (error) {
+    return storageReadFailure(error, "Rental page");
   }
 }

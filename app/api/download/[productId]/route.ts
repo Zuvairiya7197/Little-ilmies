@@ -4,6 +4,7 @@ import { getAuthSession } from "@/lib/auth/get-session";
 import { prisma } from "@/lib/db/prisma";
 import { getPrivatePdfDownloadUrl, streamPrivatePdf } from "@/lib/storage";
 import { pdfPathForFormat } from "@/lib/product-formats";
+import { storageReadFailure } from "@/lib/storage/responses";
 
 interface RouteParams {
   params: Promise<{ productId: string }>;
@@ -82,8 +83,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   let file: Awaited<ReturnType<typeof streamPrivatePdf>>;
   try {
     file = await streamPrivatePdf(pdfPath);
-  } catch {
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  } catch (error) {
+    return storageReadFailure(error, "This PDF");
   }
 
   await prisma.download.update({

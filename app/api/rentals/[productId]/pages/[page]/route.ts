@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getActiveRentalEntitlement } from "@/lib/rentals/entitlement";
 import { getRentalPage, getRentalPageUrl } from "@/lib/storage";
+import { storageReadFailure } from "@/lib/storage/responses";
 
 interface RouteParams {
   params: Promise<{ productId: string; page: string }>;
@@ -48,8 +49,8 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   let buffer: Buffer;
   try {
     buffer = await getRentalPage(pagePath);
-  } catch {
-    return NextResponse.json({ error: "Page not found" }, { status: 404 });
+  } catch (error) {
+    return storageReadFailure(error, "Book page");
   }
 
   return new NextResponse(new Uint8Array(buffer), {
