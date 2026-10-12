@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { AdminProductsList } from "@/components/admin/admin-products-list";
 import { productCoverUrl } from "@/lib/catalog-assets";
+import { getProductCompleteness } from "@/lib/admin/product-completeness";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -11,11 +13,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminProductsPage() {
-  const products = await prisma.product.findMany({
-    where: { archivedAt: null },
-    orderBy: { createdAt: "desc" },
-    include: { prices: { where: { format: "COLOUR_PDF" } }, categories: { include: { category: true } } },
-  });
+  const [products, pricingSettings] = await Promise.all([
+    prisma.product.findMany({
+      where: { archivedAt: null },
+      orderBy: { createdAt: "desc" },
+      include: { prices: true, categories: { include: { category: true } } },
+    }),
+    getPricingSettings(),
+  ]);
 
   return (
     <div>
@@ -36,10 +41,22 @@ export default async function AdminProductsPage() {
       </div>
 
       <AdminProductsList
-        products={products.map((product) => ({
-          ...product,
-          coverImage: productCoverUrl(product.id, product.coverImage),
-        }))}
+        products={products.map((product) => {
+          const { missing, liveFormats, displayPrices } = getProductCompleteness(
+            product,
+            pricingSettings.bookSaleDiscountPercentage
+          );
+          // Only what the list shows — never the private file paths.
+          return {
+            id: product.id,
+            title: product.title,
+            status: product.status,
+            coverImage: productCoverUrl(product.id, product.coverImage),
+            prices: displayPrices,
+            missing,
+            liveFormats,
+          };
+        })}
       />
     </div>
   );

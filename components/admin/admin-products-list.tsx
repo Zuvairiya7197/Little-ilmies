@@ -4,7 +4,7 @@ import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
 
@@ -13,34 +13,21 @@ type AdminProductListItem = {
   title: string;
   coverImage: string;
   status: "DRAFT" | "PUBLISHED";
-  categories: { category: { name: string } }[];
   prices: { currencyCode: string; regularPrice: number }[];
+  /** What still has to be added — see lib/admin/product-completeness.ts. */
+  missing: string[];
+  /** Formats currently for sale. */
+  liveFormats: string[];
 };
-
-// Stable color per category name (same name always gets the same chip
-// color) — cycles through the brand's rainbow palette used elsewhere in
-// admin, so categories are visually distinguishable at a glance.
-const CATEGORY_CHIP_COLORS = [
-  "bg-sage-50 text-sage-700",
-  "bg-gold-50 text-gold-700",
-  "bg-teal-50 text-teal-700",
-  "bg-blossom-50 text-blossom-700",
-  "bg-sunny-50 text-sunny-800",
-  "bg-lemon-50 text-lemon-800",
-  "bg-ink-100 text-ink-600",
-] as const;
-
-function categoryChipColor(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  return CATEGORY_CHIP_COLORS[Math.abs(hash) % CATEGORY_CHIP_COLORS.length];
-}
 
 export function AdminProductsList({ products }: { products: AdminProductListItem[] }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [onlyIncomplete, setOnlyIncomplete] = useState(false);
+  const incompleteCount = products.filter((product) => product.missing.length > 0).length;
+  const visibleProducts = onlyIncomplete ? products.filter((product) => product.missing.length > 0) : products;
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allSelected = products.length > 0 && selectedIds.length === products.length;
@@ -110,6 +97,15 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
           {hasSelection ? `${selectedIds.length} selected` : "Select books"}
         </label>
         <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gold-700">
+            <input
+              type="checkbox"
+              checked={onlyIncomplete}
+              onChange={(event) => setOnlyIncomplete(event.target.checked)}
+              className="h-4 w-4 rounded border-ink-200 text-gold-600 focus:ring-gold-400"
+            />
+            Needs attention ({incompleteCount})
+          </label>
           {message && <p className="text-sm font-semibold text-ink-400">{message}</p>}
           <button
             type="button"
@@ -128,7 +124,7 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
       </div>
 
       <ul className="divide-y divide-ink-100">
-        {products.map((product) => {
+        {visibleProducts.map((product) => {
           const inr = product.prices.find((p) => p.currencyCode === "INR");
           const usd = product.prices.find((p) => p.currencyCode === "USD");
           const isPublished = product.status === "PUBLISHED";
@@ -153,30 +149,33 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-ink-600">{product.title}</p>
-                  {product.categories.length > 0 ? (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {product.categories.map(({ category }) => (
+                  {product.missing.length > 0 ? (
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      <span className="text-[11px] font-semibold text-gold-700">Missing:</span>
+                      {product.missing.map((item) => (
                         <span
-                          key={category.name}
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${categoryChipColor(category.name)}`}
+                          key={item}
+                          className="inline-flex items-center gap-1 rounded-full bg-gold-50 px-2 py-0.5 text-[11px] font-semibold text-gold-700"
                         >
-                          {category.name}
+                          <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                          {item}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-1 text-xs text-ink-300">Uncategorized</p>
+                    <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-sage-700">
+                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      Ready
+                    </p>
+                  )}
+                  {product.liveFormats.length > 0 && (
+                    <p className="mt-1 text-[11px] text-ink-400">On sale: {product.liveFormats.join(" · ")}</p>
                   )}
                 </div>
                 <div className="hidden shrink-0 text-sm text-ink-500 sm:block">
                   {inr ? formatPrice(inr.regularPrice, "INR" as CurrencyCode) : "-"}
                   {" / "}
-                  {usd ? formatPrice(usd.regularPrice, "USD" as CurrencyCode) : (
-                    <span className="inline-flex items-center gap-1 text-gold-700">
-                      <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                      no USD price
-                    </span>
-                  )}
+                  {usd ? formatPrice(usd.regularPrice, "USD" as CurrencyCode) : "-"}
                 </div>
                 <span
                   className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold shadow-clay-sm ${
@@ -191,6 +190,9 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
         })}
         {products.length === 0 && (
           <li className="p-8 text-center text-sm text-ink-300">No products yet. Add your first book.</li>
+        )}
+        {products.length > 0 && visibleProducts.length === 0 && (
+          <li className="p-8 text-center text-sm text-sage-700">Every book is fully set up.</li>
         )}
       </ul>
     </div>
