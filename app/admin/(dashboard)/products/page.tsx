@@ -30,9 +30,6 @@ export default async function AdminProductsPage() {
           <Link href="/admin/storage-usage" className="text-sm font-semibold text-sage-700 hover:underline">
             Storage Usage
           </Link>
-          <Link href="/admin/rent-and-read-cleanup" className="text-sm font-semibold text-sage-700 hover:underline">
-            Rent &amp; Read Cleanup
-          </Link>
           <Link href="/admin/products/new" className="btn-primary">
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add Product
