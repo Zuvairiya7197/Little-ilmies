@@ -1732,6 +1732,15 @@ async function removeUploadedAsset(
   refresh: () => void,
   setError: (message: string | null) => void
 ) {
+  const confirmMessage = {
+    pdf: "Remove the colour PDF? Customers can't buy or download it until a new file is uploaded.",
+    bwPdf: "Remove the black & white PDF? Customers can't buy or download it until a new file is uploaded.",
+    cover: "Remove the cover image?",
+    preview: "Remove all free preview pages?",
+    rental: "Remove all Rent & Read pages? Active renters won't be able to read this book until pages are uploaded again.",
+  }[kind];
+  if (!window.confirm(`${confirmMessage} This can't be undone.`)) return;
+
   setError(null);
   const endpoint =
     kind === "pdf" || kind === "bwPdf"
@@ -2464,6 +2473,7 @@ async function removePreviewPage(
   refresh: () => void,
   setError: (message: string | null) => void
 ) {
+  if (!window.confirm(`Remove preview page ${index + 1}? This can't be undone.`)) return;
   setError(null);
   const res = await fetch("/api/admin/products/upload-preview", {
     method: "PATCH",
