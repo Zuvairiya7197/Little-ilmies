@@ -24,7 +24,7 @@
 const ALLOWED_KEY = /^(covers|previews)\/[A-Za-z0-9._\-/]+$/;
 const ONE_YEAR = 31536000;
 
-export default {
+const worker = {
   async fetch(request, env, ctx) {
     if (request.method !== "GET" && request.method !== "HEAD") {
       return plain("Method not allowed", 405);
@@ -76,6 +76,8 @@ export default {
     return request.method === "HEAD" ? new Response(null, response) : response;
   },
 };
+
+export default worker;
 
 function plain(body, status, extraHeaders = {}) {
   return new Response(body, {
