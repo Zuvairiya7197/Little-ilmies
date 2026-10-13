@@ -38,8 +38,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
   const signedUrl = await getRentalPageUrl(pagePath).catch(() => null);
   if (signedUrl) {
-    // The page bytes come straight from B2; this route only authorizes.
-    // The link expires in 2 minutes and is never cached.
+    // This route only authorizes; the page bytes come from the Cloudflare
+    // assets Worker (or straight from B2 if it isn't configured) through a
+    // link that expires within minutes. This redirect itself is never cached.
     const response = NextResponse.redirect(signedUrl, 302);
     response.headers.set("Cache-Control", "private, no-store");
     response.headers.set("X-Robots-Tag", "noindex, nofollow");

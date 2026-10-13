@@ -1,28 +1,32 @@
 /**
- * Little Ilmies public image CDN — a Cloudflare Worker.
+ * Little Ilmies file CDN — a Cloudflare Worker in front of the private
+ * Backblaze B2 bucket. Keeps a copy of each file at Cloudflare's edge so
+ * repeat requests don't count against B2's daily download allowance
+ * (traffic from B2 to Cloudflare is also free — Bandwidth Alliance).
  *
- * Serves ONLY book covers (covers/...) and free preview pages
- * (previews/...) from the private Backblaze B2 bucket, and caches each one
- * at Cloudflare's edge. Traffic from B2 to Cloudflare is free (Bandwidth
- * Alliance), and cached images never reach B2 at all, so storefront images
- * stop counting against B2's daily download allowance.
+ *  - covers/... and previews/...  are public (the shop shows them anyway).
+ *  - pdfs/... (paid PDFs) and rentals/... (Rent & Read pages) are served
+ *    ONLY for a link the site signed after its own login / purchase /
+ *    active-rental checks (lib/storage/signed-assets.ts). Links expire
+ *    within minutes; anything unsigned, expired or altered is refused
+ *    before the cache or B2 is touched.
  *
- * Paid PDFs (pdfs/...) and Rent & Read pages (rentals/...) are refused —
- * they keep going through the site's own access-checked routes.
- *
- * Setup (Cloudflare dashboard → Workers & Pages → Create → Worker, paste
- * this file, then Settings → Variables and Secrets):
- *   B2_ENDPOINT     e.g. https://s3.us-west-004.backblazeb2.com  (same as on Vercel)
- *   B2_REGION       e.g. us-west-004                             (same as on Vercel)
- *   B2_BUCKET_NAME  little-ilmies-files
- *   B2_KEY_ID       a READ-ONLY application key for that bucket   (secret)
- *   B2_APP_KEY      that key's secret                             (secret)
- * Then add a Custom Domain such as assets.littleilmies.com and set
- * ASSETS_CDN_DOMAIN=assets.littleilmies.com on Vercel and redeploy.
+ * Setup (Cloudflare dashboard → Workers & Pages → this Worker → Edit code,
+ * paste this file; Settings → Variables and Secrets):
+ *   B2_ENDPOINT            e.g. https://s3.us-east-005.backblazeb2.com
+ *   B2_REGION              e.g. us-east-005
+ *   B2_BUCKET_NAME         little-ilmies-files
+ *   B2_KEY_ID              a READ-ONLY application key for that bucket   (secret)
+ *   B2_APP_KEY             that key's secret                             (secret)
+ *   ASSETS_SIGNING_SECRET  same value as on Vercel                      (secret)
+ * Custom Domain: assets.littleilmies.com; on Vercel set
+ * ASSETS_CDN_DOMAIN=assets.littleilmies.com (and ASSETS_SIGNING_SECRET).
  */
 
-const ALLOWED_KEY = /^(covers|previews)\/[A-Za-z0-9._\-/]+$/;
+const PUBLIC_KEY = /^(covers|previews)\/[A-Za-z0-9._\-/]+$/;
+const PRIVATE_KEY = /^(pdfs|rentals)\/.+$/;
 const ONE_YEAR = 31536000;
+const THIRTY_DAYS = 2592000;
 
 const worker = {
   async fetch(request, env, ctx) {
@@ -37,47 +41,111 @@ const worker = {
     } catch {
       return plain("Not found", 404);
     }
-    if (!ALLOWED_KEY.test(key) || key.split("/").includes("..")) {
+    if (key.split("/").includes("..")) return plain("Not found", 404);
+
+    let clientHeaders;
+    let edgeTtl;
+    if (PUBLIC_KEY.test(key)) {
+      clientHeaders = { "Cache-Control": `public, max-age=${ONE_YEAR}, immutable`, "Access-Control-Allow-Origin": "*" };
+      edgeTtl = ONE_YEAR;
+    } else if (PRIVATE_KEY.test(key)) {
+      const download = url.searchParams.get("dl") ?? "";
+      if (!(await isValidSignature(env, key, url.searchParams.get("exp"), download, url.searchParams.get("sig")))) {
+        return plain("This link has expired. Please go back and try again.", 403);
+      }
+      clientHeaders = key.startsWith("pdfs/")
+        ? {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="${safeFileName(download) || "book.pdf"}"`,
+            "Cache-Control": "private, no-store",
+          }
+        : {
+            "Content-Disposition": "inline",
+            // The link itself stays valid for a few minutes, so let the
+            // reader's browser reuse the page when the renter flips back.
+            "Cache-Control": "private, max-age=300",
+            "X-Robots-Tag": "noindex, nofollow",
+          };
+      edgeTtl = THIRTY_DAYS;
+    } else {
       return plain("Not found", 404);
     }
 
-    // Keys are unique per upload (a new file always gets a new name), so a
-    // cached copy never goes stale. Query strings are ignored.
-    const cache = caches.default;
-    const cacheKey = new Request(`${url.origin}/${key}`, { method: "GET" });
-    const cached = await cache.match(cacheKey);
-    if (cached) return request.method === "HEAD" ? new Response(null, cached) : cached;
+    const file = await fromCacheOrB2(env, ctx, url, key, edgeTtl);
+    if (file instanceof Response) return file;
 
-    let upstream;
-    try {
-      upstream = await signedB2Get(env, key);
-    } catch (error) {
-      console.error("B2 request failed", error);
-      return plain("Temporarily unavailable", 503, { "Retry-After": "300" });
-    }
-
-    if (!upstream.ok) {
-      if (upstream.status === 404) return plain("Not found", 404);
-      // Log B2's reason (e.g. a daily cap) without caching the failure.
-      console.error(`B2 returned ${upstream.status} for ${key}: ${await upstream.text()}`);
-      return plain("Temporarily unavailable", 503, { "Retry-After": "300" });
-    }
-
-    const response = new Response(upstream.body, {
+    const response = new Response(request.method === "HEAD" ? null : file.body, {
       status: 200,
       headers: {
-        "Content-Type": upstream.headers.get("Content-Type") ?? "application/octet-stream",
-        "Cache-Control": `public, max-age=${ONE_YEAR}, immutable`,
-        "Access-Control-Allow-Origin": "*",
+        "Content-Type": file.contentType,
         "X-Content-Type-Options": "nosniff",
+        ...clientHeaders,
       },
     });
-    ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    return request.method === "HEAD" ? new Response(null, response) : response;
+    return response;
   },
 };
 
 export default worker;
+
+/**
+ * The file's bytes from Cloudflare's cache, or from B2 (then cached).
+ * Keys are unique per upload (a new file always gets a new name), so a
+ * cached copy never goes stale. Query strings never affect the cache key.
+ * Only reached after the access checks above.
+ */
+async function fromCacheOrB2(env, ctx, url, key, edgeTtl) {
+  const cache = caches.default;
+  const cacheKey = new Request(`${url.origin}/__cache/${encodeURIComponent(key)}`, { method: "GET" });
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return { body: cached.body, contentType: cached.headers.get("Content-Type") ?? "application/octet-stream" };
+  }
+
+  let upstream;
+  try {
+    upstream = await signedB2Get(env, key);
+  } catch (error) {
+    console.error("B2 request failed", error);
+    return plain("Temporarily unavailable", 503, { "Retry-After": "300" });
+  }
+
+  if (!upstream.ok) {
+    if (upstream.status === 404) return plain("Not found", 404);
+    // Log B2's reason (e.g. a daily cap) without caching the failure.
+    console.error(`B2 returned ${upstream.status} for ${key}: ${await upstream.text()}`);
+    return plain("Temporarily unavailable", 503, { "Retry-After": "300" });
+  }
+
+  const contentType = upstream.headers.get("Content-Type") ?? "application/octet-stream";
+  const [forClient, forCache] = upstream.body.tee();
+  ctx.waitUntil(
+    cache.put(
+      cacheKey,
+      new Response(forCache, {
+        headers: { "Content-Type": contentType, "Cache-Control": `public, max-age=${edgeTtl}` },
+      })
+    )
+  );
+  return { body: forClient, contentType };
+}
+
+/** Same message and HMAC-SHA256 as lib/storage/signed-assets.ts. */
+export async function isValidSignature(env, key, exp, download, sig) {
+  const secret = env.ASSETS_SIGNING_SECRET;
+  if (!secret || !exp || !sig || !/^\d+$/.test(exp)) return false;
+  if (Number(exp) < Math.floor(Date.now() / 1000)) return false;
+
+  const expected = toHex(await hmac(new TextEncoder().encode(secret), `${key}\n${exp}\n${download}`));
+  if (expected.length !== sig.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+  return diff === 0;
+}
+
+function safeFileName(name) {
+  return name.replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 120);
+}
 
 function plain(body, status, extraHeaders = {}) {
   return new Response(body, {

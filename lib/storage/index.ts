@@ -15,6 +15,7 @@ import {
   getB2Client,
   isB2Configured,
 } from "@/lib/storage/b2Client";
+import { signedAssetUrl } from "@/lib/storage/signed-assets";
 
 /**
  * Private file storage wrapper. In production, files are stored in
@@ -159,6 +160,14 @@ export async function streamPrivatePdf(relativePath: string) {
 export async function getPrivatePdfDownloadUrl(relativePath: string, downloadName: string): Promise<string | null> {
   if (!USE_B2_STORAGE) return null;
 
+  // Prefer the Cloudflare Worker: it keeps a copy of each PDF, so repeat
+  // downloads don't count against Backblaze's daily download allowance.
+  const workerUrl = signedAssetUrl(relativePath, {
+    expiresAt: Math.floor(Date.now() / 1000) + 300,
+    download: downloadName,
+  });
+  if (workerUrl) return workerUrl;
+
   const command = new GetObjectCommand({
     Bucket: getB2Bucket(),
     Key: relativePath,
@@ -300,6 +309,16 @@ export async function saveRentalPages(
  */
 export async function getRentalPageUrl(relativePath: string): Promise<string | null> {
   if (!USE_B2_STORAGE) return null;
+
+  // Via the Cloudflare Worker when configured (see getPrivatePdfDownloadUrl).
+  // The expiry is rounded to 5-minute steps so a page's link stays the same
+  // for a few minutes and the reader's browser can reuse it when the renter
+  // flips back, instead of fetching the page again.
+  const step = 300;
+  const workerUrl = signedAssetUrl(relativePath, {
+    expiresAt: (Math.floor(Date.now() / 1000 / step) + 2) * step,
+  });
+  if (workerUrl) return workerUrl;
 
   const command = new GetObjectCommand({
     Bucket: getB2Bucket(),
