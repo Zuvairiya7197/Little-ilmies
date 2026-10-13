@@ -4,6 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
 import sharp from "sharp";
+import { COVER_THUMB_WIDTH, coverThumbPath } from "@/lib/cover-thumb";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   DeleteObjectCommand,
@@ -393,12 +394,29 @@ async function compressCover(fileBuffer: Buffer, originalName: string) {
   }
 }
 
+async function makeCoverThumb(fileBuffer: Buffer): Promise<Buffer | null> {
+  try {
+    return await sharp(fileBuffer)
+      .resize({ width: COVER_THUMB_WIDTH, withoutEnlargement: true })
+      .webp({ quality: 72, effort: 6 })
+      .toBuffer();
+  } catch (error) {
+    console.error("Cover thumbnail failed; the full cover will be used instead", error);
+    return null;
+  }
+}
+
 export async function saveCoverImage(rawBuffer: Buffer, rawName: string): Promise<string> {
   const { fileBuffer, originalName } = await compressCover(rawBuffer, rawName);
   if (USE_B2_STORAGE) {
     const ext = path.extname(originalName) || ".jpg";
     const key = `covers/${safeFilename(originalName, ext)}`;
     await putObject(key, fileBuffer, contentTypeFor(originalName, "image/jpeg"));
+    // Small copy for cards/carts (see lib/cover-thumb.ts). Optional: the
+    // site falls back to the full cover if it's missing.
+    const thumbKey = coverThumbPath(key);
+    const thumb = thumbKey ? await makeCoverThumb(fileBuffer) : null;
+    if (thumbKey && thumb) await putObject(thumbKey, thumb, "image/webp").catch(() => {});
     return key;
   }
 
@@ -407,6 +425,9 @@ export async function saveCoverImage(rawBuffer: Buffer, rawName: string): Promis
   const filename = safeFilename(originalName, ext);
   const fullPath = assertWithin(COVERS_DIR, path.join(COVERS_DIR, filename));
   await writeFile(fullPath, fileBuffer);
+  const thumbPath = coverThumbPath(fullPath);
+  const thumb = thumbPath ? await makeCoverThumb(fileBuffer) : null;
+  if (thumbPath && thumb) await writeFile(thumbPath, thumb).catch(() => {});
   return path.relative(PRIVATE_ROOT, fullPath);
 }
 
@@ -422,13 +443,17 @@ export async function getCoverImage(relativePath: string): Promise<Buffer> {
 export async function deleteCoverImage(relativePath: string): Promise<void> {
   if (!relativePath.startsWith("covers/")) return;
 
+  const thumbPath = coverThumbPath(relativePath);
+
   if (USE_B2_STORAGE) {
     await deleteObject(relativePath).catch(() => {});
+    if (thumbPath) await deleteObject(thumbPath).catch(() => {});
     return;
   }
 
   const fullPath = assertWithin(COVERS_DIR, path.join(PRIVATE_ROOT, relativePath));
   await unlink(fullPath).catch(() => {});
+  if (thumbPath) await unlink(assertWithin(COVERS_DIR, path.join(PRIVATE_ROOT, thumbPath))).catch(() => {});
 }
 
 // ---------------------------------------------------------------------------

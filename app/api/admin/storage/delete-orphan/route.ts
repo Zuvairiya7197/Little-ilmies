@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
     const { pathname } = parsed.data;
+    // A cover's small copy (x.thumb.webp) belongs to the cover x.webp.
+    const thumbOwner = pathname.endsWith(".thumb.webp") ? pathname.replace(/\.thumb\.webp$/, ".webp") : null;
+    const coverPaths = thumbOwner ? [pathname, thumbOwner] : [pathname];
 
     const [productMatch, categoryMatch] = await Promise.all([
       prisma.product.findFirst({
@@ -29,14 +32,14 @@ export async function POST(request: NextRequest) {
           OR: [
             { privatePdfPath: pathname },
             { bwPrivatePdfPath: pathname },
-            { coverImage: pathname },
+            { coverImage: { in: coverPaths } },
             { previewImagePaths: { has: pathname } },
             { rentalPageImagePaths: { has: pathname } },
           ],
         },
         select: { id: true },
       }),
-      prisma.category.findFirst({ where: { coverImage: pathname }, select: { id: true } }),
+      prisma.category.findFirst({ where: { coverImage: { in: coverPaths } }, select: { id: true } }),
     ]);
 
     if (productMatch || categoryMatch) {

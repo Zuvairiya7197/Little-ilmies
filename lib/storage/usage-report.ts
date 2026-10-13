@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { coverThumbPath } from "@/lib/cover-thumb";
 import { listAllBlobStorageEntries, type BlobStorageEntry } from "@/lib/storage";
 
 /** Who uses a stored file and as what, e.g. "ABC Book" / "Colour PDF". */
@@ -81,6 +82,7 @@ export async function getStorageUsageReport(): Promise<StorageUsageReport> {
     addUse(product.privatePdfPath, { ...base, role: "Colour PDF" });
     addUse(product.bwPrivatePdfPath, { ...base, role: "B&W PDF" });
     addUse(product.coverImage, { ...base, role: "Cover image" });
+    addUse(coverThumbPath(product.coverImage), { ...base, role: "Cover image (small copy)" });
     product.previewImagePaths.forEach((p, i) => addUse(p, { ...base, role: `Preview page ${i + 1}` }));
     product.rentalPageImagePaths.forEach((p, i) => addUse(p, { ...base, role: `Rent & Read page ${i + 1}` }));
   }
@@ -90,6 +92,13 @@ export async function getStorageUsageReport(): Promise<StorageUsageReport> {
       role: "Category cover",
       href: `/admin/categories/${category.id}`,
     });
+    if (category.coverImage) {
+      addUse(coverThumbPath(category.coverImage), {
+        owner: category.name,
+        role: "Category cover (small copy)",
+        href: `/admin/categories/${category.id}`,
+      });
+    }
   }
 
   const groupMap = new Map<StorageUsageGroup["prefix"], StorageUsageGroup>();
