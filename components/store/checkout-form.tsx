@@ -23,6 +23,7 @@ import {
   Heart,
   Download,
   BookOpen,
+  Apple,
 } from "lucide-react";
 import { checkoutSchema, type CheckoutFormValues } from "@/lib/validation/checkout";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
@@ -33,7 +34,7 @@ import { cn } from "@/lib/utils/cn";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
 import { isPaypalSupportedCurrency, PAYPAL_UNSUPPORTED_CURRENCIES } from "@/lib/payments/paypal";
 
-type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "paypal";
+type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "paypal" | "applepay";
 
 const paymentMethods: { id: PaymentMethod; label: string; description: string; icon: typeof Smartphone; badge?: string }[] = [
   { id: "upi", label: "UPI", description: "Pay using any UPI app", icon: Smartphone },
@@ -41,6 +42,7 @@ const paymentMethods: { id: PaymentMethod; label: string; description: string; i
   { id: "netbanking", label: "Net Banking", description: "All major banks supported", icon: Landmark },
   { id: "wallet", label: "Paytm Wallet", description: "Fast and secure payment", icon: Wallet },
   { id: "paypal", label: "PayPal", description: "Pay with your PayPal account", icon: Wallet },
+  { id: "applepay", label: "Apple Pay", description: "Pay with Face ID or Touch ID", icon: Apple },
 ];
 
 // PayPal can only collect international currencies (Razorpay rejects it for
@@ -54,10 +56,25 @@ const internationalPaymentMethodIds: PaymentMethod[] = ["paypal", "card"];
 // the buyer is offered PayPal at the USD price instead.
 const cardOnlyPaymentMethodIds: PaymentMethod[] = ["card"];
 
-function getPaymentMethodIdsForCurrency(currencyCode: string | undefined): PaymentMethod[] {
+function getPaymentMethodIdsForCurrency(currencyCode: string | undefined, canUseApplePay: boolean): PaymentMethod[] {
   if (currencyCode === "INR") return inrPaymentMethodIds;
-  if (currencyCode && !isPaypalSupportedCurrency(currencyCode)) return cardOnlyPaymentMethodIds;
-  return internationalPaymentMethodIds;
+  const ids = currencyCode && !isPaypalSupportedCurrency(currencyCode)
+    ? cardOnlyPaymentMethodIds
+    : internationalPaymentMethodIds;
+  // Our Apple Pay is international-only, so it's offered to non-INR buyers,
+  // and only on a device/browser that reports Apple Pay is set up.
+  return canUseApplePay ? ["applepay", ...ids] : ids;
+}
+
+type ApplePaySessionLike = { canMakePayments(): boolean };
+
+function detectApplePay(): boolean {
+  try {
+    const session = (window as unknown as { ApplePaySession?: ApplePaySessionLike }).ApplePaySession;
+    return Boolean(session?.canMakePayments());
+  } catch {
+    return false;
+  }
 }
 
 const mobileTrustPoints = [
@@ -68,6 +85,9 @@ const mobileTrustPoints = [
 ] as const;
 
 function getRazorpayMethodConfig(method: PaymentMethod) {
+  // Razorpay has no method key for Apple Pay — it adds the button itself on
+  // eligible devices — so this checkout leaves its method list unfiltered.
+  if (method === "applepay") return undefined;
   return {
     netbanking: method === "netbanking",
     card: method === "card",
@@ -77,7 +97,18 @@ function getRazorpayMethodConfig(method: PaymentMethod) {
   };
 }
 
-function getRazorpayDisplayConfig(method: PaymentMethod) {
+function getRazorpayDisplayConfig(method: PaymentMethod, currencyCode: string) {
+  if (method === "applepay") {
+    return {
+      // Razorpay's default list is where its Apple Pay button lives; cards
+      // stay alongside it in case the wallet payment is declined.
+      ...(isPaypalSupportedCurrency(currencyCode) ? {} : { hide: [{ method: "wallet", wallets: ["paypal"] }] }),
+      preferences: {
+        show_default_blocks: true,
+      },
+    };
+  }
+
   if (method === "paypal") {
     return {
       blocks: {
@@ -118,14 +149,21 @@ export function CheckoutForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showPaypalFallback, setShowPaypalFallback] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
+  const [canUseApplePay, setCanUseApplePay] = useState(false);
   const isRazorpayReady = useRazorpayScript();
+
+  // ApplePaySession only exists in Safari on Apple devices, so this is read
+  // after mount to keep the server render identical.
+  useEffect(() => {
+    setCanUseApplePay(detectApplePay());
+  }, []);
 
   const subtotal = lineItems.reduce((sum, i) => sum + i.lineTotal, 0);
   const regularSubtotal = lineItems.reduce((sum, i) => sum + i.regularUnitPrice * i.quantity, 0);
   const savings = Math.max(0, regularSubtotal - subtotal);
   const currencyCode = lineItems[0]?.currencyCode;
   const isInrCheckout = currencyCode === "INR";
-  const allowedPaymentMethodIds = getPaymentMethodIdsForCurrency(currencyCode);
+  const allowedPaymentMethodIds = getPaymentMethodIdsForCurrency(currencyCode, canUseApplePay);
   // Ordered by the allowed list, with its first entry marked as recommended.
   const availablePaymentMethods = allowedPaymentMethodIds.map((id, index) => {
     const method = paymentMethods.find((m) => m.id === id)!;
@@ -206,7 +244,7 @@ export function CheckoutForm({
 
       // The server decides the final currency, so re-check the selection
       // against it rather than trusting what the UI showed.
-      const allowedForOrder = getPaymentMethodIdsForCurrency(createData.currencyCode);
+      const allowedForOrder = getPaymentMethodIdsForCurrency(createData.currencyCode, canUseApplePay);
       const requestedPaymentMethod: PaymentMethod = paypalFallback ? "paypal" : paymentMethod;
       const selectedPaymentMethod: PaymentMethod = allowedForOrder.includes(requestedPaymentMethod)
         ? requestedPaymentMethod
@@ -226,7 +264,7 @@ export function CheckoutForm({
         // Keep Razorpay Checkout aligned with the payment method selected in
         // our UI instead of showing its generic/default method list.
         method: getRazorpayMethodConfig(selectedPaymentMethod),
-        display: getRazorpayDisplayConfig(selectedPaymentMethod),
+        display: getRazorpayDisplayConfig(selectedPaymentMethod, createData.currencyCode),
         handler: async (response: {
           razorpay_order_id: string;
           razorpay_payment_id: string;
@@ -260,7 +298,10 @@ export function CheckoutForm({
 
       // A failed card in a currency PayPal can't collect (AED) unlocks the
       // PayPal-in-USD fallback once the buyer closes the Razorpay window.
-      if (selectedPaymentMethod === "card" && PAYPAL_UNSUPPORTED_CURRENCIES.has(createData.currencyCode)) {
+      if (
+        (selectedPaymentMethod === "card" || selectedPaymentMethod === "applepay") &&
+        PAYPAL_UNSUPPORTED_CURRENCIES.has(createData.currencyCode)
+      ) {
         razorpay.on("payment.failed", () => setShowPaypalFallback(true));
       }
 

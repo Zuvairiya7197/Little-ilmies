@@ -29,6 +29,16 @@ const nextConfig: NextConfig = {
   // exist as real routes (Phase 2+) — typedRoutes rejects links to routes
   // that haven't been created yet.
   typedRoutes: false,
+  // Apple Pay domain verification expects this extension-less file as
+  // text/plain (Next would otherwise send application/octet-stream).
+  async headers() {
+    return [
+      {
+        source: "/.well-known/apple-developer-merchantid-domain-association",
+        headers: [{ key: "Content-Type", value: "text/plain" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
