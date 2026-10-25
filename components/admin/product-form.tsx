@@ -46,6 +46,7 @@ import { formatPrice } from "@/lib/utils/format";
 import { calculateRentalPrice } from "@/lib/rentals/pricing";
 import { RENTAL_CURRENCY_CODE, RENTAL_DURATION_DAYS, RENTAL_PERCENTAGE } from "@/lib/rentals/config";
 import { PDFDocument } from "pdf-lib";
+import { compressPdfInBrowser } from "@/lib/admin/compress-pdf";
 
 interface CategoryOption {
   id: string;
@@ -138,6 +139,7 @@ export function ProductForm({
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [bwPdfFile, setBwPdfFile] = useState<File | null>(null);
+  const [compressPdfs, setCompressPdfs] = useState(true);
   const [pdfUploadProgress, setPdfUploadProgress] = useState<number | null>(null);
   const [rentalUploadProgress, setRentalUploadProgress] = useState<number | null>(null);
   const [rentalFiles, setRentalFiles] = useState<File[]>([]);
@@ -287,11 +289,11 @@ export function ProductForm({
       }
       if (pdfFile) {
         setPdfUploadProgress(0);
-        await uploadAndAttachPdf(savedId, pdfFile, setPdfUploadProgress);
+        await uploadAndAttachPdf(savedId, pdfFile, setPdfUploadProgress, "COLOUR_PDF", compressPdfs);
       }
       if (bwPdfFile) {
         setPdfUploadProgress(0);
-        await uploadAndAttachPdf(savedId, bwPdfFile, setPdfUploadProgress, "BW_PDF");
+        await uploadAndAttachPdf(savedId, bwPdfFile, setPdfUploadProgress, "BW_PDF", compressPdfs);
       }
       if (rentalFiles.length > 0) {
         setRentalUploadProgress(0);
@@ -579,6 +581,17 @@ export function ProductForm({
           Each format is offered only when it is enabled here, its file or pages are uploaded and it has a price.
           Disabled or incomplete formats never appear in the store and can&apos;t be bought.
         </p>
+        <div className="mt-3">
+          <Checkbox
+            label="Compress PDFs before upload (recommended)"
+            checked={compressPdfs}
+            onChange={(e) => setCompressPdfs(e.target.checked)}
+          />
+          <p className="text-xs text-ink-300">
+            Shrinks print exports (often by 40%) in your browser before uploading, keeping text sharp and images at
+            print quality. Takes up to a minute for a large book. Untick to upload a PDF exactly as it is.
+          </p>
+        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <FormatToggle
             title="Colour Printable PDF"
@@ -619,9 +632,9 @@ export function ProductForm({
                     label={currentFiles?.hasBwPdf ? "Replace B&W PDF" : "Upload B&W PDF"}
                     hideLabel
                     accept="application/pdf"
-                    onUpload={async (file, onProgress) => {
-                      await uploadAndAttachPdf(productId, file, onProgress, "BW_PDF");
-                    }}
+                    onUpload={(file, onProgress) =>
+                      uploadAndAttachPdf(productId, file, onProgress, "BW_PDF", compressPdfs)
+                    }
                     onDone={router.refresh}
                   />
                 </div>
@@ -876,9 +889,9 @@ export function ProductForm({
                     label="Replace colour PDF"
                     hideLabel
                     accept="application/pdf"
-                    onUpload={async (file, onProgress) => {
-                      await uploadAndAttachPdf(productId, file, onProgress);
-                    }}
+                    onUpload={(file, onProgress) =>
+                      uploadAndAttachPdf(productId, file, onProgress, "COLOUR_PDF", compressPdfs)
+                    }
                     onDone={router.refresh}
                   />
                 </div>
@@ -948,7 +961,7 @@ export function ProductForm({
                     />
                   </div>
                   <p className="mt-1.5 text-xs font-semibold text-ink-400">
-                    Uploading PDF {Math.round(pdfUploadProgress)}%
+                    {compressPdfs ? "Compressing and uploading" : "Uploading"} PDF {Math.round(pdfUploadProgress)}%
                   </p>
                 </div>
               )}
@@ -1559,7 +1572,8 @@ function InstantFileUpload({
 }: {
   label: string;
   accept: string;
-  onUpload: (file: File, onProgress: (percentage: number) => void) => Promise<void>;
+  /** May resolve to a short note shown under the field once done. */
+  onUpload: (file: File, onProgress: (percentage: number) => void) => Promise<string | void>;
   onDone?: () => void;
   hideLabel?: boolean;
 }) {
@@ -1567,14 +1581,16 @@ function InstantFileUpload({
   const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
 
   async function handleAdd() {
     if (!file) return;
     setStatus("uploading");
     setError(null);
+    setNote(null);
     setProgress(0);
     try {
-      await onUpload(file, setProgress);
+      setNote((await onUpload(file, setProgress)) || null);
       setStatus("done");
       onDone?.();
     } catch (err) {
@@ -1627,6 +1643,7 @@ function InstantFileUpload({
         </div>
       )}
       {error && <p className="mt-1.5 text-xs text-gold-700">{error}</p>}
+      {note && status === "done" && <p className="mt-1.5 text-xs text-ink-400">{note}</p>}
     </div>
   );
 }
@@ -2537,10 +2554,20 @@ async function attachUploadedPdf(
  */
 async function uploadAndAttachPdf(
   productId: string,
-  file: File,
+  original: File,
   onProgress: (percentage: number) => void,
-  format: "COLOUR_PDF" | "BW_PDF" = "COLOUR_PDF"
-) {
+  format: "COLOUR_PDF" | "BW_PDF" = "COLOUR_PDF",
+  compress = true
+): Promise<string> {
+  // Compression fills the first 60% of the progress bar, the upload the rest.
+  const compressShare = compress ? 60 : 0;
+  const compression = compress
+    ? await compressPdfInBrowser(original, (percentage) => onProgress((percentage * compressShare) / 100))
+    : null;
+  const file = compression?.file ?? original;
+  const uploadProgress = (percentage: number) =>
+    onProgress(compressShare + (percentage * (100 - compressShare)) / 100);
+
   const key = pdfPathname(productId, file.name);
   let uploadUrl: string;
   try {
@@ -2556,7 +2583,7 @@ async function uploadAndAttachPdf(
   }
 
   try {
-    await uploadToPresignedUrl(uploadUrl, file, "application/pdf", onProgress);
+    await uploadToPresignedUrl(uploadUrl, file, "application/pdf", uploadProgress);
     await attachUploadedPdf(productId, key, file, format);
   } catch (error) {
     await removeUnattachedUpload(key);
@@ -2566,6 +2593,12 @@ async function uploadAndAttachPdf(
         : `Could not upload PDF: ${blobUploadErrorMessage(error)}`
     );
   }
+
+  if (!compression) return `Uploaded without compressing (${formatBytes(file.size)}).`;
+  return compression.compressed
+    ? `Compressed ${formatBytes(compression.originalSize)} → ${formatBytes(file.size)} ` +
+        `(${Math.round((1 - file.size / compression.originalSize) * 100)}% smaller).`
+    : `Uploaded the original (${formatBytes(file.size)}): not compressed because ${compression.reason}.`;
 }
 
 /** Best-effort removal of an upload that never got attached. The server

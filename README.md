@@ -270,7 +270,11 @@ local disk.
 
 Admins upload large files straight from the browser to B2
 (`/api/admin/products/client-upload` hands out a short-lived upload link), so
-they never pass through a Vercel function.
+they never pass through a Vercel function. PDFs are first compressed in the
+admin's browser with Ghostscript (`lib/admin/compress-pdf.ts`,
+`public/workers/compress-pdf.js`), which often makes Canva exports 40–90%
+smaller. The original is uploaded instead if compression fails or saves less
+than 10%, and admins can turn it off on the product page.
 
 ### Sign-in
 
