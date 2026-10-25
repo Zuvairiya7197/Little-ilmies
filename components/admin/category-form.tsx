@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, AlertTriangle, Upload } from "lucide-react";
 import { categoryFormSchema, type CategoryFormValues } from "@/lib/validation/admin-category";
+import { uploadCover } from "@/lib/admin/upload-cover";
 import {
   FEATURED_CATEGORY_ACCENT_KEYS,
   FEATURED_CATEGORY_ICON_KEYS,
@@ -80,14 +81,11 @@ export function CategoryForm({
       const savedId = categoryId ?? data.id;
 
       if (coverFile && savedId) {
-        const fd = new FormData();
-        fd.append("file", coverFile);
-        fd.append("categoryId", savedId);
-        const uploadRes = await fetch("/api/admin/categories/upload-cover", { method: "POST", body: fd });
-        if (!uploadRes.ok) {
-          const uploadData = await uploadRes.json().catch(() => null);
-          throw new Error(uploadData?.error ?? "Category was saved, but the cover image could not be uploaded.");
-        }
+        await uploadCover({ categoryId: savedId }, coverFile).catch((error) => {
+          throw new Error(
+            `Category was saved, but the cover image could not be uploaded: ${error instanceof Error ? error.message : "unknown error"}`
+          );
+        });
       }
 
       router.push("/admin/categories");

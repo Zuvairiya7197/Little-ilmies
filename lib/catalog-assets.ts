@@ -27,6 +27,13 @@ export function categoryCoverUrl(categoryId: string, coverImage: string) {
   return coverImage;
 }
 
+/** A cover the admin's browser uploaded straight to storage for this book
+ * or category: covers/<ownerId>/<name>.webp (see lib/admin/upload-cover.ts). */
+export function isUploadedCoverPath(pathname: string, ownerId: string) {
+  const prefix = `covers/${ownerId}/`;
+  return pathname.startsWith(prefix) && /^[A-Za-z0-9_-]+\.webp$/.test(pathname.slice(prefix.length));
+}
+
 export function productPreviewUrls(productId: string, previewImagePaths: string[]) {
   return previewImagePaths.map((path, index) => {
     if (!path.startsWith("previews/")) return path;

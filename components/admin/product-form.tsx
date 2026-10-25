@@ -47,6 +47,9 @@ import { calculateRentalPrice } from "@/lib/rentals/pricing";
 import { RENTAL_CURRENCY_CODE, RENTAL_DURATION_DAYS, RENTAL_PERCENTAGE } from "@/lib/rentals/config";
 import { PDFDocument } from "pdf-lib";
 import { compressPdfInBrowser } from "@/lib/admin/compress-pdf";
+import { compressPageImage } from "@/lib/admin/compress-image";
+import { getPresignedUploadUrl, removeUnattachedUpload, uploadToPresignedUrl } from "@/lib/admin/direct-upload";
+import { uploadCover } from "@/lib/admin/upload-cover";
 
 interface CategoryOption {
   id: string;
@@ -282,10 +285,7 @@ export function ProductForm({
       const savedId = productId ?? data.id;
 
       if (coverFile) {
-        const fd = new FormData();
-        fd.append("file", coverFile);
-        fd.append("productId", savedId);
-        await uploadFile("/api/admin/products/upload-cover", fd, "cover image");
+        await uploadCover({ productId: savedId }, coverFile);
       }
       if (pdfFile) {
         setPdfUploadProgress(0);
@@ -855,10 +855,7 @@ export function ProductForm({
                     accept="image/jpeg,image/png,image/webp"
                     onUpload={async (file, onProgress) => {
                       onProgress(0);
-                      const fd = new FormData();
-                      fd.append("file", file);
-                      fd.append("productId", productId);
-                      await uploadFile("/api/admin/products/upload-cover", fd, "cover image");
+                      await uploadCover({ productId }, file);
                       onProgress(100);
                     }}
                     onDone={router.refresh}
@@ -1880,8 +1877,8 @@ function DirectPreviewUploader({
     try {
       const pathnames: string[] = [];
       for (let i = 0; i < files.length; i++) {
-        const compressed = await compressImageInBrowser(files[i]);
-        const key = previewPathname(productId, files[i].name, existingCount + i);
+        const { file: compressed } = await compressPageImage(files[i]);
+        const key = previewPathname(productId, compressed.name, existingCount + i);
         const contentType = compressed.type || "image/jpeg";
         const { uploadUrl } = await getPresignedUploadUrl({
           kind: "preview",
@@ -2002,8 +1999,8 @@ function RentalPagesUploader({
   async function uploadItem(item: RentalPageUploadItem): Promise<boolean> {
     updateItem(item.id, { status: "uploading", progress: 0, error: undefined });
     try {
-      const compressed = await compressImageInBrowser(item.file);
-      const key = rentalPathname(productId, item.file.name, 0);
+      const { file: compressed } = await compressPageImage(item.file);
+      const key = rentalPathname(productId, compressed.name, 0);
       const contentType = compressed.type || "image/jpeg";
       const { uploadUrl } = await getPresignedUploadUrl({
         kind: "rental",
@@ -2519,16 +2516,6 @@ async function removePreviewPage(
   refresh();
 }
 
-async function uploadFile(endpoint: string, formData: FormData, label: string) {
-  const res = await fetch(endpoint, { method: "POST", body: formData });
-  if (res.ok) return;
-
-  const contentType = res.headers.get("content-type") ?? "";
-  const data = contentType.includes("application/json") ? await res.json().catch(() => null) : null;
-  const fallback = `${res.status} ${res.statusText}`.trim();
-  throw new Error(data?.error ?? `Could not upload ${label}${fallback ? ` (${fallback})` : ""}.`);
-}
-
 async function attachUploadedPdf(
   productId: string,
   pathname: string,
@@ -2601,16 +2588,6 @@ async function uploadAndAttachPdf(
     : `Uploaded the original (${formatBytes(file.size)}): not compressed because ${compression.reason}.`;
 }
 
-/** Best-effort removal of an upload that never got attached. The server
- * re-checks that nothing uses the file before deleting it. */
-async function removeUnattachedUpload(pathname: string) {
-  await fetch("/api/admin/storage/delete-orphan", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pathname }),
-  }).catch(() => {});
-}
-
 /**
  * Rental pages upload directly to B2 via a presigned URL (like the PDF)
  * rather than through our own server — a raw scan/export can be 15-30MB,
@@ -2630,8 +2607,8 @@ async function uploadRentalPages(
 ): Promise<void> {
   for (let index = 0; index < files.length; index++) {
     const original = files[index];
-    const file = await compressImageInBrowser(original);
-    const key = rentalPathname(productId, original.name, index);
+    const { file } = await compressPageImage(original);
+    const key = rentalPathname(productId, file.name, index);
     const contentType = file.type || "image/jpeg";
     const { uploadUrl } = await getPresignedUploadUrl({
       kind: "rental",
@@ -2674,96 +2651,14 @@ function rentalPathname(productId: string, filename: string, index: number) {
   return `rentals/${productId}/page-${index + 1}-${crypto.randomUUID()}${nameSlug ? `-${nameSlug}` : ""}${normalizedExt}`;
 }
 
-// Mirrors the server-side sharp() compression the finalize step used to do
-// (JPEG quality 85, max 2400px) — but here, in the browser, before the file
-// ever reaches B2. This is what lets an upload skip the old
-// download-from-B2-then-reupload round trip entirely: B2 only ever
-// receives the already-small final file, so the finalize call no longer
-// needs to read anything back to compress it (see finalizeRentalPage's
-// skipCompress flag below). Falls back to the original file untouched if
-// canvas encoding fails for any reason (e.g. an unsupported format).
+// Pages are compressed in the browser (lib/admin/compress-image.ts) before
+// they reach B2. The server only needs to read a page back from B2 and
+// compress it when the browser couldn't and the original is big — skipping
+// that step for every other page saves a function run + B2 read per page.
 const COMPRESS_ABOVE_BYTES_CLIENT = 1.5 * 1024 * 1024;
-const MAX_DIMENSION_CLIENT = 2400;
-const JPEG_QUALITY_CLIENT = 0.85;
 
-// The server only needs to read a page back from B2 and compress it when
-// the browser couldn't: the original was too big and came back untouched.
-// Pages already under the threshold need nothing, so skipping the finalize
-// step's B2 download for them saves a function run + B2 read per page.
 function needsServerCompression(original: File, uploaded: File) {
   return uploaded === original && original.size > COMPRESS_ABOVE_BYTES_CLIENT;
-}
-
-async function compressImageInBrowser(file: File): Promise<File> {
-  if (file.size <= COMPRESS_ABOVE_BYTES_CLIENT || !file.type.startsWith("image/")) return file;
-
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_DIMENSION_CLIENT / Math.max(bitmap.width, bitmap.height));
-    const width = Math.round(bitmap.width * scale);
-    const height = Math.round(bitmap.height * scale);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close();
-
-    const blob: Blob | null = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY_CLIENT)
-    );
-    if (!blob || blob.size >= file.size) return file;
-
-    const newName = file.name.replace(/\.(jpe?g|png|webp)$/i, ".jpg");
-    return new File([blob], newName, { type: "image/jpeg" });
-  } catch {
-    return file;
-  }
-}
-
-async function getPresignedUploadUrl(params: {
-  kind: "pdf" | "preview" | "rental";
-  productId: string;
-  key: string;
-  contentType: string;
-  fileSize: number;
-}): Promise<{ uploadUrl: string; key: string }> {
-  const res = await fetch("/api/admin/products/client-upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new Error(data?.error ?? "Failed to get an upload URL.");
-  }
-  return res.json();
-}
-
-/** Uploads a file directly to a presigned B2 URL via XHR (not fetch) so
- * upload progress events are available for the progress bar UI. */
-function uploadToPresignedUrl(
-  uploadUrl: string,
-  file: File,
-  contentType: string,
-  onProgress: (percentage: number) => void
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadUrl);
-    xhr.setRequestHeader("Content-Type", contentType);
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress((event.loaded / event.total) * 100);
-    };
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) resolve();
-      else reject(new Error(`Upload failed with status ${xhr.status}`));
-    };
-    xhr.onerror = () => reject(new Error("Network error during upload."));
-    xhr.send(file);
-  });
 }
 
 /**

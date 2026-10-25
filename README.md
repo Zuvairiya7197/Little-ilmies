@@ -274,7 +274,13 @@ they never pass through a Vercel function. PDFs are first compressed in the
 admin's browser with Ghostscript (`lib/admin/compress-pdf.ts`,
 `public/workers/compress-pdf.js`), which often makes Canva exports 40–90%
 smaller. The original is uploaded instead if compression fails or saves less
-than 10%, and admins can turn it off on the product page.
+than 10%, and admins can turn it off on the product page. Images are
+compressed in the browser too (`lib/admin/compress-image.ts`): preview and
+Rent & Read pages become WebP (quality 85, at most 2400px; JPEG where the
+browser can't make WebP), and covers become a 1200px WebP plus the 400px
+small copy, uploaded straight to B2 (`lib/admin/upload-cover.ts`). SVG
+covers, and browsers that can't make WebP, still go through the server,
+which compresses them with `sharp`.
 
 ### Sign-in
 

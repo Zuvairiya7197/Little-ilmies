@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getActiveRentalEntitlement } from "@/lib/rentals/entitlement";
 import { getRentalPage, getRentalPageUrl } from "@/lib/storage";
-import { storageReadFailure } from "@/lib/storage/responses";
+import { pageImageContentType, storageReadFailure } from "@/lib/storage/responses";
 
 interface RouteParams {
   params: Promise<{ productId: string; page: string }>;
@@ -57,7 +57,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   return new NextResponse(new Uint8Array(buffer), {
     status: 200,
     headers: {
-      "Content-Type": "image/jpeg",
+      "Content-Type": pageImageContentType(pagePath),
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
       "X-Robots-Tag": "noindex, nofollow",

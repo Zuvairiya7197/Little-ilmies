@@ -10,6 +10,13 @@ import { NextResponse } from "next/server";
  */
 const NO_STORE = { "Cache-Control": "no-store" };
 
+/** Content type for a preview or Rent & Read page. Pages compressed in
+ * the browser are WebP; older ones are JPEG (some still named .png), which
+ * browsers display fine under image/jpeg. */
+export function pageImageContentType(pathname: string) {
+  return pathname.endsWith(".webp") ? "image/webp" : "image/jpeg";
+}
+
 /** The file genuinely isn't there (or isn't public). */
 export function assetNotFound(message: string) {
   return NextResponse.json({ error: message }, { status: 404, headers: NO_STORE });

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { getRentalPage } from "@/lib/storage";
-import { assetNotFound, storageReadFailure } from "@/lib/storage/responses";
+import { assetNotFound, pageImageContentType, storageReadFailure } from "@/lib/storage/responses";
 
 interface RouteParams {
   params: Promise<{ productId: string; pageIndex: string }>;
@@ -38,7 +38,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const buffer = await getRentalPage(pagePath);
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
-        "Content-Type": "image/jpeg",
+        "Content-Type": pageImageContentType(pagePath),
         // The URL's ?v= query param is the exact storage key, so a given
         // URL always resolves to the same bytes forever — reordering,
         // replacing, or deleting a page always changes the key, which

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { getPreviewPages } from "@/lib/storage";
-import { assetNotFound, storageReadFailure } from "@/lib/storage/responses";
+import { assetNotFound, pageImageContentType, storageReadFailure } from "@/lib/storage/responses";
 
 interface RouteParams {
   params: Promise<{ productId: string; pageIndex: string }>;
@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const [buffer] = await getPreviewPages([previewPath]);
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
-        "Content-Type": "image/jpeg",
+        "Content-Type": pageImageContentType(previewPath),
         // s-maxage lets Vercel's edge cache this response for every
         // visitor after the first, instead of re-downloading from B2 on
         // every single request — see the covers route for the full

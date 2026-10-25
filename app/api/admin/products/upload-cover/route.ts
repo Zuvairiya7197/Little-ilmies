@@ -3,17 +3,46 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { deleteCoverImage, saveCoverImage } from "@/lib/storage";
 import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
-import { productCoverUrl } from "@/lib/catalog-assets";
+import { isUploadedCoverPath, productCoverUrl } from "@/lib/catalog-assets";
 import { z } from "zod";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"];
 const removeCoverSchema = z.object({ productId: z.string().min(1) });
+// A cover the browser already compressed and uploaded straight to storage
+// (lib/admin/upload-cover.ts), so only its path comes through here.
+const attachedCoverSchema = z.object({ productId: z.string().min(1), pathname: z.string().min(1) });
 
 export async function POST(request: NextRequest) {
   try {
     const denied = await requireAdminApi();
     if (denied) return denied;
+
+    if (request.headers.get("content-type")?.includes("application/json")) {
+      const parsed = attachedCoverSchema.safeParse(await request.json());
+      if (!parsed.success) {
+        return NextResponse.json({ error: "Invalid uploaded cover data" }, { status: 400 });
+      }
+      const { productId, pathname } = parsed.data;
+      if (!isUploadedCoverPath(pathname, productId)) {
+        return NextResponse.json({ error: "Invalid uploaded cover path" }, { status: 400 });
+      }
+
+      const product = await prisma.product.findUnique({
+        where: { id: productId },
+        select: { id: true, slug: true, coverImage: true },
+      });
+      if (!product) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+
+      await prisma.product.update({ where: { id: productId }, data: { coverImage: pathname } });
+      if (product.coverImage !== pathname) {
+        await deleteCoverImage(product.coverImage);
+      }
+      revalidateCatalogPaths(product.slug);
+      return NextResponse.json({ coverImage: productCoverUrl(productId, pathname) });
+    }
 
     const formData = await request.formData();
     const file = formData.get("file");

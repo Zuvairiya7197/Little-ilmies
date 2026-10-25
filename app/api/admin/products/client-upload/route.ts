@@ -4,6 +4,7 @@ import { PutObjectCommand, getB2Bucket, getB2Client, isB2Configured } from "@/li
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
 import { z } from "zod";
+import { isUploadedCoverPath } from "@/lib/catalog-assets";
 
 const MAX_PDF_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_PREVIEW_SIZE = 10 * 1024 * 1024; // 10MB per page
@@ -13,13 +14,19 @@ const MAX_PREVIEW_SIZE = 10 * 1024 * 1024; // 10MB per page
 // uncompressed scan/export, not the size actually kept long-term.
 const MAX_RENTAL_PAGE_SIZE = 30 * 1024 * 1024; // 30MB per page, pre-compression
 
-const requestSchema = z.object({
-  kind: z.enum(["pdf", "preview", "rental"]),
-  productId: z.string().min(1),
-  key: z.string().min(1),
-  contentType: z.string().min(1),
-  fileSize: z.number().int().min(0),
-});
+const MAX_COVER_SIZE = 5 * 1024 * 1024; // 5MB, already compressed in the browser
+
+const requestSchema = z
+  .object({
+    kind: z.enum(["pdf", "preview", "rental", "cover"]),
+    productId: z.string().min(1).optional(),
+    // Category covers belong to a category instead of a book.
+    categoryId: z.string().min(1).optional(),
+    key: z.string().min(1),
+    contentType: z.string().min(1),
+    fileSize: z.number().int().min(0),
+  })
+  .refine((body) => (body.kind === "cover" ? Boolean(body.productId) !== Boolean(body.categoryId) : Boolean(body.productId)));
 
 /**
  * Issues a presigned PUT URL for a direct browser-to-B2 upload — the
@@ -50,32 +57,47 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid upload request." }, { status: 400 });
     }
-    const { kind, productId, key, contentType, fileSize } = parsed.data;
+    const { kind, productId, categoryId, key, contentType, fileSize } = parsed.data;
 
-    const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
-    if (!product) {
-      return NextResponse.json({ error: "Product not found." }, { status: 404 });
+    const owner = categoryId
+      ? await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } })
+      : await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+    if (!owner) {
+      return NextResponse.json({ error: categoryId ? "Category not found." : "Product not found." }, { status: 404 });
     }
+    const ownerId = owner.id;
 
     const isPdf = kind === "pdf";
     const isRental = kind === "rental";
+    const isCover = kind === "cover";
     const validPath = isPdf
-      ? key.startsWith(`pdfs/${productId}/`) && key.endsWith(".pdf")
-      : isRental
-        ? key.startsWith(`rentals/${productId}/`) && /\.(jpe?g|png|webp)$/i.test(key)
-        : key.startsWith(`previews/${productId}/`) && /\.(jpe?g|png|webp)$/i.test(key);
+      ? key.startsWith(`pdfs/${ownerId}/`) && key.endsWith(".pdf")
+      : isCover
+        ? // The cover itself or its small copy (x.thumb.webp).
+          isUploadedCoverPath(key.replace(/\.thumb\.webp$/, ".webp"), ownerId)
+        : isRental
+          ? key.startsWith(`rentals/${ownerId}/`) && /\.(jpe?g|png|webp)$/i.test(key)
+          : key.startsWith(`previews/${ownerId}/`) && /\.(jpe?g|png|webp)$/i.test(key);
     if (!validPath) {
       return NextResponse.json({ error: "Invalid upload path." }, { status: 400 });
     }
 
     const allowedContentTypes = isPdf
       ? ["application/pdf"]
-      : ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+      : isCover
+        ? ["image/webp"]
+        : ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedContentTypes.includes(contentType)) {
       return NextResponse.json({ error: "Unsupported file type." }, { status: 415 });
     }
 
-    const maximumSizeInBytes = isPdf ? MAX_PDF_SIZE : isRental ? MAX_RENTAL_PAGE_SIZE : MAX_PREVIEW_SIZE;
+    const maximumSizeInBytes = isPdf
+      ? MAX_PDF_SIZE
+      : isCover
+        ? MAX_COVER_SIZE
+        : isRental
+          ? MAX_RENTAL_PAGE_SIZE
+          : MAX_PREVIEW_SIZE;
     if (fileSize > maximumSizeInBytes) {
       return NextResponse.json({ error: "File is too large." }, { status: 413 });
     }
