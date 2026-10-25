@@ -423,8 +423,9 @@ model CartItem {
 
 model Order {
   id              String      @id @default(cuid())
-  /// Nullable: a buyer can check out as a guest; the order is still linked
-  /// to their email and can be claimed on login with that same email.
+  /// Nullable: a buyer can check out as a guest. The order is linked to the
+  /// account with that email at payment (if one exists) or on that email's
+  /// next magic-link sign-in — see linkGuestOrdersToUser in lib/db/orders.ts.
   userId          String?
   buyerName       String
   buyerEmail      String

@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
+import { linkGuestOrdersToUser } from "@/lib/db/orders";
 
 const hasResendConfig = Boolean(process.env.RESEND_API_KEY);
 
@@ -88,6 +89,16 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  events: {
+    // Clicking the magic link proves the buyer owns this email, so any
+    // orders they placed as a guest with it now belong to their account.
+    async signIn({ user, account }) {
+      if (account?.provider !== "email" || !user.email) return;
+      await linkGuestOrdersToUser(user.id, user.email).catch((err) => {
+        console.error("Failed to link guest orders on sign-in:", err);
+      });
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

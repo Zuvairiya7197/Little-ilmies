@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { linkGuestOrdersToUser } from "@/lib/db/orders";
 import { sendOrderConfirmationEmail } from "@/lib/email/send-order-confirmation";
 import { FORMAT_SOURCE_SELECT, primaryPdfFormat } from "@/lib/product-formats";
 import { isPdfFormat } from "@/lib/formats";
@@ -37,6 +38,21 @@ export async function fulfillOrder({
   if (!order) return;
 
   if (order.status === "PAID") return; // already fulfilled — no-op
+
+  // A guest checkout whose email already belongs to a verified account
+  // goes straight to that account, so a buyer still signed in elsewhere
+  // sees it without signing in again. Emails with no account yet are
+  // linked on their first sign-in instead (see lib/auth/config.ts).
+  if (!order.userId) {
+    const owner = await prisma.user.findFirst({
+      where: { email: { equals: order.buyerEmail.trim(), mode: "insensitive" }, emailVerified: { not: null } },
+      select: { id: true },
+    });
+    if (owner) {
+      await linkGuestOrdersToUser(owner.id, order.buyerEmail);
+      order.userId = owner.id;
+    }
+  }
 
   const accessWrites: Prisma.PrismaPromise<unknown>[] = [];
 

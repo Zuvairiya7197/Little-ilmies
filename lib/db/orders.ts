@@ -13,6 +13,19 @@ import { downloadHref, formatName, isPdfFormat, type PdfFormat } from "@/lib/for
  * unverified client input for anything that gates access to purchased
  * content.
  */
+/**
+ * Moves guest orders (placed while logged out) under the account that owns
+ * their email, so the buyer's downloads and rentals show up there. Only
+ * call once that email is proven to belong to this user — a magic-link
+ * sign-in, or a user whose emailVerified is set.
+ */
+export async function linkGuestOrdersToUser(userId: string, email: string) {
+  return prisma.order.updateMany({
+    where: { userId: null, buyerEmail: { equals: email.trim(), mode: "insensitive" } },
+    data: { userId },
+  });
+}
+
 export async function getOrdersForUser(userId: string): Promise<OrderRecord[]> {
   const orders = await prisma.order.findMany({
     where: { userId, status: "PAID" },
