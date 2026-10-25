@@ -17,8 +17,11 @@ const GS_BASE = "https://cdn.jsdelivr.net/npm/@jspawn/ghostscript-wasm@0.0.2/";
 const GS_JS_SHA256 = "a42012ee915fff68dda2a13daee367f2af681d616a2af012e7520beea1086ad7";
 const GS_WASM_SHA256 = "4dceaac93a7586722d76c48cf8632fdac8407db4400bdb9772eebf61758d4161";
 
-// Same settings as the tested manual run: /printer keeps images at print
-// resolution (up to 300 dpi) and leaves text as real text.
+// /printer keeps images at print resolution (up to 300 dpi) and leaves text
+// as real text. Ghostscript copies JPEG images through untouched by default,
+// so a book Canva already exported as JPEG barely shrank (Beginner I:
+// 25.5 → 22.0 MB); re-saving them at /printer quality gets 14.1 MB with no
+// visible change. Books with lossless or CMYK images are unaffected.
 const GS_ARGS = [
   "-dNOPAUSE",
   "-dBATCH",
@@ -26,6 +29,7 @@ const GS_ARGS = [
   "-sDEVICE=pdfwrite",
   "-dCompatibilityLevel=1.6",
   "-dPDFSETTINGS=/printer",
+  "-dPassThroughJPEGImages=false",
   "-sOutputFile=/out.pdf",
   "/in.pdf",
 ];
