@@ -1,19 +1,49 @@
 # Little Ilmies
 
-A custom digital bookstore for Islamic and educational e-books for children — built with Next.js, TypeScript, Tailwind CSS, Prisma, and PostgreSQL.
+An online bookstore for Islamic and educational e-books for children, live at
+[littleilmies.com](https://littleilmies.com). Parents buy printable PDFs, or
+in India rent a book to read online for a few days. Built with Next.js,
+TypeScript, Tailwind CSS, Prisma and PostgreSQL.
 
-This is being built in phases. **Phases 1–6 complete: project setup, design system, layout, header/footer, homepage, shop page, product detail page, regional pricing, wishlist/cart/checkout UI, buyer/admin authentication with account dashboard, purchase history and downloads, the Razorpay payment backend with protected PDF downloads, and the full admin dashboard (products, categories, orders, buyers, coupons, downloads report).**
+## Features
+
+- **Storefront:** homepage sections (best sellers, new arrivals, shop by age
+  and learning goal, featured collections, a flip-through sample book), a
+  shop with filters and sorting, two-level categories, search, product pages
+  with free preview pages, wishlist and cart.
+- **Formats:** each book can be sold as a colour PDF, a black & white
+  (ink-friendly) PDF and Rent & Read. A "Hardcover · Coming Soon" card can be
+  shown but hardcovers can't be bought.
+- **Rent & Read (India only):** pay a fraction of the price to read the book
+  online for a set number of days (7 by default), with an option to upgrade
+  to the PDF for the difference.
+- **Bundles:** fixed bundles with set prices, and custom bundles where the
+  buyer picks a number of books for a discounted price.
+- **Regional pricing:** prices set by hand per currency (INR, USD, GBP, AED),
+  chosen from the visitor's country. The server decides the price at
+  checkout, never the browser.
+- **Payments:** Razorpay, with UPI, cards, netbanking, wallets, PayPal and
+  Apple Pay.
+- **Accounts:** password-free magic-link sign-in, purchase history,
+  downloads and rentals. Orders placed without logging in are linked to the
+  account with the same email.
+- **Admin dashboard** (`/admin`): products (including file uploads),
+  categories, bundles, coupons, orders and refunds, buyers, a downloads
+  report, pricing and storefront settings, and a storage-usage page.
 
 ## Stack
 
-- Next.js App Router + TypeScript
-- Tailwind CSS
-- Prisma ORM + PostgreSQL
-- Auth.js / NextAuth (buyer OTP/magic-link login, admin email+password)
-- Razorpay for payments
-- Zustand for cart/wishlist client state
-- Framer Motion for subtle interactions
-- Local private file storage for PDFs (`/private-uploads`), swappable for Cloudflare R2 later
+| Area | Tools |
+| --- | --- |
+| App | Next.js 15 (App Router), React 19, TypeScript |
+| Styling | Tailwind CSS, Framer Motion, lucide-react icons |
+| Data | PostgreSQL, Prisma |
+| Auth | NextAuth (Auth.js) v4 with JWT sessions |
+| Payments | Razorpay |
+| Email | Resend |
+| Files | Backblaze B2 (S3-compatible), behind a Cloudflare Worker |
+| Client state | Zustand (cart, wishlist, currency), saved in localStorage |
+| Hosting | Vercel, behind Cloudflare |
 
 ## Getting started
 
@@ -25,8 +55,7 @@ npm install
 
 ### 2. Set up PostgreSQL
 
-This project needs a running local PostgreSQL instance. If you don't already
-have one:
+You need a PostgreSQL database. To run one locally on Ubuntu:
 
 ```bash
 sudo apt-get update
@@ -36,8 +65,8 @@ sudo -u postgres createuser --superuser "$USER"
 createdb little_ilmies
 ```
 
-(Alternatively, use a free [Neon](https://neon.tech) Postgres database and
-skip straight to step 3 with Neon's connection string.)
+Or use a free [Neon](https://neon.tech) database and use its connection
+string in the next step.
 
 ### 3. Configure environment variables
 
@@ -45,24 +74,21 @@ skip straight to step 3 with Neon's connection string.)
 cp .env.example .env
 ```
 
-`.env` is already filled in with working local defaults (a generated
-`NEXTAUTH_SECRET`, `DATABASE_URL` pointing at `little_ilmies` on
-`localhost:5432`). If you used Neon instead, replace `DATABASE_URL`.
+For local development you only need `DATABASE_URL` and `NEXTAUTH_SECRET`
+(generate one with `openssl rand -base64 32`). Everything else can stay
+empty; see [Environment variables](#environment-variables) for what each one
+turns on.
 
-Email is intentionally left blank in `.env` for local dev — see "Buyer login
-in local development" below.
-
-### 4. Run migrations and seed demo data
+### 4. Create the tables and add demo data
 
 ```bash
-npx prisma migrate dev --name init
-npm run db:seed
+npm run db:deploy   # applies every migration in prisma/migrations
+npm run db:seed     # demo categories, books, prices and an admin account
 ```
 
-Seeding creates an admin account (`admin@littleilmies.com` / `changeme123`
-by default — override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` env
-vars before seeding) plus all demo categories, products, and regional
-prices from `data/`.
+The seed creates the admin `admin@littleilmies.com` / `changeme123`. Set
+`SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` before seeding to choose your
+own.
 
 ### 5. Start the dev server
 
@@ -70,174 +96,222 @@ prices from `data/`.
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). The admin dashboard is
+at [/admin](http://localhost:3000/admin).
 
-### Buyer login in local development
+### Working locally without external services
 
-Buyers sign in via a magic link emailed to them — there's no password. Since
-`.env` has no SMTP server configured locally, the link is **printed to the
-terminal running `npm run dev`** instead of actually being emailed (see
-`lib/auth/config.ts`'s `sendVerificationRequest`). Enter any email on
-`/login`, then copy the link from the terminal into your browser.
+- **Sign-in and emails:** without `RESEND_API_KEY`, magic links and order
+  emails are printed in the terminal running `npm run dev` instead of being
+  sent. Enter any email on `/login` and open the printed link.
+- **Files:** without the `B2_*` variables, uploads are saved to
+  `PRIVATE_UPLOADS_DIR` (`./private-uploads` in `.env.example`, git-ignored)
+  and served through the app's own routes.
+- **Payments:** checkout needs Razorpay test keys (`RAZORPAY_KEY_ID`,
+  `RAZORPAY_KEY_SECRET`). Without them, placing an order shows an error.
+- **Country:** locally there are no country headers, so the browser guesses
+  the currency for display and checkout charges USD. Rent & Read (India only)
+  is hidden.
 
-To send real emails instead, fill in `EMAIL_SERVER_HOST` /
-`EMAIL_SERVER_PORT` / `EMAIL_SERVER_USER` / `EMAIL_SERVER_PASSWORD` in
-`.env` with real SMTP credentials.
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Clears `.next` and starts the dev server |
+| `npm run build` | Generates the Prisma client, applies migrations, builds the app |
+| `npm run start` | Runs the production build |
+| `npm run lint` / `npm run typecheck` | ESLint / TypeScript checks |
+| `npm run db:migrate` | Creates a new migration after you edit `prisma/schema.prisma` |
+| `npm run db:deploy` | Applies pending migrations |
+| `npm run db:seed` | Loads the demo data from `data/` |
+| `npm run db:studio` | Opens Prisma Studio to browse the database |
+
+`npm run build` applies migrations itself, so every Vercel deploy brings the
+production database up to date.
+
+## Environment variables
+
+| Variable | Needed for |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection (required) |
+| `NEXTAUTH_SECRET`, `NEXTAUTH_URL` | Signing sessions and building sign-in links (required) |
+| `SITE_URL` | Links in emails, sitemap and SEO tags |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Sending magic links and order emails |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Taking payments |
+| `RAZORPAY_WEBHOOK_SECRET` | Checking the Razorpay webhook's signature |
+| `B2_KEY_ID`, `B2_APP_KEY`, `B2_BUCKET_NAME`, `B2_ENDPOINT`, `B2_REGION` | Storing files in Backblaze B2 (all but the region are needed together) |
+| `ASSETS_CDN_DOMAIN` | Serving files from the Cloudflare Worker (`assets.littleilmies.com`) |
+| `ASSETS_SIGNING_SECRET` | Signed links to paid PDFs and rental pages on the Worker (same value on the Worker) |
+| `PRIVATE_UPLOADS_DIR` | Local folder for uploads when B2 isn't set up (default `/tmp/private-uploads`) |
+| `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | The admin account created by the seed |
 
 ## Project structure
 
 ```
-app/                    Routes (App Router)
-  api/checkout/         create-order, verify-payment
-  api/webhooks/razorpay Razorpay webhook handler
-  api/download/[id]     Protected PDF download route
+app/                      Pages and API routes (App Router)
+  admin/                  Admin login and dashboard
+  account/                Buyer account: orders, downloads, rentals, details
+  read/[productId]/       Full-screen Rent & Read reader
+  api/checkout/           create-order, verify-payment
+  api/webhooks/razorpay/  Razorpay webhook
+  api/download/           Download route for paid PDFs
+  api/rentals/            Rental page images, one page per request
+  api/admin/              Admin APIs (products, uploads, orders, settings…)
+  api/product-assets/     Covers and preview pages when no CDN is set up
 components/
-  ui/                   Low-level primitives
-  store/                Storefront components (header, footer, product card, home sections)
-  book-preview/         Book-style e-book preview components
-  account/              Buyer account/dashboard components
-  admin/                Admin dashboard components (Phase 6)
+  store/                  Storefront (header, cards, shop, cart, checkout, home sections)
+  admin/                  Admin forms and lists
+  account/, rentals/, book-preview/, ui/, seo/, providers/
 lib/
-  db/                   Prisma client + queries
-  auth/                 Auth.js config
-  storage/              Private PDF/preview/cover storage abstraction (local disk; swap for R2 later)
-  payments/             Razorpay client, order creation, signature verification
-  checkout/             Shared order-fulfillment logic (used by both verify-payment and the webhook)
-  email/                Transactional email (order confirmation) + shared SMTP/dev-log sender
-  pricing/               Regional price resolution (display-side and DB-backed) + region verification
-  seo/                  Structured data helpers (Phase 7)
-  store/                Zustand stores (cart, wishlist, currency)
-  utils/                Shared helpers (cn, formatting)
-prisma/                 schema.prisma, migrations, seed.ts
-data/                   Demo catalog data (used to seed the database; not read at runtime)
-types/                  Shared TypeScript types
-styles/                 Global Tailwind styles
-private-uploads/        Full PDFs, sample previews, covers — never served directly
+  db/                     Prisma client and queries (catalog, orders, admin stats)
+  auth/                   NextAuth config and session/admin checks
+  pricing/                Country detection, regional prices, automatic discounts
+  payments/               Razorpay client and signature checks, PayPal currency rules
+  checkout/               fulfillOrder: marks an order paid and grants access
+  rentals/                Rent & Read rules, pricing and access check
+  storage/                B2 / local-disk storage, signed Worker links, storage report
+  bundles/                Custom bundle validation and order snapshots
+  settings/               Admin-editable settings (discounts, hardcover card)
+  email/                  Order confirmation and the shared Resend sender
+  store/                  Zustand stores (cart, wishlist, currency, search)
+  validation/             Zod schemas for forms and API requests
+  product-formats.ts      Which formats of a book can be bought, and at what price
+cloudflare/assets-worker.js  The Cloudflare Worker in front of B2
+prisma/                   schema.prisma, migrations, seed.ts
+data/                     Demo catalog used by the seed, plus a few fallbacks read at runtime
+hooks/, types/, styles/
 ```
+
+## How it works
+
+### Catalog and formats
+
+A `Product` has its own on/off switch and file for each PDF format
+(`colourPdfEnabled` / `privatePdfPath`, `bwPdfEnabled` / `bwPrivatePdfPath`),
+and its own `ProductPrice` rows per format and currency. Rent & Read needs
+`rentAndReadEnabled` plus uploaded page images (`rentalPageImagePaths`).
+
+`lib/product-formats.ts` is the single place that decides whether a format
+can be bought: it must be switched on, have its file and have a price. The
+storefront and checkout both use it, so a format the page doesn't show can't
+be bought by editing the cart.
+
+### Pricing
+
+- **Regional prices are set by hand**, not converted live (for example ₹300
+  and $4, not ₹300 ÷ 83). Amounts are stored in minor units (paise, cents).
+- **Country:** `lib/pricing/request-country.ts` uses Cloudflare's
+  `cf-ipcountry` only when the request really came through Cloudflare, and
+  otherwise Vercel's `x-vercel-ip-country`. India → INR, UK → GBP, UAE →
+  AED, everywhere else → USD.
+- **There is no currency picker.** `middleware.ts` saves the country in a
+  cookie so the browser can show prices, but checkout works the country out
+  again from the request and ignores anything the browser sends.
+- **Sale prices are automatic:** a store-wide discount (20% by default, set
+  in admin settings) is taken off every regular price and rounded down to a
+  price ending in 9 or .99 (`lib/pricing/automatic-pricing.ts`). Custom
+  bundles have their own discount (15% by default).
+- **Rental price:** a price set on the book, or else 25% of its INR sale
+  price, rounded up to ₹5, minimum ₹20.
+- **PayPal** can't charge AED, so a UAE buyer whose card fails can choose to
+  pay with PayPal at the USD price.
+
+### Checkout and payment
+
+1. `POST /api/checkout/create-order` receives only book IDs, formats and
+   quantities. It checks each line can be bought, prices it on the server,
+   saves a `PENDING` order and creates a Razorpay order. Rentals must be
+   checked out on their own, and only from India.
+2. The browser opens Razorpay Checkout.
+3. The payment is confirmed in two ways, and either is enough:
+   `/api/checkout/verify-payment` (checks Razorpay's signature as soon as the
+   buyer pays) and `/api/webhooks/razorpay` (in case the buyer closes the
+   page). Both call `fulfillOrder()` in `lib/checkout/fulfill-order.ts`,
+   which does nothing if the order is already paid.
+4. `fulfillOrder()` marks the order `PAID`, creates a `Download` row for each
+   PDF bought or a `RentalAccess` row with an end date (renting again extends
+   an active rental), and sends the confirmation email.
+5. **Guest orders:** checkout doesn't require logging in. A guest order is
+   linked to the account with the same email when the payment is confirmed
+   (if a verified account exists) or the next time that email signs in.
+6. **Refunds** (from the admin order page) set the order to `REFUNDED`.
+   Every access check requires a `PAID` order, so this removes access to the
+   download or rental straight away. Issue the money refund itself in the
+   Razorpay dashboard.
+
+### Files and delivery
+
+Files live in a private Backblaze B2 bucket under four prefixes:
+
+| Prefix | Contents | Who can get it |
+| --- | --- | --- |
+| `covers/` | Book and category covers (WebP, plus a 400px `.thumb.webp` for cards) | Anyone |
+| `previews/` | Free sample pages | Anyone |
+| `pdfs/` | Paid PDFs | Buyers, through a signed link |
+| `rentals/` | Every page of a book, for Rent & Read | Current renters, through a signed link |
+
+`cloudflare/assets-worker.js` runs at `assets.littleilmies.com` in front of
+the bucket and keeps a copy of each file at Cloudflare, so repeat requests
+don't count against B2's free daily download allowance or Vercel's bandwidth.
+
+For paid files, the site does the checks and then redirects to a Worker link
+signed with `ASSETS_SIGNING_SECRET`:
+
+- **PDFs:** `/api/download/[productId]` (`?format=bw` for black & white)
+  checks the buyer is logged in, has a verified email and owns that format
+  through a `PAID` order. The link expires after 5 minutes.
+- **Rental pages:** `/api/rentals/[productId]/pages/[page]` checks for an
+  active rental and returns one page at a time. The reader never receives the
+  PDF, and each page shows a watermark with the order number.
+
+The Worker refuses any link that is unsigned, expired or altered. Without the
+Worker settings, the site falls back to direct B2 links, and without B2 to
+local disk.
+
+Admins upload large files straight from the browser to B2
+(`/api/admin/products/client-upload` hands out a short-lived upload link), so
+they never pass through a Vercel function.
+
+### Sign-in
+
+- **Buyers** sign in with a magic link emailed through Resend. There are no
+  buyer passwords.
+- **Admins** sign in at `/admin/login` with email and password, and must have
+  `role = ADMIN`. The dashboard layout and every admin API check this.
+
+## Deployment
+
+Production runs on Vercel's free Hobby plan with Cloudflare in front, so the
+code tries to keep heavy traffic off Vercel:
+
+- Files come from the Cloudflare Worker, not from Vercel functions.
+- `next.config.ts` limits image sizes and formats and caches optimised images
+  for 31 days, to stay inside the free image allowance.
+- `middleware.ts` runs on page loads only, not on API or static requests.
+
+To deploy the Worker, paste `cloudflare/assets-worker.js` into the Worker in
+the Cloudflare dashboard and set the variables listed at the top of that file.
+Use a read-only B2 key there.
+
+In the Razorpay dashboard, point the webhook at
+`https://littleilmies.com/api/webhooks/razorpay` with the `payment.captured`
+and `payment.failed` events. The Apple Pay domain file is in
+`public/.well-known/`.
+
+## Known gaps
+
+- Coupons can be created in admin but aren't applied at checkout yet.
+- Tax is always 0.
 
 ## Design system
 
-- **Colors**: warm cream background, deep ink/navy text, soft sage + muted gold accents, dusty beige sections. See `tailwind.config.ts`.
-- **Typography**: Fraunces (serif, display/headings) + Plus Jakarta Sans (body).
-- **Breakpoints**: mobile-first, starting at 360px (`xs`), then `sm` 480px, `md` 768px (tablet), `lg` 1024px, `xl` 1280px, `2xl` 1440px.
-
-## Mobile-first principles used throughout
-
-- Layouts are authored for 360px first, then progressively enhanced for tablet/desktop.
-- All interactive controls use a 44px minimum tap target (`.tap-target` utility).
-- Filters, cart, and search use drawers/overlays rather than being squeezed into desktop layouts.
-- Horizontal snap-scroll carousels are used for category and product rails on mobile instead of cramped grids.
-
-## Roadmap
-
-1. ✅ Project setup, design system, layout, header, footer, homepage
-2. ✅ Shop page, product grid, sorting, filters, search, product detail page
-3. ✅ Book-style preview, wishlist, cart drawer + cart page, checkout UI
-4. ✅ Buyer login/logout (OTP/magic link), admin login (email+password), account dashboard, purchase history, downloads
-5. ✅ Razorpay integration, payment verification, webhooks, protected PDF downloads
-6. ✅ Admin dashboard: products, categories, PDFs, orders, coupons
-7. SEO, schema markup, sitemap/robots, performance and accessibility polish
-
-## Regional pricing
-
-Pricing is **manual per-region**, not live currency conversion — an admin sets
-an intentional price per currency (e.g. INR 300 shown as USD 4, not a
-converted 300÷83). Launch scope is deliberately **two regions**: India (INR)
-and International (USD). GBP/AED exist in the data model for later use but
-are not shown or detected yet.
-
-**Security model — this is the part that matters:** pricing region is fully
-automatic and detection-controlled. There is **no customer-facing currency
-selector anywhere** — not in the header, not at checkout. A customer cannot
-pick a cheaper region and complete checkout at that price, because there is
-nothing for them to pick. Every surface (product cards, product page, cart)
-shows exactly one price, in exactly one currency, resolved from detection —
-never both INR and USD side by side.
-
-- **Detection**: `middleware.ts` reads `x-vercel-ip-country` / `cf-ipcountry`
-  into a cookie; `lib/pricing/detect-currency.ts` falls back to a client-side
-  IP lookup (local dev) and finally to `navigator.language` region if IP
-  detection fails. Only `IN → INR`, everything else `→ USD`
-  (`types/pricing.ts` `COUNTRY_TO_CURRENCY`). This frontend detection is for
-  *display* while browsing only — `lib/pricing/verify-region.ts` re-derives
-  region server-side at checkout and is the actual source of truth (see
-  below).
-- **State**: `lib/store/use-currency-store.ts` (Zustand + localStorage) holds
-  one `currency` value, set once by `hydrate()` and never overridden by the
-  customer. It also exposes a `checkoutCurrency` slot and
-  `selectHasRegionMismatch()`: once the checkout API returns its verified
-  region, if that differs from the browsing currency,
-  `components/store/region-mismatch-notice.tsx` shows the one quiet, allowed
-  message ("Your checkout region is different from your browsing region, so
-  the price has been updated.") — and shows nothing at all when regions
-  already agree. No proactive/persistent pricing disclaimer.
-- **Cart**: `lib/store/use-cart-store.ts` stores only product identity, never
-  a frozen price — `hooks/use-cart-line-items.ts` re-resolves every line's
-  price from the live product catalog against the detected `currency` on
-  every render, purely for on-screen presentation before checkout.
-
-### `product_prices` table (`prisma/schema.prisma`)
-
-```
-product_prices
-  id              string   pk
-  product_id      string   fk -> products.id
-  pricing_region  string   e.g. "India", "International"
-  country_code    string?  ISO 3166-1 alpha-2, null for the international/default row
-  currency_code   string   ISO 4217 (INR, USD; GBP/AED reserved for later regions)
-  regular_price   int      minor units
-  sale_price      int?     minor units
-  is_default      boolean  true on exactly one row per product (the USD international fallback)
-  is_active       boolean
-```
-
-### Checkout pricing contract (implemented — `app/api/checkout/create-order`)
-
-This is the core rule: **the backend silently decides the final price; the
-frontend price is informational only.**
-
-- Region is determined server-side via `lib/pricing/verify-region.ts`, in
-  this priority order:
-  1. IP-based country detection (`x-vercel-ip-country` / `cf-ipcountry`
-     header, read directly on the request — not from a client-supplied
-     value).
-  2. Billing country, if passed to `resolveVerifiedCurrency()` (extension
-     point — no billing-address collection step exists yet, so this is
-     currently always IP-based).
-  3. Payment method country — not exposed by Razorpay pre-payment, so not
-     wired up.
-  4. A previously verified account country (`Profile.countryCode`) — wired
-     into the schema, not yet read at checkout (buyer profile UI doesn't
-     collect it yet).
-- The frontend's detected `currency` (`lib/store/use-currency-store.ts`) is
-  never sent to `/api/checkout/create-order` — the request body carries only
-  product IDs, quantities, and buyer name/email, never a price or currency.
-- On order creation, `resolveProductPriceFromDb()`
-  (`lib/pricing/resolve-price-db.ts`) resolves each cart item's price from
-  `product_prices` using the *verified* region above (same fallback order as
-  the display-side `resolveProductPrice`: exact region match →
-  international/USD default → INR emergency fallback) and computes
-  subtotal/total itself. A client-submitted total or currency is never read.
-- Persist the final `currencyCode` and `totalAmount` actually charged on the
-  `Order` row (`fxRateAtPurchase` exists for reporting only and is never
-  read back into pricing logic).
-- Payment verification (`app/api/checkout/verify-payment`, backed up by the
-  `app/api/webhooks/razorpay` webhook) confirms the Razorpay HMAC signature
-  before ever marking an order `PAID` — the frontend's "payment succeeded"
-  callback is never trusted on its own. Both paths converge on the same
-  `fulfillOrder()` (`lib/checkout/fulfill-order.ts`) so an order can't be
-  fulfilled twice.
-- Uses Razorpay INR by default; the Razorpay client/order-creation code is
-  currency-agnostic, so enabling Razorpay's international currency support
-  (or adding Stripe/PayPal) only requires touching `lib/payments/`.
-
-**Explicitly disallowed and not present anywhere in this codebase:** an open
-"pick any country" selector that changes the checkout price without server
-verification.
-
-## Security notes
-
-- Full PDF files are never stored in `/public` and never exposed by direct URL — see `lib/storage/index.ts`. In production, uploads go to a private Backblaze B2 bucket (S3-compatible; see `B2_*` env vars). Locally, if B2 env vars are unset, uploads fall back to `PRIVATE_UPLOADS_DIR` or `/tmp/private-uploads`. Cover images and free-preview pages may additionally be served from a public CDN domain (`ASSETS_CDN_DOMAIN`) when configured — full PDFs and Rent & Read pages never are.
-- Downloads are streamed only through `/api/download/[productId]` after verifying, in order: logged in → email verified → product owned via a `PAID` order → download access record exists → not expired. Verified end-to-end: an authenticated user with no purchase gets a 403, not a file.
-- Payment status is verified server-side (`verifyPaymentSignature`) and via the Razorpay webhook (`verifyWebhookSignature`) — the frontend's payment callback is informational only, never the trigger that marks an order paid.
-- `/api/checkout/create-order` fails fast (before writing anything to the database) if Razorpay isn't configured, and marks the order `FAILED` rather than leaving it `PENDING` if order creation fails after the local row already exists.
+- **Colours:** a light blue-grey `cream` background, deep indigo `ink` text,
+  and accent colours `sage`, `gold`, `sunny`, `lemon`, `teal` and `blossom`.
+  See `tailwind.config.ts`.
+- **Fonts:** Baloo 2 for headings and Nunito for body text, loaded in
+  `app/layout.tsx`.
+- **Breakpoints:** mobile-first from 360px (`xs`), then `sm` 480px, `md`
+  768px, `lg` 1024px, `xl` 1280px, `2xl` 1440px.
+- **Mobile:** buttons and links are at least 44px tall (`.tap-target`),
+  filters, cart and search open as drawers, and product rows scroll sideways
+  on small screens.

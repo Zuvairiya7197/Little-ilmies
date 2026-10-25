@@ -40,5 +40,6 @@ next-env.d.ts
 /private-uploads/pdfs/*
 /private-uploads/previews/*
 /private-uploads/covers/*
+/private-uploads/rentals/*
 !/private-uploads/**/.gitkeep
 .env*
