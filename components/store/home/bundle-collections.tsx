@@ -68,7 +68,7 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
       className="group flex flex-col overflow-hidden rounded-3xl bg-cream-50 shadow-clay transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
     >
       <div
-        className={`relative overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-sage-50 ${bundle.coverImage ? "aspect-square" : "h-44 px-5 pt-6"}`}
+        className="relative aspect-square overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-sage-50"
       >
         <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-blossom-100/60 blur-2xl" aria-hidden="true" />
         <div className="absolute right-10 bottom-8 h-24 w-24 rounded-full bg-sage-100/70 blur-2xl" aria-hidden="true" />
@@ -88,12 +88,12 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-        <div className="absolute inset-x-5 bottom-3 flex h-32 items-end justify-center">
+        <div className="absolute inset-x-5 bottom-[16%] flex h-44 items-end justify-center">
           {covers.map((product, i) => {
             const coverStyles = [
-              "z-30 w-[5.7rem] -translate-x-8 rotate-[-5deg] group-hover:-translate-y-1.5 group-hover:rotate-[-7deg]",
-              "z-20 w-[5.15rem] translate-x-8 -translate-y-1 rotate-[4deg] group-hover:-translate-y-2 group-hover:rotate-[6deg]",
-              "z-10 w-[4.55rem] translate-x-16 translate-y-2 rotate-[10deg] opacity-95 group-hover:translate-x-[4.5rem]",
+              "z-30 w-[7.5rem] -translate-x-11 rotate-[-5deg] group-hover:-translate-y-1.5 group-hover:rotate-[-7deg]",
+              "z-20 w-[6.8rem] translate-x-11 -translate-y-1 rotate-[4deg] group-hover:-translate-y-2 group-hover:rotate-[6deg]",
+              "z-10 w-[6rem] translate-x-[5.5rem] translate-y-2 rotate-[10deg] opacity-95 group-hover:translate-x-24",
             ];
 
             return (
@@ -101,11 +101,11 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
                 key={product.id}
                 className={`absolute aspect-[3/4] transition-transform duration-300 ${coverStyles[i] ?? coverStyles[0]}`}
               >
-                <Image src={product.coverImage} alt="" fill sizes="112px" className="object-contain object-center" />
+                <Image src={product.coverImage} alt="" fill sizes="144px" className="object-contain object-center" />
               </div>
             );
           })}
-          <div className="absolute bottom-0 h-3 w-40 rounded-full bg-ink-500/10 blur-md" aria-hidden="true" />
+          <div className="absolute -bottom-2 h-3 w-52 rounded-full bg-ink-500/10 blur-md" aria-hidden="true" />
         </div>
         )}
       </div>
