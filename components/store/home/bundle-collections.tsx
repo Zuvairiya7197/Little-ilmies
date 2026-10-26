@@ -77,6 +77,11 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
             Save {savingsPercent}%
           </span>
         )}
+        {bundle.coverImage ? (
+          <div className="absolute inset-x-5 bottom-3 top-6 transition-transform duration-300 group-hover:-translate-y-1">
+            <Image src={bundle.coverImage} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-contain object-center" />
+          </div>
+        ) : (
         <div className="absolute inset-x-5 bottom-3 flex h-32 items-end justify-center">
           {covers.map((product, i) => {
             const coverStyles = [
@@ -96,6 +101,7 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
           })}
           <div className="absolute bottom-0 h-3 w-40 rounded-full bg-ink-500/10 blur-md" aria-hidden="true" />
         </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-5">

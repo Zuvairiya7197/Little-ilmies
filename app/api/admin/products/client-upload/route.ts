@@ -22,11 +22,17 @@ const requestSchema = z
     productId: z.string().min(1).optional(),
     // Category covers belong to a category instead of a book.
     categoryId: z.string().min(1).optional(),
+    // Bundle covers belong to a bundle instead of a book.
+    bundleId: z.string().min(1).optional(),
     key: z.string().min(1),
     contentType: z.string().min(1),
     fileSize: z.number().int().min(0),
   })
-  .refine((body) => (body.kind === "cover" ? Boolean(body.productId) !== Boolean(body.categoryId) : Boolean(body.productId)));
+  .refine((body) =>
+    body.kind === "cover"
+      ? [body.productId, body.categoryId, body.bundleId].filter(Boolean).length === 1
+      : Boolean(body.productId) && !body.categoryId && !body.bundleId
+  );
 
 /**
  * Issues a presigned PUT URL for a direct browser-to-B2 upload — the
@@ -57,13 +63,18 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid upload request." }, { status: 400 });
     }
-    const { kind, productId, categoryId, key, contentType, fileSize } = parsed.data;
+    const { kind, productId, categoryId, bundleId, key, contentType, fileSize } = parsed.data;
 
     const owner = categoryId
       ? await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } })
-      : await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+      : bundleId
+        ? await prisma.bundle.findUnique({ where: { id: bundleId }, select: { id: true } })
+        : await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
     if (!owner) {
-      return NextResponse.json({ error: categoryId ? "Category not found." : "Product not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: categoryId ? "Category not found." : bundleId ? "Bundle not found." : "Product not found." },
+        { status: 404 }
+      );
     }
     const ownerId = owner.id;
 

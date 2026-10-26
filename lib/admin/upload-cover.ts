@@ -2,19 +2,23 @@ import { coverThumbPath } from "@/lib/cover-thumb";
 import { prepareCoverImages } from "@/lib/admin/compress-image";
 import { getPresignedUploadUrl, removeUnattachedUpload, uploadToPresignedUrl } from "@/lib/admin/direct-upload";
 
-type CoverOwner = { productId: string } | { categoryId: string };
+type CoverOwner = { productId: string } | { categoryId: string } | { bundleId: string };
 
 /**
- * Uploads a book or category cover. Normally the browser makes the WebP
+ * Uploads a book, category or bundle cover. Normally the browser makes the WebP
  * cover and its small copy and sends both straight to B2, so the image
  * never passes through (or uses CPU on) a Vercel function. SVGs, browsers
  * that can't encode WebP, and deployments without B2 fall back to the old
  * route, where the server compresses the cover itself.
  */
 export async function uploadCover(owner: CoverOwner, file: File): Promise<void> {
-  const isProduct = "productId" in owner;
-  const ownerId = isProduct ? owner.productId : owner.categoryId;
-  const endpoint = isProduct ? "/api/admin/products/upload-cover" : "/api/admin/categories/upload-cover";
+  const [ownerField, ownerId] = Object.entries(owner)[0] as [keyof CoverOwner, string];
+  const endpoint =
+    "productId" in owner
+      ? "/api/admin/products/upload-cover"
+      : "categoryId" in owner
+        ? "/api/admin/categories/upload-cover"
+        : "/api/admin/bundles/upload-cover";
 
   const prepared = await prepareCoverImages(file);
   const key = prepared ? coverPathname(ownerId, file.name) : null;
@@ -37,7 +41,7 @@ export async function uploadCover(owner: CoverOwner, file: File): Promise<void> 
   if (!prepared || !key || !uploadUrl) {
     const fd = new FormData();
     fd.append("file", file);
-    fd.append(isProduct ? "productId" : "categoryId", ownerId);
+    fd.append(ownerField, ownerId);
     const res = await fetch(endpoint, { method: "POST", body: fd });
     if (!res.ok) throw new Error(await errorMessage(res));
     return;

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { BundleForm } from "@/components/admin/bundle-form";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
+import { bundleCoverUrl } from "@/lib/catalog-assets";
 
 export const metadata: Metadata = {
   title: "Edit Bundle",
@@ -43,6 +44,11 @@ export default async function EditBundlePage({ params }: PageProps) {
       </h1>
       <BundleForm
         bundleId={bundle.id}
+        currentCoverImage={
+          bundle.coverImage
+            ? bundleCoverUrl(bundle.id, bundle.coverImage)
+            : undefined
+        }
         products={products.map((product) => ({
           ...product,
           prices: Object.fromEntries(

@@ -94,7 +94,16 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
       <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
         <div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-gradient-to-br from-cream-50 via-lilac-50 to-blossom-50 shadow-clay-sm">
-            {heroBooks.length > 0 ? (
+            {bundle.coverImage ? (
+              <Image
+                src={bundle.coverImage}
+                alt={bundle.name}
+                fill
+                priority
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                className="object-contain p-6"
+              />
+            ) : heroBooks.length > 0 ? (
               <div className="absolute inset-0 flex items-center justify-center p-5 sm:p-8">
                 <div className="relative h-full w-full max-w-[34rem]">
                   {heroBooks.map((book, index) => {
@@ -130,7 +139,7 @@ export function CustomBundleBuilder({ bundle }: { bundle: BundleSummary }) {
               </div>
             ) : (
               <Image
-                src={bundle.coverImage ?? "/images/explore-bundles.webp"}
+                src="/images/explore-bundles.webp"
                 alt=""
                 fill
                 sizes="(min-width: 1024px) 42vw, 100vw"

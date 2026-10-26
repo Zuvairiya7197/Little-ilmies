@@ -10,7 +10,7 @@ import type {
 import type { CurrencyCode } from "@/types/pricing";
 import { Prisma } from "@prisma/client";
 import { defaultExtra, detailExtras } from "@/data/product-details";
-import { categoryCoverUrl, productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
+import { bundleCoverUrl, categoryCoverUrl, productCoverUrl, productPreviewUrls } from "@/lib/catalog-assets";
 import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { getPricingSettings, type PricingSettings } from "@/lib/settings/pricing-settings";
 import { getStorefrontSettings, type StorefrontSettings } from "@/lib/settings/storefront-settings";
@@ -296,7 +296,7 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
       slug: bundle.slug,
       name: bundle.name,
       description: bundle.description ?? undefined,
-      coverImage: bundle.coverImage ?? undefined,
+      coverImage: bundle.coverImage ? bundleCoverUrl(bundle.id, bundle.coverImage) : undefined,
       type: bundle.type,
       products,
       prices,

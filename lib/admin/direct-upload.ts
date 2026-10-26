@@ -10,6 +10,8 @@ export interface PresignedUploadRequest {
   productId?: string;
   /** For category covers instead of a book. */
   categoryId?: string;
+  /** For bundle covers instead of a book. */
+  bundleId?: string;
   key: string;
   contentType: string;
   fileSize: number;

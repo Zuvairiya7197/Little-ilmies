@@ -27,8 +27,18 @@ export function categoryCoverUrl(categoryId: string, coverImage: string) {
   return coverImage;
 }
 
-/** A cover the admin's browser uploaded straight to storage for this book
- * or category: covers/<ownerId>/<name>.webp (see lib/admin/upload-cover.ts). */
+/** Same pattern again, for Bundle.coverImage — shown on the bundle page and
+ * bundle cards instead of the fanned-out book covers when an admin uploads one. */
+export function bundleCoverUrl(bundleId: string, coverImage: string) {
+  if (coverImage.startsWith("covers/")) {
+    if (CDN_DOMAIN) return `https://${CDN_DOMAIN}/${coverImage}`;
+    return `/api/bundle-assets/covers/${bundleId}?v=${encodeURIComponent(coverImage)}`;
+  }
+  return coverImage;
+}
+
+/** A cover the admin's browser uploaded straight to storage for this book,
+ * category or bundle: covers/<ownerId>/<name>.webp (see lib/admin/upload-cover.ts). */
 export function isUploadedCoverPath(pathname: string, ownerId: string) {
   const prefix = `covers/${ownerId}/`;
   return pathname.startsWith(prefix) && /^[A-Za-z0-9_-]+\.webp$/.test(pathname.slice(prefix.length));

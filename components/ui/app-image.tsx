@@ -6,7 +6,7 @@ import { coverThumbPath } from "@/lib/cover-thumb";
 
 // Uploaded covers/previews: from the Cloudflare assets Worker
 // (https://<ASSETS_CDN_DOMAIN>/covers/...) or, without it, the proxy routes.
-const UPLOADED_ASSET = /^(https?:\/\/[^/]+\/(covers|previews)\/|\/api\/(product|category)-assets\/)/;
+const UPLOADED_ASSET = /^(https?:\/\/[^/]+\/(covers|previews)\/|\/api\/(product|category|bundle)-assets\/)/;
 
 // Covers shown no wider than this (CSS px) use the small copy, which is
 // COVER_THUMB_WIDTH px wide — sharp up to ~2x screens.
