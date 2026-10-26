@@ -67,7 +67,9 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
       href={bundle.type === "CUSTOM" ? `/bundle/${bundle.slug}` : `/shop?bundle=${bundle.slug}`}
       className="group flex flex-col overflow-hidden rounded-3xl bg-cream-50 shadow-clay transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted"
     >
-      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-sage-50 px-5 pt-6">
+      <div
+        className={`relative overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-sage-50 ${bundle.coverImage ? "aspect-square" : "h-44 px-5 pt-6"}`}
+      >
         <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-blossom-100/60 blur-2xl" aria-hidden="true" />
         <div className="absolute right-10 bottom-8 h-24 w-24 rounded-full bg-sage-100/70 blur-2xl" aria-hidden="true" />
         {savingsPercent > 0 && (
@@ -78,9 +80,13 @@ export function BundleCard({ bundle, index }: { bundle: BundleSummary; index: nu
           </span>
         )}
         {bundle.coverImage ? (
-          <div className="absolute inset-x-5 bottom-3 top-6 transition-transform duration-300 group-hover:-translate-y-1">
-            <Image src={bundle.coverImage} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-contain object-center" />
-          </div>
+          <Image
+            src={bundle.coverImage}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 25vw, 50vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         ) : (
         <div className="absolute inset-x-5 bottom-3 flex h-32 items-end justify-center">
           {covers.map((product, i) => {
