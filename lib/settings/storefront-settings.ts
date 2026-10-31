@@ -1,4 +1,3 @@
-import { unstable_noStore as noStore } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 
 export const HARDCOVER_COMING_SOON_ENABLED_KEY = "HARDCOVER_COMING_SOON_ENABLED";
@@ -15,7 +14,6 @@ export const defaultStorefrontSettings: StorefrontSettings = {
 };
 
 export async function getStorefrontSettings(): Promise<StorefrontSettings> {
-  noStore();
   const row = await prisma.appSetting.findUnique({ where: { key: HARDCOVER_COMING_SOON_ENABLED_KEY } });
   return {
     hardcoverComingSoonEnabled: row ? row.value === "true" : defaultStorefrontSettings.hardcoverComingSoonEnabled,

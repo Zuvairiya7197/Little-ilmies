@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
+import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { categoryFormSchema } from "@/lib/validation/admin-category";
 
 interface RouteParams {
@@ -58,6 +59,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       accentColor: parsed.data.accentColor ?? null,
     },
   });
+  revalidateCatalogPaths();
   return NextResponse.json({ id: categoryId });
 }
 
@@ -75,5 +77,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   }
 
   await prisma.category.delete({ where: { id: categoryId } });
+  revalidateCatalogPaths();
   return NextResponse.json({ status: "deleted" });
 }

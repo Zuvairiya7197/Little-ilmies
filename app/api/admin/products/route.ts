@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  revalidateCatalogPaths(product.slug);
+  revalidateCatalogPaths();
 
   return NextResponse.json({ id: product.id, slug: product.slug }, { status: 201 });
 }
@@ -125,7 +125,7 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  products.forEach((product) => revalidateCatalogPaths(product.slug));
+  revalidateCatalogPaths();
 
   return NextResponse.json({
     deletedCount: productsToDelete.length,

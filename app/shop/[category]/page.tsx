@@ -15,7 +15,7 @@ interface PageProps {
   params: Promise<{ category: string }>;
 }
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 // Legacy top-level group slugs from the old 3-group static system, mapped
 // to their closest equivalent in the new 8-group DB-driven hierarchy so
@@ -63,7 +63,7 @@ const resolveCategory = cache(async (slugParam: string) => {
 
 export async function generateStaticParams() {
   // If the DB is unreachable at build time, fall back to just the legacy
-  // group slugs — revalidate = 60 covers any DB-backed category slug on
+  // group slugs — revalidate covers any DB-backed category slug on
   // first request. See app/product/[slug]/page.tsx for the same pattern.
   try {
     const categories = await getAllCategories();

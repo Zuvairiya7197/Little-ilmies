@@ -6,8 +6,13 @@ import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { ActiveStateFix } from "@/components/providers/active-state-fix";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
-import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
 import { getAllCategories } from "@/lib/db/catalog";
+
+// Don't read headers() or cookies() here: that would make every page on the
+// site render per visit, waking the free-tier database. Per-visitor state
+// belongs in the browser (see hooks/use-rental-eligible.ts). Admin saves
+// clear this cache straight away through revalidateCatalogPaths().
+export const revalidate = 86400;
 
 const baloo = Baloo_2({
   subsets: ["latin"],
@@ -81,13 +86,10 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [showRentAndRead, categories] = await Promise.all([
-    isRentalEligibleFromHeaders(),
-    // If the DB is unreachable at build/render time, fall back to the
-    // curated nav alone rather than breaking every page's chrome — same
-    // philosophy as app/sitemap.ts and generateStaticParams elsewhere.
-    getAllCategories().catch(() => []),
-  ]);
+  // If the DB is unreachable at build/render time, fall back to the
+  // curated nav alone rather than breaking every page's chrome — same
+  // philosophy as app/sitemap.ts and generateStaticParams elsewhere.
+  const categories = await getAllCategories().catch(() => []);
 
   return (
     <html lang="en" className={`${baloo.variable} ${nunito.variable}`}>
@@ -102,7 +104,7 @@ export default async function RootLayout({
           Skip to main content
         </a>
         <AuthSessionProvider>
-          <StorefrontChrome showRentAndRead={showRentAndRead} categories={categories}>
+          <StorefrontChrome categories={categories}>
             {children}
           </StorefrontChrome>
         </AuthSessionProvider>

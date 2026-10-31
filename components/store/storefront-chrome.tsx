@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
+import { useRentalEligible } from "@/hooks/use-rental-eligible";
 import type { Category } from "@/types/catalog";
 
 /**
@@ -19,15 +20,14 @@ import type { Category } from "@/types/catalog";
  * proxy in front of Vercel.
  */
 export function StorefrontChrome({
-  showRentAndRead,
   categories,
   children,
 }: {
-  showRentAndRead: boolean;
   categories: Pick<Category, "id" | "slug" | "name" | "parentId">[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const showRentAndRead = useRentalEligible() === true;
   const isChromeless = pathname?.startsWith("/admin") || pathname?.startsWith("/read/");
 
   if (isChromeless) {

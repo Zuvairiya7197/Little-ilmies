@@ -1,4 +1,3 @@
-import { unstable_noStore as noStore } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 
 export const DEFAULT_BOOK_SALE_DISCOUNT_PERCENTAGE = 20;
@@ -23,7 +22,6 @@ function parsePercentage(value: string | undefined, fallback: number) {
 }
 
 export async function getPricingSettings(): Promise<PricingSettings> {
-  noStore();
   const rows = await prisma.appSetting.findMany({
     where: {
       key: {
