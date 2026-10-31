@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       const storedPaths = [...previousPaths, key];
 
       await prisma.product.update({ where: { id: productId }, data: { rentalPageImagePaths: storedPaths } });
-      revalidateCatalogPaths(product.slug);
+      revalidateCatalogPaths();
 
       return NextResponse.json({ rentalPageImagePaths: productRentalPageUrls(productId, storedPaths) });
     }
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       }
 
       await prisma.product.update({ where: { id: productId }, data: { rentalPageImagePaths: order } });
-      revalidateCatalogPaths(product.slug);
+      revalidateCatalogPaths();
       return NextResponse.json({ rentalPageImagePaths: productRentalPageUrls(productId, order) });
     }
 
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.product.update({ where: { id: productId }, data: { rentalPageImagePaths: pathnames } });
     await deleteRentalPages(product.rentalPageImagePaths);
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
     return NextResponse.json({
       rentalPageImagePaths: productRentalPageUrls(productId, pathnames),
     });
@@ -203,13 +203,13 @@ export async function DELETE(request: NextRequest) {
       const remaining = product.rentalPageImagePaths.filter((p) => p !== pathname);
       await prisma.product.update({ where: { id: product.id }, data: { rentalPageImagePaths: remaining } });
       await deleteRentalPages([pathname]);
-      revalidateCatalogPaths(product.slug);
+      revalidateCatalogPaths();
       return NextResponse.json({ status: "removed" });
     }
 
     await deleteRentalPages(product.rentalPageImagePaths);
     await prisma.product.update({ where: { id: product.id }, data: { rentalPageImagePaths: [] } });
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
     return NextResponse.json({ status: "removed" });
   } catch (error) {
     console.error("Rental page removal failed", error);

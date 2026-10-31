@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       if (product.coverImage !== pathname) {
         await deleteCoverImage(product.coverImage);
       }
-      revalidateCatalogPaths(product.slug);
+      revalidateCatalogPaths();
       return NextResponse.json({ coverImage: productCoverUrl(productId, pathname) });
     }
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     if (product.coverImage !== relativePath) {
       await deleteCoverImage(product.coverImage);
     }
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
 
     return NextResponse.json({ coverImage: productCoverUrl(productId, relativePath) });
   } catch (error) {
@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
       where: { id: product.id },
       data: { coverImage: "/images/products/placeholder.svg" },
     });
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
     return NextResponse.json({ status: "removed" });
   } catch (error) {
     console.error("Cover removal failed", error);
