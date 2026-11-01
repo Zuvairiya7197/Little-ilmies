@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { ShopView } from "@/components/store/shop/shop-view";
-import { ProductGridSkeleton } from "@/components/store/shop/product-card-skeleton";
+import { ShopFallback } from "@/components/store/shop/shop-fallback";
 import { getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
 import { learningGoals, getLearningGoalBySlug } from "@/lib/learning-goals";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -60,7 +60,7 @@ export default async function LearningGoalShopPage({ params }: PageProps) {
   return (
     <>
       <JsonLd data={breadcrumb} />
-      <Suspense fallback={<div className="container-content py-8"><ProductGridSkeleton /></div>}>
+      <Suspense fallback={<ShopFallback products={resolved.matchedProducts} title={resolved.title} description={resolved.description} />}>
         <ShopView
           products={resolved.matchedProducts}
           categories={resolved.categories}

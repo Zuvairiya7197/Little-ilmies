@@ -7,6 +7,7 @@ import { ActiveStateFix } from "@/components/providers/active-state-fix";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
 import { getAllCategories } from "@/lib/db/catalog";
+import { getSiteUrl } from "@/lib/site-url";
 
 // Don't read headers() or cookies() here: that would make every page on the
 // site render per visit, waking the free-tier database. Per-visitor state
@@ -28,7 +29,7 @@ const nunito = Nunito({
   display: "swap",
 });
 
-const siteUrl = process.env.SITE_URL ?? "https://littleilmies.com";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

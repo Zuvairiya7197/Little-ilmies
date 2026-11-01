@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db/prisma";
 import { legacyCategoryGroupSlugs } from "@/data/category-groups";
+import { getSiteUrl } from "@/lib/site-url";
 
-const siteUrl = process.env.SITE_URL ?? "https://littleilmies.com";
+const siteUrl = getSiteUrl();
 
 const staticRoutes = [
   "",

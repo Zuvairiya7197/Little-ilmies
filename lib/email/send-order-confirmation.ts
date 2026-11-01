@@ -5,6 +5,7 @@ import type { CurrencyCode } from "@/types/pricing";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
 import { formatName } from "@/lib/formats";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function sendOrderConfirmationEmail(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -13,7 +14,7 @@ export async function sendOrderConfirmationEmail(orderId: string) {
   });
   if (!order) return;
 
-  const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl("http://localhost:3000");
   const currency = order.currencyCode as CurrencyCode;
   // Rentals always check out separately from purchases (see
   // create-order/route.ts), so an order is either entirely rentals or

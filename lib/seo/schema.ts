@@ -1,4 +1,6 @@
-const siteUrl = process.env.SITE_URL ?? "https://littleilmies.com";
+import { getSiteUrl } from "@/lib/site-url";
+
+const siteUrl = getSiteUrl();
 
 export function organizationSchema() {
   return {

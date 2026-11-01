@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ShopView } from "@/components/store/shop/shop-view";
-import { ProductGridSkeleton } from "@/components/store/shop/product-card-skeleton";
+import { ShopFallback } from "@/components/store/shop/shop-fallback";
 import { getActiveBundles, getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
 
 export const revalidate = 86400;
@@ -23,7 +23,7 @@ export default async function ShopPage() {
   ]);
 
   return (
-    <Suspense fallback={<div className="container-content py-8"><ProductGridSkeleton /></div>}>
+    <Suspense fallback={<ShopFallback products={products} title="All Books" description="Browse our full collection of Islamic and educational e-books for children." />}>
       <ShopView
         products={products}
         bundles={bundles}
