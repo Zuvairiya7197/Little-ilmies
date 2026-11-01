@@ -7,7 +7,13 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export const revalidate = 60;
+export const revalidate = 86400;
+
+// Empty on purpose: bundles are built on first visit, then cached like the
+// other catalog pages (a dynamic route without this is rendered every time).
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

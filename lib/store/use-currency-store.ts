@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { FALLBACK_CURRENCY, type CurrencyCode } from "@/types/pricing";
 import { currencyFromCountryCode, detectInitialCurrency } from "@/lib/pricing/detect-currency";
+import { readDetectedCountry } from "@/lib/pricing/detected-country";
 
 interface CurrencyState {
   /**
@@ -39,13 +40,7 @@ export const useCurrencyStore = create<CurrencyState>()(
         if (get().hasHydrated) return;
         set({ hasHydrated: true });
 
-        const cookieCountry =
-          typeof document !== "undefined"
-            ? document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("li_detected_country="))
-                ?.split("=")[1]
-            : undefined;
+        const cookieCountry = readDetectedCountry();
 
         const detected = cookieCountry
           ? currencyFromCountryCode(cookieCountry)

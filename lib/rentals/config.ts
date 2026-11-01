@@ -4,3 +4,7 @@ export const RENTAL_ROUNDING_INCREMENT = 500;
 export const RENTAL_DURATION_DAYS = 7;
 export const RENTAL_COUNTRY_CODE = "IN";
 export const RENTAL_CURRENCY_CODE = "INR";
+
+export function isRentalsCountryCode(countryCode?: string | null) {
+  return countryCode?.toUpperCase() === RENTAL_COUNTRY_CODE;
+}

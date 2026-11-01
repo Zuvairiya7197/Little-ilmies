@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: storedPaths } });
     await deletePreviewPages(product.previewImagePaths);
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
 
     return NextResponse.json({ previewImagePaths: productPreviewUrls(productId, storedPaths) });
   } catch (error) {

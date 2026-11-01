@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         where: { id: productId },
         data: pdfFields(format, pathname, fileName ?? pathname.split("/").at(-1) ?? null, storedSize),
       });
-      revalidateCatalogPaths(product.slug);
+      revalidateCatalogPaths();
       return NextResponse.json({ status: "uploaded" });
     }
 
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       where: { id: productId },
       data: pdfFields(format, relativePath, file.name, file.size),
     });
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
 
     return NextResponse.json({ status: "uploaded" });
   } catch (error) {
@@ -167,7 +167,7 @@ export async function DELETE(request: NextRequest) {
       where: { id: product.id },
       data: pdfFields(parsed.data.format, null, null, null),
     });
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
     return NextResponse.json({ status: "removed" });
   } catch (error) {
     console.error("PDF removal failed", error);

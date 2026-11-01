@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
+import { revalidateCatalogPaths } from "@/lib/catalog-revalidation";
 import { categoryFormSchema } from "@/lib/validation/admin-category";
 
 export async function POST(request: NextRequest) {
@@ -43,5 +44,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  revalidateCatalogPaths();
   return NextResponse.json({ id: category.id }, { status: 201 });
 }

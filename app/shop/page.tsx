@@ -4,7 +4,7 @@ import { ShopView } from "@/components/store/shop/shop-view";
 import { ProductGridSkeleton } from "@/components/store/shop/product-card-skeleton";
 import { getActiveBundles, getAllCategories, getPublishedProducts } from "@/lib/db/catalog";
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Shop All Books",

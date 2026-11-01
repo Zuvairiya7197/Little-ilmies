@@ -92,10 +92,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     ),
   ]);
 
-  revalidateCatalogPaths(current.slug);
-  if (current.slug !== productData.slug) {
-    revalidateCatalogPaths(productData.slug);
-  }
+  revalidateCatalogPaths();
 
   return NextResponse.json({ id: productId });
 }
@@ -124,7 +121,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
         slug: `${product.slug}-archived-${product.id.slice(-8)}`,
       },
     });
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
     return NextResponse.json({
       status: "archived",
       message: "Product has past orders, so it was archived instead of hard-deleted.",
@@ -136,6 +133,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   }
 
   await prisma.product.delete({ where: { id: productId } });
-  revalidateCatalogPaths(product.slug);
+  revalidateCatalogPaths();
   return NextResponse.json({ status: "deleted" });
 }

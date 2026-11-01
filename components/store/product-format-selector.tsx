@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils/cn";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
+import { useProductEntitlement } from "@/hooks/use-product-entitlement";
+import { useRentalEligible } from "@/hooks/use-rental-eligible";
 import { resolveProductPrice, type ResolvedPrice } from "@/lib/pricing/resolve-price";
 import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
 import {
@@ -53,9 +55,6 @@ const BENEFIT_ICONS: Record<BookFormat, LucideIcon[]> = {
 
 interface ProductFormatSelectorProps {
   product: ProductDetail;
-  rentalEligible: boolean;
-  ownedFormats: PdfFormat[];
-  activeRentalExpiresAt: string | null;
 }
 
 /**
@@ -65,13 +64,10 @@ interface ProductFormatSelectorProps {
  * an India visitor. Hardcover is a separate, inert "Coming Soon" card that
  * can never be selected or priced.
  */
-export function ProductFormatSelector({
-  product,
-  rentalEligible,
-  ownedFormats,
-  activeRentalExpiresAt,
-}: ProductFormatSelectorProps) {
+export function ProductFormatSelector({ product }: ProductFormatSelectorProps) {
   const router = useRouter();
+  const rentalEligible = useRentalEligible();
+  const { ownedFormats, activeRentalExpiresAt } = useProductEntitlement(product.id);
   const addItem = useCartStore((s) => s.addItem);
   const cartItems = useCartStore((s) => s.items);
   const currency = useCurrencyStore((s) => s.currency);
@@ -99,7 +95,10 @@ export function ProductFormatSelector({
 
   // Restore the format chosen earlier: an explicit ?format= in the URL
   // (cart links, back button) wins, then whatever is already in the cart.
+  // Waits for the visitor's country, since that decides whether the Rent &
+  // Read format is on offer at all.
   useEffect(() => {
+    if (rentalEligible === null) return;
     const fromUrl = formatFromUrlParam(new URLSearchParams(window.location.search).get("format"));
     const inCart = cartItems.find((item) => item.productId === product.id && item.type !== "CUSTOM_BUNDLE");
     const fromCart: BookFormat | undefined = inCart
@@ -109,9 +108,10 @@ export function ProductFormatSelector({
       : undefined;
     const restored = [fromUrl, fromCart].find((format) => variants.some((v) => v.format === format));
     if (restored) setSelectedFormat(restored);
-    // Run once on mount — later cart changes must not move the selection.
+    // Not on cart changes — those must not move the selection. An active
+    // rental arrives after mount and can add the format to the list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [rentalEligible, isRenting]);
 
   function selectFormat(format: BookFormat) {
     setSelectedFormat(format);

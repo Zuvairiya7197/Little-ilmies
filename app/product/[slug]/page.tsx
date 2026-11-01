@@ -13,9 +13,6 @@ import { ProductMobileAbout } from "@/components/store/product-mobile-about";
 import { RelatedBooks } from "@/components/store/related-books";
 import { findPrice } from "@/lib/pricing/resolve-price";
 import { formatName } from "@/lib/formats";
-import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
-import { getAuthSession } from "@/lib/auth/get-session";
-import { getProductEntitlementForUser } from "@/lib/db/orders";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbSchema } from "@/lib/seo/schema";
 import { Reveal } from "@/components/ui/reveal";
@@ -24,12 +21,12 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   // If the DB is unreachable at build time (e.g. first deploy before
   // DATABASE_URL is configured), skip pre-rendering rather than failing the
-  // whole build — revalidate = 60 means every slug still renders correctly
+  // whole build — revalidate means every slug still renders correctly
   // on first request and gets cached from then on (dynamicParams defaults
   // to true).
   try {
@@ -70,11 +67,6 @@ export default async function ProductPage({ params }: PageProps) {
   if (!product) notFound();
 
   const relatedProducts = await getRelatedProductsBySlug(slug, 4);
-  const rentalEligible = await isRentalEligibleFromHeaders();
-  const session = await getAuthSession();
-  const entitlement = session?.user
-    ? await getProductEntitlementForUser(session.user.id, product.id)
-    : { ownedFormats: [], activeRentalExpiresAt: null };
 
   // One offer per purchasable PDF format, each with its own INR price.
   const offers = product.variants.flatMap((variant) => {
@@ -136,12 +128,7 @@ export default async function ProductPage({ params }: PageProps) {
           <div className="lg:mt-0">
             <ProductHeader product={product} />
 
-            <ProductFormatSelector
-              product={product}
-              rentalEligible={rentalEligible}
-              ownedFormats={entitlement.ownedFormats}
-              activeRentalExpiresAt={entitlement.activeRentalExpiresAt}
-            />
+            <ProductFormatSelector product={product} />
           </div>
         </div>
 

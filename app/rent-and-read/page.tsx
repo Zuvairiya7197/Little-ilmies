@@ -3,10 +3,14 @@ import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { BookOpen, Clock, ShoppingBag } from "lucide-react";
 import { getRentAndReadProducts } from "@/lib/db/catalog";
-import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
+import { RentalEligibleGate } from "@/components/store/rental-eligible-gate";
 import { resolveProductPrice } from "@/lib/pricing/resolve-price";
 import { productHref } from "@/lib/formats";
 import { formatPrice } from "@/lib/utils/format";
+
+// Hourly, not daily like the rest of the site: prices here are resolved on
+// the server, so a scheduled sale has to start and end close to on time.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Rent & Read",
@@ -16,10 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RentAndReadPage() {
-  const [eligible, rentableProducts] = await Promise.all([
-    isRentalEligibleFromHeaders(),
-    getRentAndReadProducts(),
-  ]);
+  const rentableProducts = await getRentAndReadProducts();
   // Only books whose Rent & Read format is actually purchasable.
   const products = rentableProducts.flatMap((product) => {
     const rental = product.variants.find((variant) => variant.format === "RENT_AND_READ");
@@ -39,20 +40,23 @@ export default async function RentAndReadPage() {
         </p>
       </div>
 
-      {!eligible ? (
-        <section className="rounded-3xl bg-cream-50 p-8 text-center shadow-clay-sm">
-          <h2 className="font-display text-2xl font-bold text-ink-700">
-            Rent &amp; Read is available in India
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-ink-400">
-            You can still browse and buy downloadable Little Ilmies ebooks.
-          </p>
-          <Link href="/shop" className="btn-primary mt-6">
-            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-            Browse Books
-          </Link>
-        </section>
-      ) : products.length === 0 ? (
+      <RentalEligibleGate
+        fallback={
+          <section className="rounded-3xl bg-cream-50 p-8 text-center shadow-clay-sm">
+            <h2 className="font-display text-2xl font-bold text-ink-700">
+              Rent &amp; Read is available in India
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-ink-400">
+              You can still browse and buy downloadable Little Ilmies ebooks.
+            </p>
+            <Link href="/shop" className="btn-primary mt-6">
+              <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+              Browse Books
+            </Link>
+          </section>
+        }
+      >
+        {products.length === 0 ? (
         <section className="rounded-3xl bg-cream-50 p-8 text-center shadow-clay-sm">
           <h2 className="font-display text-2xl font-bold text-ink-700">
             No Rent &amp; Read books yet
@@ -61,7 +65,7 @@ export default async function RentAndReadPage() {
             Please check back soon for eligible books.
           </p>
         </section>
-      ) : (
+        ) : (
         <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
           {products.map(({ product, rental, rentalPrice }) => {
             const pdfVariant = product.variants.find((variant) => variant.format !== "RENT_AND_READ");
@@ -137,7 +141,8 @@ export default async function RentAndReadPage() {
             );
           })}
         </section>
-      )}
+        )}
+      </RentalEligibleGate>
     </div>
   );
 }

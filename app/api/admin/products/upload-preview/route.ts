@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       const nextPaths = append ? [...product.previewImagePaths, ...pathnames] : pathnames;
       await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: nextPaths } });
       if (!append) await deletePreviewPages(product.previewImagePaths);
-      revalidateCatalogPaths(product.slug);
+      revalidateCatalogPaths();
       return NextResponse.json({
         previewImagePaths: productPreviewUrls(productId, nextPaths),
       });
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.product.update({ where: { id: productId }, data: { previewImagePaths: storedPaths } });
     await deletePreviewPages(product.previewImagePaths);
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
 
     return NextResponse.json({ previewImagePaths });
   } catch (error) {
@@ -145,7 +145,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     await prisma.product.update({ where: { id: product.id }, data: { previewImagePaths: nextPaths } });
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
     return NextResponse.json({ previewImagePaths: productPreviewUrls(product.id, nextPaths) });
   } catch (error) {
     console.error("Preview update failed", error);
@@ -173,7 +173,7 @@ export async function DELETE(request: NextRequest) {
 
     await deletePreviewPages(product.previewImagePaths);
     await prisma.product.update({ where: { id: product.id }, data: { previewImagePaths: [] } });
-    revalidateCatalogPaths(product.slug);
+    revalidateCatalogPaths();
     return NextResponse.json({ status: "removed" });
   } catch (error) {
     console.error("Preview removal failed", error);

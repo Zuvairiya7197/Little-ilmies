@@ -20,9 +20,9 @@ import {
   getPublishedProducts,
 } from "@/lib/db/catalog";
 import { Reveal } from "@/components/ui/reveal";
-import { isRentalEligibleFromHeaders } from "@/lib/rentals/eligibility";
+import { RentalEligibleGate } from "@/components/store/rental-eligible-gate";
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Islamic & Educational E-Books for Young Hearts",
@@ -34,15 +34,12 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, bundles, homepageSample, rentalEligible, featuredCategories] = await Promise.all(
-    [
-      getPublishedProducts(),
-      getActiveBundles(),
-      getHomepageSampleProduct(),
-      isRentalEligibleFromHeaders(),
-      getFeaturedCategories(),
-    ],
-  );
+  const [products, bundles, homepageSample, featuredCategories] = await Promise.all([
+    getPublishedProducts(),
+    getActiveBundles(),
+    getHomepageSampleProduct(),
+    getFeaturedCategories(),
+  ]);
 
   return (
     <>
@@ -66,11 +63,11 @@ export default async function HomePage() {
       <Reveal>
         <ShopByAge />
       </Reveal>
-      {rentalEligible && (
+      <RentalEligibleGate>
         <Reveal>
           <RentAndReadHighlight products={products} />
         </Reveal>
-      )}
+      </RentalEligibleGate>
       {bundles.length > 0 && (
         <Reveal>
           <BundleCollections bundles={bundles} />
