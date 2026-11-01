@@ -141,6 +141,7 @@ production database up to date.
 | `RAZORPAY_WEBHOOK_SECRET` | Checking the Razorpay webhook's signature |
 | `PAYMENT_PROVIDER` | `razorpay` (default) or `cashfree`: who takes new payments |
 | `CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`, `CASHFREE_ENV` | Taking payments with Cashfree (`sandbox` or `production`) |
+| `BANK_TRANSFER_DETAILS`, `WHATSAPP_NUMBER` | Showing the bank transfer fallback to international buyers (both needed). These orders are handled by hand and aren't recorded on the site |
 | `B2_KEY_ID`, `B2_APP_KEY`, `B2_BUCKET_NAME`, `B2_ENDPOINT`, `B2_REGION` | Storing files in Backblaze B2 (all but the region are needed together) |
 | `ASSETS_CDN_DOMAIN` | Serving files from the Cloudflare Worker (`assets.littleilmies.com`) |
 | `ASSETS_SIGNING_SECRET` | Signed links to paid PDFs and rental pages on the Worker (same value on the Worker) |

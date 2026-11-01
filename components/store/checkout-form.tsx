@@ -28,12 +28,14 @@ import {
 import { cashfreeCheckoutSchema, checkoutSchema, type CheckoutFormValues } from "@/lib/validation/checkout";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
 import { useCartStore } from "@/lib/store/use-cart-store";
+import { BankTransferOption } from "@/components/store/bank-transfer-option";
 import { useCashfreeScript } from "@/hooks/use-cashfree-script";
 import { useRazorpayScript } from "@/hooks/use-razorpay-script";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
 import { isPaypalSupportedCurrency, PAYPAL_UNSUPPORTED_CURRENCIES } from "@/lib/payments/paypal";
+import type { BankTransferInfo } from "@/lib/payments/bank-transfer";
 import type { PaymentProviderId } from "@/lib/payments/provider";
 
 type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "paypal" | "applepay";
@@ -139,10 +141,12 @@ function getRazorpayDisplayConfig(method: PaymentMethod, currencyCode: string) {
 
 export function CheckoutForm({
   paymentProvider,
+  bankTransfer,
   mobilePhase,
   onMobilePhaseChange,
 }: {
   paymentProvider: PaymentProviderId;
+  bankTransfer: BankTransferInfo | null;
   mobilePhase: "details" | "payment";
   onMobilePhaseChange: (phase: "details" | "payment") => void;
 }) {
@@ -182,6 +186,7 @@ export function CheckoutForm({
   const {
     register,
     handleSubmit,
+    getValues,
     setValue,
     formState: { errors },
   } = useForm<CheckoutFormValues>({
@@ -567,6 +572,15 @@ export function CheckoutForm({
               100% Secure Payments — your payment details are safe with us.
             </div>
           </div>
+
+          {!isInrCheckout && bankTransfer && currencyCode && (
+            <BankTransferOption
+              bankTransfer={bankTransfer}
+              total={formatPrice(subtotal, currencyCode)}
+              items={lineItems.map((item) => (item.formatLabel ? `${item.title} (${item.formatLabel})` : item.title))}
+              getBuyer={getValues}
+            />
+          )}
 
           <div className="rounded-3xl bg-cream-50 p-5 shadow-clay-sm">
             <div className="flex items-center justify-between gap-3">
