@@ -23,7 +23,7 @@ TypeScript, Tailwind CSS, Prisma and PostgreSQL.
   chosen from the visitor's country. The server decides the price at
   checkout, never the browser.
 - **Payments:** Razorpay, with UPI, cards, netbanking, wallets, PayPal and
-  Apple Pay.
+  Apple Pay, or Cashfree, chosen with `PAYMENT_PROVIDER`.
 - **Accounts:** password-free magic-link sign-in, purchase history,
   downloads and rentals. Orders placed without logging in are linked to the
   account with the same email.
@@ -39,7 +39,7 @@ TypeScript, Tailwind CSS, Prisma and PostgreSQL.
 | Styling | Tailwind CSS, Framer Motion, lucide-react icons |
 | Data | PostgreSQL, Prisma |
 | Auth | NextAuth (Auth.js) v4 with JWT sessions |
-| Payments | Razorpay |
+| Payments | Razorpay or Cashfree |
 | Email | Resend |
 | Files | Backblaze B2 (S3-compatible), behind a Cloudflare Worker |
 | Client state | Zustand (cart, wishlist, currency), saved in localStorage |
@@ -139,6 +139,8 @@ production database up to date.
 | `RESEND_API_KEY`, `EMAIL_FROM` | Sending magic links and order emails |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Taking payments |
 | `RAZORPAY_WEBHOOK_SECRET` | Checking the Razorpay webhook's signature |
+| `PAYMENT_PROVIDER` | `razorpay` (default) or `cashfree`: who takes new payments |
+| `CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`, `CASHFREE_ENV` | Taking payments with Cashfree (`sandbox` or `production`) |
 | `B2_KEY_ID`, `B2_APP_KEY`, `B2_BUCKET_NAME`, `B2_ENDPOINT`, `B2_REGION` | Storing files in Backblaze B2 (all but the region are needed together) |
 | `ASSETS_CDN_DOMAIN` | Serving files from the Cloudflare Worker (`assets.littleilmies.com`) |
 | `ASSETS_SIGNING_SECRET` | Signed links to paid PDFs and rental pages on the Worker (same value on the Worker) |
@@ -166,7 +168,7 @@ lib/
   db/                     Prisma client and queries (catalog, orders, admin stats)
   auth/                   NextAuth config and session/admin checks
   pricing/                Country detection, regional prices, automatic discounts
-  payments/               Razorpay client and signature checks, PayPal currency rules
+  payments/               Provider toggle, Razorpay and Cashfree clients, PayPal currency rules
   checkout/               fulfillOrder: marks an order paid and grants access
   rentals/                Rent & Read rules, pricing and access check
   storage/                B2 / local-disk storage, signed Worker links, storage report
@@ -223,11 +225,16 @@ be bought by editing the cart.
    saves a `PENDING` order and creates a Razorpay order. Rentals must be
    checked out on their own, and only from India.
 2. The browser opens Razorpay Checkout.
+   With `PAYMENT_PROVIDER=cashfree`, the order is created with Cashfree, a
+   mobile number is required, and the browser goes to Cashfree's hosted page.
 3. The payment is confirmed in two ways, and either is enough:
    `/api/checkout/verify-payment` (checks Razorpay's signature as soon as the
    buyer pays) and `/api/webhooks/razorpay` (in case the buyer closes the
    page). Both call `fulfillOrder()` in `lib/checkout/fulfill-order.ts`,
-   which does nothing if the order is already paid.
+   which does nothing if the order is already paid. Cashfree's equivalents
+   are `/api/checkout/cashfree-return` (asks Cashfree whether the order was
+   paid) and `/api/webhooks/cashfree`. Both providers' routes stay live
+   whichever is active, so in-progress payments survive a switch.
 4. `fulfillOrder()` marks the order `PAID`, creates a `Download` row for each
    PDF bought or a `RentalAccess` row with an end date (renting again extends
    an active rental), and sends the confirmation email.
@@ -237,7 +244,7 @@ be bought by editing the cart.
 6. **Refunds** (from the admin order page) set the order to `REFUNDED`.
    Every access check requires a `PAID` order, so this removes access to the
    download or rental straight away. Issue the money refund itself in the
-   Razorpay dashboard.
+   Razorpay or Cashfree dashboard, whichever took the payment.
 
 ### Files and delivery
 
@@ -307,6 +314,10 @@ In the Razorpay dashboard, point the webhook at
 `https://littleilmies.com/api/webhooks/razorpay` with the `payment.captured`
 and `payment.failed` events. The Apple Pay domain file is in
 `public/.well-known/`.
+
+Cashfree orders send their own webhook address, built from `SITE_URL`, so no
+dashboard webhook is needed. To switch provider, set `PAYMENT_PROVIDER` in
+Vercel and redeploy.
 
 ## Known gaps
 

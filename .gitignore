@@ -43,3 +43,6 @@ next-env.d.ts
 /private-uploads/rentals/*
 !/private-uploads/**/.gitkeep
 .env*
+
+APIKey.csv
+CashFree.md

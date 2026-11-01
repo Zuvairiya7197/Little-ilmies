@@ -8,21 +8,21 @@ import type { Prisma } from "@prisma/client";
 
 /**
  * Idempotent: safe to call from both the client-side verify-payment route
- * and the Razorpay webhook handler for the same order without
- * double-fulfilling (duplicate Download rows, duplicate confirmation
- * emails). Both call sites converge here so an order is never marked PAID
+ * and the payment webhooks for the same order without double-fulfilling
+ * (duplicate Download rows, duplicate confirmation emails). All call sites
+ * converge here so an order is never marked PAID
  * twice — see README "Checkout pricing contract".
  */
 export async function fulfillOrder({
   orderId,
   paymentId,
-  razorpayPaymentId,
-  razorpaySignature,
+  providerPaymentId,
+  providerSignature,
 }: {
   orderId: string;
   paymentId: string;
-  razorpayPaymentId: string;
-  razorpaySignature?: string;
+  providerPaymentId: string;
+  providerSignature?: string;
 }) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -121,8 +121,8 @@ export async function fulfillOrder({
       where: { id: paymentId },
       data: {
         status: "VERIFIED",
-        providerPaymentId: razorpayPaymentId,
-        providerSignature: razorpaySignature,
+        providerPaymentId,
+        providerSignature,
         verifiedAt: new Date(),
       },
     }),

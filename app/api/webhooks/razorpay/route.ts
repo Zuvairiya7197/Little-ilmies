@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         await fulfillOrder({
           orderId: payment.orderId,
           paymentId: payment.id,
-          razorpayPaymentId,
+          providerPaymentId: razorpayPaymentId,
         });
       }
     }

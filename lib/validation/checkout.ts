@@ -1,9 +1,18 @@
 import { z } from "zod";
 
+/** Cashfree requires a phone number: 10 digits, or + and a country code. */
+const buyerPhoneSchema = z
+  .string()
+  .transform((phone) => phone.replace(/[\s()-]/g, ""))
+  .pipe(z.string().regex(/^\+?\d{10,15}$/, "Enter a valid mobile number"));
+
 export const checkoutSchema = z.object({
   fullName: z.string().trim().min(2, "Enter your full name"),
   email: z.string().trim().email("Enter a valid email address"),
+  phone: z.string().optional(),
 });
+
+export const cashfreeCheckoutSchema = checkoutSchema.extend({ phone: buyerPhoneSchema });
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
@@ -57,6 +66,7 @@ export const checkoutItemSchema = z.union([
 export const createOrderRequestSchema = z.object({
   buyerName: z.string().trim().min(2),
   buyerEmail: z.string().trim().email(),
+  buyerPhone: buyerPhoneSchema.optional(),
   items: z.array(checkoutItemSchema).min(1),
   couponCode: z.string().trim().optional(),
   // Buyer chose PayPal after their card failed in a currency PayPal can't

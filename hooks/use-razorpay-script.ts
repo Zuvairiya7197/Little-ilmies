@@ -14,13 +14,13 @@ declare global {
 }
 
 /** Loads Razorpay's Checkout.js once and reports when window.Razorpay is ready. */
-export function useRazorpayScript() {
+export function useRazorpayScript(enabled: boolean) {
   const [isLoaded, setIsLoaded] = useState(
     typeof window !== "undefined" && Boolean(window.Razorpay)
   );
 
   useEffect(() => {
-    if (isLoaded) return;
+    if (!enabled || isLoaded) return;
     if (document.querySelector(`script[src="${RAZORPAY_SRC}"]`)) {
       setIsLoaded(true);
       return;
@@ -31,7 +31,7 @@ export function useRazorpayScript() {
     script.async = true;
     script.onload = () => setIsLoaded(true);
     document.body.appendChild(script);
-  }, [isLoaded]);
+  }, [enabled, isLoaded]);
 
   return isLoaded;
 }
