@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CheckoutView } from "@/components/store/checkout-view";
+import { getBankTransferInfo } from "@/lib/payments/bank-transfer";
 import { getPaymentProvider } from "@/lib/payments/provider";
 
 export const metadata: Metadata = {
@@ -14,5 +15,5 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutPage() {
-  return <CheckoutView paymentProvider={getPaymentProvider()} />;
+  return <CheckoutView paymentProvider={getPaymentProvider()} bankTransfer={getBankTransferInfo()} />;
 }

@@ -37,8 +37,8 @@ const otherWays = [
     bg: "bg-sage-100",
     color: "text-sage-600",
     labelColor: "text-sage-600",
-    lines: ["+91 98765 43210", "Mon – Sat, 10 AM – 6 PM"],
-    href: "https://wa.me/919876543210",
+    lines: ["+91 99874 48073", "Mon – Sat, 10 AM – 6 PM"],
+    href: "https://wa.me/919987448073",
   },
   {
     label: "Business Hours",

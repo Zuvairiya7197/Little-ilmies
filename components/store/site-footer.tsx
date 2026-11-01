@@ -139,7 +139,7 @@ const socialLinks = [
   },
   {
     label: "WhatsApp",
-    href: "https://wa.me/919876543210",
+    href: "https://wa.me/919987448073",
     icon: MessageCircle,
   },
   {
