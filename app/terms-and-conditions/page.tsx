@@ -37,7 +37,7 @@ export default function TermsAndConditionsPage() {
 
       <h2>Payments</h2>
       <p>
-        Payments are processed securely via Razorpay. We never see or store your full card, UPI,
+        Payments are processed securely via Razorpay or Cashfree. We never see or store your full card, UPI,
         or bank details. All charges are made in the currency shown to you at checkout.
       </p>
 

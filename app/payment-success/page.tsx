@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpen, CheckCircle2, Download, LogIn } from "lucide-react";
+import { ClearCart } from "@/components/store/clear-cart";
 
 export const metadata: Metadata = {
   title: "Payment Successful",
@@ -8,15 +9,16 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ email?: string; type?: string }>;
+  searchParams: Promise<{ email?: string; type?: string; clearCart?: string }>;
 }
 
 export default async function PaymentSuccessPage({ searchParams }: PageProps) {
-  const { email, type } = await searchParams;
+  const { email, type, clearCart } = await searchParams;
   const isRental = type === "rental";
 
   return (
     <div className="container-content pb-28 pt-8 xs:pt-10">
+      {clearCart && <ClearCart />}
       <div className="mx-auto flex max-w-sm flex-col items-center rounded-3xl bg-cream-50 p-6 text-center shadow-clay-sm">
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sage-50 text-sage-600 shadow-soft">
           <CheckCircle2 className="h-8 w-8" aria-hidden="true" />

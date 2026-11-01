@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
   await fulfillOrder({
     orderId: order.id,
     paymentId: payment.id,
-    razorpayPaymentId,
-    razorpaySignature,
+    providerPaymentId: razorpayPaymentId,
+    providerSignature: razorpaySignature,
   });
 
   return NextResponse.json({ status: "ok", orderId: order.id });

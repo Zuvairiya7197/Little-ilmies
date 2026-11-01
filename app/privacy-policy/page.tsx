@@ -18,9 +18,10 @@ export default function PrivacyPolicyPage() {
       <h2>Information we collect</h2>
       <ul>
         <li>Your name and email address, when you check out or sign in</li>
+        <li>Your mobile number, when our payment provider needs it to process your payment</li>
         <li>Order and purchase history, linked to your verified email</li>
         <li>Basic usage data (pages visited, device type) for improving the site</li>
-        <li>Payment details are processed directly by Razorpay — we never store your card or UPI details</li>
+        <li>Payment details are processed directly by our payment provider (Razorpay or Cashfree) — we never store your card or UPI details</li>
       </ul>
 
       <h2>How we use your information</h2>
@@ -39,7 +40,7 @@ export default function PrivacyPolicyPage() {
       <h2>Data sharing</h2>
       <p>
         We do not sell your personal information. We share only what&apos;s necessary with our
-        payment processor (Razorpay) to complete transactions, and with email delivery providers
+        payment processor (Razorpay or Cashfree) to complete transactions, and with email delivery providers
         to send you order updates.
       </p>
 

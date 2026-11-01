@@ -5,6 +5,9 @@ import { createOrderRequestSchema } from "@/lib/validation/checkout";
 import { resolveProductPriceFromDb } from "@/lib/pricing/resolve-price-db";
 import { resolveVerifiedCurrency } from "@/lib/pricing/verify-region";
 import { createRazorpayOrder, getRazorpayClient } from "@/lib/payments/razorpay";
+import { assertCashfreeConfigured, createCashfreeOrder, getCashfreeMode } from "@/lib/payments/cashfree";
+import { getPaymentProvider } from "@/lib/payments/provider";
+import { getSiteUrl } from "@/lib/site-url";
 import { PAYPAL_FALLBACK_CURRENCY, PAYPAL_UNSUPPORTED_CURRENCIES } from "@/lib/payments/paypal";
 import { validateCustomBundleSelection } from "@/lib/bundles/custom-bundle";
 import { isRentalEligibleRequest } from "@/lib/rentals/eligibility";
@@ -16,18 +19,25 @@ import type { Prisma } from "@prisma/client";
 
 /**
  * Creates an Order (status PENDING) with a server-computed total, then a
- * matching Razorpay order. The amount charged is never taken from the
+ * matching order with the active payment provider. The amount charged is never taken from the
  * request body — every line is re-priced here from ProductPrice using a
  * backend-verified region. See README "Checkout pricing contract".
  */
 export async function POST(request: NextRequest) {
   // Fail fast, before touching the database, if payments aren't configured
   // yet — avoids leaving orphaned PENDING orders with no Payment row.
+  const paymentProvider = getPaymentProvider();
   try {
-    getRazorpayClient();
+    if (paymentProvider === "cashfree") assertCashfreeConfigured();
+    else getRazorpayClient();
   } catch {
     return NextResponse.json(
-      { error: "Payments are not configured yet. Add RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET to .env." },
+      {
+        error:
+          paymentProvider === "cashfree"
+            ? "Payments are not configured yet. Add CASHFREE_APP_ID/CASHFREE_SECRET_KEY to .env."
+            : "Payments are not configured yet. Add RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET to .env.",
+      },
       { status: 502 }
     );
   }
@@ -36,7 +46,11 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { buyerName, buyerEmail, items, paypalFallback } = parsed.data;
+  const { buyerName, buyerEmail, buyerPhone, items, paypalFallback } = parsed.data;
+
+  if (paymentProvider === "cashfree" && !buyerPhone) {
+    return NextResponse.json({ error: "Please enter your mobile number." }, { status: 400 });
+  }
 
   const hasRentalItems = items.some((item) => item.type === "RENTAL");
   const hasUpgradeItems = items.some((item) => item.type === "UPGRADE");
@@ -252,14 +266,44 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  let razorpayOrder;
+  let providerOrderId: string;
+  let checkout;
   try {
-    razorpayOrder = await createRazorpayOrder({
-      amount: totalAmount,
-      currencyCode: currency,
-      receipt: order.id,
-    });
-  } catch {
+    if (paymentProvider === "cashfree") {
+      const siteUrl = getSiteUrl();
+      const cashfreeOrder = await createCashfreeOrder({
+        orderId: order.id,
+        amount: totalAmount,
+        currencyCode: currency,
+        customerId: userId ?? order.id,
+        buyerName,
+        buyerEmail,
+        buyerPhone: buyerPhone!,
+        returnUrl: `${siteUrl}/api/checkout/cashfree-return?order_id=${order.id}`,
+        // Cashfree only accepts an HTTPS notify URL, so local dev goes without.
+        notifyUrl: siteUrl.startsWith("https://") ? `${siteUrl}/api/webhooks/cashfree` : undefined,
+      });
+      providerOrderId = order.id;
+      checkout = {
+        provider: paymentProvider,
+        paymentSessionId: cashfreeOrder.payment_session_id,
+        cashfreeMode: getCashfreeMode(),
+      };
+    } else {
+      const razorpayOrder = await createRazorpayOrder({
+        amount: totalAmount,
+        currencyCode: currency,
+        receipt: order.id,
+      });
+      providerOrderId = razorpayOrder.id;
+      checkout = {
+        provider: paymentProvider,
+        razorpayOrderId: razorpayOrder.id,
+        razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+      };
+    }
+  } catch (error) {
+    console.error(`Could not create ${paymentProvider} order:`, error);
     // Local order already exists at this point — mark it FAILED rather
     // than leaving it dangling as PENDING with no Payment row.
     await prisma.order.update({ where: { id: order.id }, data: { status: "FAILED" } });
@@ -269,8 +313,8 @@ export async function POST(request: NextRequest) {
   await prisma.payment.create({
     data: {
       orderId: order.id,
-      provider: "RAZORPAY",
-      providerOrderId: razorpayOrder.id,
+      provider: paymentProvider === "cashfree" ? "CASHFREE" : "RAZORPAY",
+      providerOrderId,
       amount: totalAmount,
       currencyCode: currency,
       status: "CREATED",
@@ -279,9 +323,8 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     orderId: order.id,
-    razorpayOrderId: razorpayOrder.id,
     amount: totalAmount,
     currencyCode: currency,
-    razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+    ...checkout,
   });
 }

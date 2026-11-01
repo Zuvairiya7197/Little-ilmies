@@ -25,14 +25,16 @@ import {
   BookOpen,
   Apple,
 } from "lucide-react";
-import { checkoutSchema, type CheckoutFormValues } from "@/lib/validation/checkout";
+import { cashfreeCheckoutSchema, checkoutSchema, type CheckoutFormValues } from "@/lib/validation/checkout";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
 import { useCartStore } from "@/lib/store/use-cart-store";
+import { useCashfreeScript } from "@/hooks/use-cashfree-script";
 import { useRazorpayScript } from "@/hooks/use-razorpay-script";
 import { formatPrice } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
 import { isPaypalSupportedCurrency, PAYPAL_UNSUPPORTED_CURRENCIES } from "@/lib/payments/paypal";
+import type { PaymentProviderId } from "@/lib/payments/provider";
 
 type PaymentMethod = "upi" | "card" | "netbanking" | "wallet" | "paypal" | "applepay";
 
@@ -136,9 +138,11 @@ function getRazorpayDisplayConfig(method: PaymentMethod, currencyCode: string) {
 }
 
 export function CheckoutForm({
+  paymentProvider,
   mobilePhase,
   onMobilePhaseChange,
 }: {
+  paymentProvider: PaymentProviderId;
   mobilePhase: "details" | "payment";
   onMobilePhaseChange: (phase: "details" | "payment") => void;
 }) {
@@ -150,7 +154,9 @@ export function CheckoutForm({
   const [showPaypalFallback, setShowPaypalFallback] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
   const [canUseApplePay, setCanUseApplePay] = useState(false);
-  const isRazorpayReady = useRazorpayScript();
+  const isCashfree = paymentProvider === "cashfree";
+  const isRazorpayReady = useRazorpayScript(!isCashfree);
+  const isCashfreeReady = useCashfreeScript(isCashfree);
 
   // ApplePaySession only exists in Safari on Apple devices, so this is read
   // after mount to keep the server render identical.
@@ -179,7 +185,7 @@ export function CheckoutForm({
     setValue,
     formState: { errors },
   } = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(isCashfree ? cashfreeCheckoutSchema : checkoutSchema),
   });
 
   // Prefill with the logged-in buyer's email instead of leaving it blank —
@@ -213,6 +219,7 @@ export function CheckoutForm({
         body: JSON.stringify({
           buyerName: values.fullName,
           buyerEmail: values.email,
+          buyerPhone: values.phone,
           paypalFallback,
           items: lineItems.map((item) =>
             item.type === "CUSTOM_BUNDLE"
@@ -234,6 +241,20 @@ export function CheckoutForm({
       const createData = await createRes.json();
       if (!createRes.ok) {
         setSubmitError(createData.error ?? "Could not start checkout. Please try again.");
+        return;
+      }
+
+      // Cashfree takes the buyer to its own page to choose a method and pay.
+      // They come back through /api/checkout/cashfree-return.
+      if (createData.provider === "cashfree") {
+        if (!isCashfreeReady || !window.Cashfree) {
+          setSubmitError("Payment is still loading — please try again in a moment.");
+          return;
+        }
+        await window.Cashfree({ mode: createData.cashfreeMode }).checkout({
+          paymentSessionId: createData.paymentSessionId,
+          redirectTarget: "_self",
+        });
         return;
       }
 
@@ -372,6 +393,29 @@ export function CheckoutForm({
           </p>
         )}
 
+        {isCashfree && (
+          <>
+            <div className="mt-3">
+              <input
+                id="phone"
+                type="tel"
+                autoComplete="tel"
+                inputMode="tel"
+                aria-invalid={Boolean(errors.phone)}
+                aria-describedby={errors.phone ? "phone-error" : undefined}
+                {...register("phone")}
+                className="store-input rounded-2xl"
+                placeholder={isInrCheckout ? "Mobile number" : "Mobile number with country code, e.g. +44"}
+              />
+            </div>
+            {errors.phone && (
+              <p id="phone-error" role="alert" className="mt-1.5 text-xs text-gold-700">
+                {errors.phone.message}
+              </p>
+            )}
+          </>
+        )}
+
         <label className="mt-3 flex items-center gap-2.5 text-sm text-ink-500">
           <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-ink-200 text-ink-600" />
           Email me order updates and offers
@@ -454,7 +498,12 @@ export function CheckoutForm({
 
           <div className="rounded-3xl bg-cream-50 p-5 shadow-clay-sm">
             <h2 className="font-display text-lg font-bold text-ink-700">Payment Methods</h2>
-            <div className="mt-3 flex flex-col gap-3">
+            {isCashfree && (
+              <p className="mt-3 text-sm text-ink-500">
+                You&apos;ll choose how to pay on Cashfree&apos;s secure page next.
+              </p>
+            )}
+            <div className={cn("mt-3 flex flex-col gap-3", isCashfree && "hidden")}>
               {availablePaymentMethods.map(({ id, label, description, icon: Icon, badge }) => (
                 <label
                   key={id}
@@ -488,7 +537,7 @@ export function CheckoutForm({
               ))}
             </div>
 
-            {!isInrCheckout && !allowedPaymentMethodIds.includes("paypal") && (
+            {!isCashfree && !isInrCheckout && !allowedPaymentMethodIds.includes("paypal") && (
               <p className="mt-3 rounded-2xl bg-ink-50 px-3.5 py-3 text-xs font-semibold text-ink-500">
                 International orders are processed by card for {currencyCode ?? "your selected currency"} checkout.
               </p>

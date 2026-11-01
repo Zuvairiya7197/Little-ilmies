@@ -44,7 +44,7 @@ export default function RefundPolicyPage() {
 
       <h2>How refunds are processed</h2>
       <p>
-        Approved refunds are issued to your original payment method via Razorpay, typically
+        Approved refunds are issued to your original payment method via our payment provider, typically
         within 5–7 business days.
       </p>
 

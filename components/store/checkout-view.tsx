@@ -8,8 +8,9 @@ import { CheckoutForm } from "@/components/store/checkout-form";
 import { CheckoutStepProgress } from "@/components/store/checkout-step-progress";
 import { RegionMismatchNotice } from "@/components/store/region-mismatch-notice";
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
+import type { PaymentProviderId } from "@/lib/payments/provider";
 
-export function CheckoutView() {
+export function CheckoutView({ paymentProvider }: { paymentProvider: PaymentProviderId }) {
   const lineItems = useCartLineItems();
   const [mobilePhase, setMobilePhase] = useState<"details" | "payment">("details");
 
@@ -55,7 +56,11 @@ export function CheckoutView() {
       </div>
 
       <div className="mx-auto max-w-2xl">
-        <CheckoutForm mobilePhase={mobilePhase} onMobilePhaseChange={setMobilePhase} />
+        <CheckoutForm
+          paymentProvider={paymentProvider}
+          mobilePhase={mobilePhase}
+          onMobilePhaseChange={setMobilePhase}
+        />
       </div>
     </div>
   );

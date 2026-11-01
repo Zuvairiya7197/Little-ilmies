@@ -527,8 +527,8 @@ model Payment {
   id                    String        @id @default(cuid())
   orderId               String
   provider              PaymentProvider @default(RAZORPAY)
-  providerOrderId        String? // Razorpay order_id
-  providerPaymentId      String? // Razorpay payment_id
+  providerOrderId        String? // Razorpay order_id, or our Order.id for Cashfree
+  providerPaymentId      String? // Razorpay payment_id or Cashfree cf_payment_id
   providerSignature      String?
   amount                Int // minor units, must match Order.totalAmount
   currencyCode          String
@@ -547,6 +547,7 @@ enum PaymentProvider {
   RAZORPAY
   STRIPE
   PAYPAL
+  CASHFREE
 }
 
 enum PaymentStatus {
