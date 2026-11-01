@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getActiveCustomBundleBySlug } from "@/lib/db/catalog";
 import { CustomBundleBuilder } from "@/components/store/custom-bundle-builder";
 
@@ -35,5 +36,11 @@ export default async function BundlePage({ params }: PageProps) {
   const { slug } = await params;
   const bundle = await getActiveCustomBundleBySlug(slug);
   if (!bundle) notFound();
-  return <CustomBundleBuilder bundle={bundle} />;
+  // The builder reads ?edit= with useSearchParams, which a cached page can
+  // only do inside a Suspense boundary.
+  return (
+    <Suspense>
+      <CustomBundleBuilder bundle={bundle} />
+    </Suspense>
+  );
 }
