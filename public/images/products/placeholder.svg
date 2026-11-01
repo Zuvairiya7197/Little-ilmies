@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <rect width="600" height="800" fill="#E4ECF5"/>
+  <rect x="24" y="24" width="552" height="752" fill="none" stroke="#4B449D" stroke-width="2" opacity="0.5"/>
+  <circle cx="300" cy="340" r="90" fill="none" stroke="#4B449D" stroke-width="3" opacity="0.6"/>
+  <path d="M 300 270 L 320 320 L 375 325 L 335 360 L 348 415 L 300 385 L 252 415 L 265 360 L 225 325 L 280 320 Z" fill="#4B449D" opacity="0.7"/>
+  <text x="300" y="500" font-family="Georgia, serif" font-size="26" font-weight="600" fill="#17142B" text-anchor="middle">Cover coming soon</text>
+  <text x="300" y="540" font-family="sans-serif" font-size="16" fill="#17142B" opacity="0.6" text-anchor="middle">LITTLE ILMIES</text>
+</svg>
