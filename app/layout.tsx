@@ -3,6 +3,7 @@ import { Baloo_2, Nunito } from "next/font/google";
 import "@/styles/globals.css";
 import { StorefrontChrome } from "@/components/store/storefront-chrome";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
+import { CartSync } from "@/components/store/cart-sync";
 import { ActiveStateFix } from "@/components/providers/active-state-fix";
 import { JsonLd } from "@/components/seo/json-ld";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
@@ -105,6 +106,7 @@ export default async function RootLayout({
           Skip to main content
         </a>
         <AuthSessionProvider>
+          <CartSync />
           <StorefrontChrome categories={categories}>
             {children}
           </StorefrontChrome>
