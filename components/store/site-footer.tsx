@@ -144,7 +144,7 @@ const socialLinks = [
   },
   {
     label: "Facebook",
-    href: "https://facebook.com/littleilmies",
+    href: "https://www.facebook.com/profile.php?id=61594316431976",
     icon: Facebook,
   },
 ];

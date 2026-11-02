@@ -11,7 +11,7 @@ export function organizationSchema() {
     logo: `${siteUrl}/images/little_ilmies_logo_cropped.png`,
     description:
       "Little Ilmies helps Muslim parents nurture young hearts with authentic Islamic and educational e-books.",
-    sameAs: ["https://instagram.com/littleilmies", "https://facebook.com/littleilmies"],
+    sameAs: ["https://instagram.com/littleilmies", "https://www.facebook.com/profile.php?id=61594316431976"],
     contactPoint: {
       "@type": "ContactPoint",
       email: "contact@littleilmies.com",
