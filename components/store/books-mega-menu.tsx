@@ -6,7 +6,14 @@ import { ChevronDown, BookOpen } from "lucide-react";
 import { getBooksMenuSections } from "@/lib/store-navigation";
 import type { Category } from "@/types/catalog";
 
-export function BooksMegaMenu({ categories = [] }: { categories?: Pick<Category, "id" | "slug" | "name" | "parentId">[] }) {
+export function BooksMegaMenu({
+  categories = [],
+  active = false,
+}: {
+  categories?: Pick<Category, "id" | "slug" | "name" | "parentId">[];
+  /** Highlights the trigger while a book category page is open. */
+  active?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const booksMenuSections = getBooksMenuSections(categories);
   const [panelLeft, setPanelLeft] = useState(0);
@@ -59,7 +66,10 @@ export function BooksMegaMenu({ categories = [] }: { categories?: Pick<Category,
         aria-controls="books-mega-menu"
         onClick={() => setOpen((value) => !value)}
         onFocus={updatePanelPosition}
-        className="tap-target flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold text-ink-600 transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm"
+        aria-current={active ? "page" : undefined}
+        className={`tap-target flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm ${
+          active ? "bg-sage-50 text-sage-700 shadow-clay-sm" : "text-ink-600"
+        }`}
       >
         Books
         <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />

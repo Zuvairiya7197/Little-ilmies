@@ -8,6 +8,17 @@ export const shopNavLinks = [
   { label: "Sale", href: "/shop?sale=true" },
 ] as const;
 
+/**
+ * Whether a nav link points at the current page. Links that differ only by
+ * query (/shop?sort=newest vs /shop?sale=true) match when every param the
+ * link sets has the same value in the current URL.
+ */
+export function isNavLinkActive(href: string, pathname: string, searchParams: URLSearchParams) {
+  const url = new URL(href, "https://littleilmies.com");
+  if (url.pathname !== pathname) return false;
+  return [...url.searchParams].every(([key, value]) => searchParams.get(key) === value);
+}
+
 export const quickCategoryLinks = [
   { label: "Ramadan", href: "/shop/ramadan" },
   { label: "Stories of the Prophets", href: "/shop/stories-of-the-prophets" },

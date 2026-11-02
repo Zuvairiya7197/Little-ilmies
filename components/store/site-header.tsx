@@ -1,8 +1,8 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Menu, ArrowLeft, Heart, ShoppingBag, User } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
 import { Logo } from "@/components/store/logo";
@@ -18,8 +18,31 @@ import { useWishlistStore } from "@/lib/store/use-wishlist-store";
 import { useCurrencyStore } from "@/lib/store/use-currency-store";
 import { useSearchStore } from "@/lib/store/use-search-store";
 import { cn } from "@/lib/utils/cn";
-import { shopNavLinks } from "@/lib/store-navigation";
+import { isNavLinkActive, shopNavLinks } from "@/lib/store-navigation";
 import type { Category } from "@/types/catalog";
+
+const navLinkClass =
+  "tap-target flex items-center rounded-full px-3.5 py-2 text-sm font-semibold transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm";
+const navLinkActiveClass = "bg-sage-50 text-sage-700 shadow-clay-sm";
+
+/** A header link that highlights itself on the page it points to. */
+function ShopNavLink({ href, label }: { href: string; label: string }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const active = isNavLinkActive(href, pathname, searchParams);
+
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(navLinkClass, active ? navLinkActiveClass : "text-ink-600")}
+    >
+      {label}
+    </Link>
+  );
+}
+
+const printablesHref = shopNavLinks.find((item) => item.label === "Printables")?.href;
 
 export function SiteHeader({
   showRentAndRead = false,
@@ -92,26 +115,31 @@ export function SiteHeader({
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-1">
               <li>
-                <BooksMegaMenu categories={categories} />
+                <BooksMegaMenu
+                  categories={categories}
+                  active={pathname.startsWith("/shop/") && pathname !== printablesHref}
+                />
               </li>
               {shopNavLinks.map((item) => (
                 <Fragment key={item.href}>
                   <li>
-                    <Link
-                      href={item.href}
-                      className="tap-target flex items-center rounded-full px-3.5 py-2 text-sm font-semibold text-ink-600 transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm"
+                    {/* useSearchParams needs a Suspense boundary on static pages. */}
+                    <Suspense
+                      fallback={
+                        <Link href={item.href} className={cn(navLinkClass, "text-ink-600")}>
+                          {item.label}
+                        </Link>
+                      }
                     >
-                      {item.label}
-                    </Link>
+                      <ShopNavLink href={item.href} label={item.label} />
+                    </Suspense>
                   </li>
                   {showRentAndRead && item.label === "Bundles" && (
                     <li>
                     <Link
                       href="/rent-and-read"
-                      className={cn(
-                        "tap-target flex items-center rounded-full px-3.5 py-2 text-sm font-semibold transition-all duration-200 hover:bg-cream-50 hover:shadow-clay-sm",
-                        pathname === "/rent-and-read" ? "bg-sage-50 text-sage-700 shadow-clay-sm" : "text-ink-600"
-                      )}
+                      aria-current={pathname === "/rent-and-read" ? "page" : undefined}
+                      className={cn(navLinkClass, pathname === "/rent-and-read" ? navLinkActiveClass : "text-ink-600")}
                     >
                       Rent & Read
                     </Link>
