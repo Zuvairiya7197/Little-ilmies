@@ -6,6 +6,20 @@ import { getPrivatePdfDownloadUrl, streamPrivatePdf } from "@/lib/storage";
 import { pdfPathForFormat } from "@/lib/product-formats";
 import { storageReadFailure } from "@/lib/storage/responses";
 
+/** Counts a download on the buyer's purchase and on the book's total. */
+function recordDownload(downloadId: string, productId: string) {
+  return prisma.$transaction([
+    prisma.download.update({
+      where: { id: downloadId },
+      data: { downloadCount: { increment: 1 }, lastDownloadedAt: new Date() },
+    }),
+    prisma.product.update({
+      where: { id: productId },
+      data: { downloadCount: { increment: 1 } },
+    }),
+  ]);
+}
+
 interface RouteParams {
   params: Promise<{ productId: string }>;
 }
@@ -69,10 +83,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const signedUrl = await getPrivatePdfDownloadUrl(pdfPath, fileName).catch(() => null);
 
   if (signedUrl) {
-    await prisma.download.update({
-      where: { id: download.id },
-      data: { downloadCount: { increment: 1 }, lastDownloadedAt: new Date() },
-    });
+    await recordDownload(download.id, productId);
     // The URL expires in 5 minutes and is never cached, so it can't be
     // reused or shared beyond a single download.
     const response = NextResponse.redirect(signedUrl, 302);
@@ -87,10 +98,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return storageReadFailure(error, "This PDF");
   }
 
-  await prisma.download.update({
-    where: { id: download.id },
-    data: { downloadCount: { increment: 1 }, lastDownloadedAt: new Date() },
-  });
+  await recordDownload(download.id, productId);
 
   const webStream = Readable.toWeb(file.stream) as ReadableStream;
 

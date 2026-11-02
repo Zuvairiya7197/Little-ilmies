@@ -178,6 +178,8 @@ model Product {
   pageCount   Int
   rating      Float    @default(0)
   reviewCount Int      @default(0)
+  /// Real buyer downloads of this book, kept in step by the download route
+  /// (sum of its Download.downloadCount rows). Never set it by hand.
   downloadCount Int    @default(0)
   isBestseller Boolean @default(false)
   isNewArrival Boolean @default(false)

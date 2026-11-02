@@ -32,8 +32,7 @@ export async function getRecentOrders(limit = 8) {
 
 /**
  * Real downloads per book, from the per-purchase Download rows the download
- * route increments. Product.downloadCount is a storefront display number set
- * by hand/seed and never counts actual downloads, so reports must not use it.
+ * route increments, along with how often each book was bought.
  */
 export async function getDownloadReport() {
   const grouped = await prisma.download.groupBy({
