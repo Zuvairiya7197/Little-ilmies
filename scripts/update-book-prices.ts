@@ -14,6 +14,15 @@ import type { CurrencyCode } from "../types/pricing";
 const DISCOUNT_PERCENTAGE = 16.67;
 const CURRENCIES: CurrencyCode[] = ["INR", "USD", "GBP", "AED"];
 
+// Sold only as black & white PDFs, so these take the same prices in that format.
+const BW_ONLY_SLUGS = new Set([
+  "my-first-islamic-colouring-book",
+  "fruits-colouring-book",
+  "shapes-in-my-world-a-colouring-book",
+  "my-little-world-of-vehicles",
+  "created-by-allah-my-first-colouring-book",
+]);
+
 const BOOKS: [slug: string, inr: number, usd: number, gbp: number, aed: number][] = [
   ["progressive-phonics-beginner-book-1-short-vowel-a", 149, 2.99, 2.49, 11],
   ["progressive-phonics-beginner-book-2-short-vowel-e", 149, 2.99, 2.49, 11],
@@ -58,7 +67,7 @@ async function main() {
   for (const [slug, ...sellingPrices] of BOOKS) {
     const product = await prisma.product.findUnique({
       where: { slug },
-      select: { title: true, prices: { where: { format: "COLOUR_PDF" } } },
+      select: { title: true, prices: true },
     });
     if (!product) {
       problems.push(`${slug}: book not found`);
@@ -66,22 +75,28 @@ async function main() {
     }
     console.log(`\n${product.title}`);
 
-    CURRENCIES.forEach((currencyCode, index) => {
-      const row = product.prices.find((price) => price.currencyCode === currencyCode);
-      if (!row) {
-        problems.push(`${slug}: no ${currencyCode} colour PDF price`);
-        return;
-      }
-      if (!row.isActive) problems.push(`${slug}: ${currencyCode} price is inactive`);
-      if (row.saleStartDate || row.saleEndDate) problems.push(`${slug}: ${currencyCode} has sale dates set`);
+    for (const bookFormat of BW_ONLY_SLUGS.has(slug) ? ["COLOUR_PDF", "BW_PDF"] : ["COLOUR_PDF"]) {
+      CURRENCIES.forEach((currencyCode, index) => {
+        const row = product.prices.find(
+          (price) => price.format === bookFormat && price.currencyCode === currencyCode
+        );
+        if (!row) {
+          problems.push(`${slug}: no ${currencyCode} ${bookFormat} price`);
+          return;
+        }
+        if (!row.isActive) problems.push(`${slug}: ${currencyCode} ${bookFormat} price is inactive`);
+        if (row.saleStartDate || row.saleEndDate) {
+          problems.push(`${slug}: ${currencyCode} ${bookFormat} has sale dates set`);
+        }
 
-      const regularPrice = regularPriceFor(sellingPrices[index], currencyCode);
-      const salePrice = calculateSalePrice(regularPrice, DISCOUNT_PERCENTAGE, currencyCode);
-      console.log(
-        `  ${currencyCode}: regular ${format(row.regularPrice)} -> ${format(regularPrice)}, buyer pays ${format(salePrice)}`
-      );
-      updates.push({ id: row.id, regularPrice });
-    });
+        const regularPrice = regularPriceFor(sellingPrices[index], currencyCode);
+        const salePrice = calculateSalePrice(regularPrice, DISCOUNT_PERCENTAGE, currencyCode);
+        console.log(
+          `  ${bookFormat} ${currencyCode}: regular ${format(row.regularPrice)} -> ${format(regularPrice)}, buyer pays ${format(salePrice)}`
+        );
+        updates.push({ id: row.id, regularPrice });
+      });
+    }
   }
 
   if (problems.length > 0) {
