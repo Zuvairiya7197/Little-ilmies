@@ -6,6 +6,7 @@ import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { CartSync } from "@/components/store/cart-sync";
 import { ActiveStateFix } from "@/components/providers/active-state-fix";
 import { JsonLd } from "@/components/seo/json-ld";
+import { MetaPixel } from "@/components/seo/meta-pixel";
 import { organizationSchema, websiteSchema } from "@/lib/seo/schema";
 import { getAllCategories } from "@/lib/db/catalog";
 import { getSiteUrl } from "@/lib/site-url";
@@ -97,6 +98,7 @@ export default async function RootLayout({
     <html lang="en" className={`${baloo.variable} ${nunito.variable}`}>
       <body className="flex min-h-screen flex-col bg-cream font-sans text-ink-500">
         <ActiveStateFix />
+        <MetaPixel />
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
         <a
