@@ -13,6 +13,7 @@ import {
   Sparkle,
 } from "lucide-react";
 import { ContactForm } from "@/components/store/contact-form";
+import { SellerDetails } from "@/components/store/seller-details";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -54,7 +55,7 @@ const otherWays = [
     bg: "bg-sunny-100",
     color: "text-sunny-600",
     labelColor: "text-sunny-600",
-    lines: ["India", "Serving little Muslims worldwide 💜"],
+    lines: ["Chiplun, Maharashtra, India", "Serving little Muslims worldwide 💜"],
   },
 ];
 
@@ -386,6 +387,8 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+
+      <SellerDetails />
     </div>
   );
 }

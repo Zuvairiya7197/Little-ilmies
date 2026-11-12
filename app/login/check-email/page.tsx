@@ -83,7 +83,12 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
             <p className="mt-1 text-sm leading-relaxed text-ink-500">
               Check your spam or promotions folder.
               <br />
-              Still not there? <Link href="/login" className="font-bold text-ink-600 hover:text-blossom-600">Resend the link.</Link>
+              Still not there after a few minutes?{" "}
+              <Link href="/login" className="font-bold text-ink-600 hover:text-blossom-600">Resend the link.</Link>
+              <br />
+              <span className="text-xs text-ink-400">
+                For security, we send at most 5 links per email address every 15 minutes.
+              </span>
             </p>
           </div>
         </div>

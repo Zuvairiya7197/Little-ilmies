@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function DigitalDeliveryPolicyPage() {
   return (
-    <LegalPageLayout title="Digital Delivery Policy" updatedAt="July 2026">
+    <LegalPageLayout title="Digital Delivery Policy" updatedAt="November 2026">
       <p>
         All products on Little Ilmies are digital and delivered instantly — there is no
         physical shipping.
@@ -18,6 +18,10 @@ export default function DigitalDeliveryPolicyPage() {
       <h2>How delivery works</h2>
       <ul>
         <li>Once your payment is confirmed, your e-books are immediately available to download.</li>
+        <li>
+          Paying by bank transfer? Your books unlock as soon as we&apos;ve confirmed the money has reached our
+          account, which can take 1–3 business days depending on your bank.
+        </li>
         <li>You&apos;ll receive an order confirmation email with your receipt and a link to your account.</li>
         <li>
           Sign in anytime with the same email you checked out with to access your{" "}
@@ -27,9 +31,10 @@ export default function DigitalDeliveryPolicyPage() {
 
       <h2>No account needed to buy</h2>
       <p>
-        You can complete checkout as a guest with just your name and email — an account isn&apos;t
+        You can pay online as a guest with just your name and email — an account isn&apos;t
         required to purchase. Your order is linked to your email, so you can always log in later
-        with the same address to re-download your books.
+        with the same address to download your books. (Paying by bank transfer needs you to sign
+        in first, so your payment details go to your verified email.)
       </p>
 
       <h2>File format</h2>

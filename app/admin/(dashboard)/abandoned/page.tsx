@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
+import { BANK_TRANSFER_PAYMENT_DAYS } from "@/lib/payments/bank-transfer";
 
 export const metadata: Metadata = {
   title: "Abandoned",
@@ -40,8 +41,19 @@ export default async function AdminAbandonedPage() {
   });
   carts.sort((a, b) => b.items[0].addedAt.getTime() - a.items[0].addedAt.getTime());
 
+  const bankTransferWindowStart = new Date();
+  bankTransferWindowStart.setDate(bankTransferWindowStart.getDate() - BANK_TRANSFER_PAYMENT_DAYS);
   const unpaidOrders = await prisma.order.findMany({
-    where: { status: { in: ["PENDING", "FAILED"] } },
+    where: {
+      status: { in: ["PENDING", "FAILED"] },
+      // A bank transfer order inside its payment window is waiting for the
+      // buyer's money, not abandoned; once the window ends it is.
+      NOT: {
+        status: "PENDING",
+        payments: { some: { provider: "BANK_TRANSFER" } },
+        createdAt: { gte: bankTransferWindowStart },
+      },
+    },
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {

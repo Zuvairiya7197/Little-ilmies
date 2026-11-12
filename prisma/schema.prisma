@@ -450,6 +450,8 @@ model Order {
   payments Payment[]
   downloads Download[]
   rentals RentalAccess[]
+  /// The one review whose reward this order paid for (one code per order).
+  rewardedReview Review?
 
   @@index([buyerEmail])
   @@map("orders")
@@ -550,6 +552,9 @@ enum PaymentProvider {
   STRIPE
   PAYPAL
   CASHFREE
+  /// Paid straight to the shop's bank account; an admin confirms receipt
+  /// (see app/api/admin/orders/[orderId]/confirm-bank-transfer).
+  BANK_TRANSFER
 }
 
 enum PaymentStatus {
@@ -588,9 +593,14 @@ model Coupon {
   maxRedemptions Int?
   redemptionCount Int        @default(0)
   expiresAt     DateTime?
+  /// Only this buyer email may redeem the coupon (case-insensitive). Set on
+  /// review reward coupons; null means anyone can use it.
+  restrictedToEmail String?
   createdAt     DateTime     @default(now())
 
   orders Order[]
+  /// The review that earned this coupon, for review reward coupons.
+  rewardForReview Review?
 
   @@map("coupons")
 }
@@ -600,6 +610,9 @@ enum CouponType {
   FIXED_AMOUNT
 }
 
+/// A buyer's review of a book they bought or rented. Only APPROVED reviews
+/// are shown or counted in Product.rating/reviewCount, and approving one is
+/// what issues its reward coupon (see lib/reviews/moderate-review.ts).
 model Review {
   id        String   @id @default(cuid())
   productId String
@@ -608,12 +621,51 @@ model Review {
   rating    Int
   title     String?
   body      String
+  status    ReviewStatus @default(PENDING)
+  /// GIFTED reviews are added by an admin for parents given a free copy:
+  /// no account, no reward, shown as "Gifted copy" rather than "Verified
+  /// buyer", and never the book's first-reviewer.
+  source    ReviewSource @default(BUYER)
+  /// True when this was the book's first approved buyer review — it earns the
+  /// bigger first-reviewer reward.
+  isFirstReview Boolean @default(false)
+  approvedAt DateTime?
+  rewardCouponId String? @unique
+  /// The purchase this review's reward was issued for. Unique, so however
+  /// many books from one order are reviewed, the order earns one code.
+  rewardOrderId String? @unique
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User?   @relation(fields: [userId], references: [id])
+  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user         User?   @relation(fields: [userId], references: [id])
+  rewardCoupon Coupon? @relation(fields: [rewardCouponId], references: [id], onDelete: SetNull)
+  rewardOrder  Order?  @relation(fields: [rewardOrderId], references: [id], onDelete: SetNull)
 
+  @@unique([productId, userId])
+  @@index([productId, status])
+  @@index([status])
   @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReviewSource {
+  BUYER
+  GIFTED
+}
+
+/// Emails actually sent per UTC day, so optional emails can stop before the
+/// provider's daily limit and leave room for sign-in links (lib/email/send-mail.ts).
+model EmailDailyCount {
+  day   String @id // YYYY-MM-DD (UTC)
+  count Int    @default(0)
+
+  @@map("email_daily_counts")
 }
 
 model AppSetting {

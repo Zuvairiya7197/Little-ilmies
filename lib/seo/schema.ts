@@ -1,4 +1,5 @@
 import { getSiteUrl } from "@/lib/site-url";
+import { BUSINESS } from "@/lib/business";
 
 const siteUrl = getSiteUrl();
 
@@ -12,9 +13,17 @@ export function organizationSchema() {
     description:
       "Little Ilmies helps Muslim parents nurture young hearts with authentic Islamic and educational e-books.",
     sameAs: ["https://instagram.com/littleilmies", "https://www.facebook.com/profile.php?id=61594316431976"],
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: BUSINESS.city,
+      addressRegion: "Maharashtra",
+      postalCode: BUSINESS.postalCode,
+      addressCountry: "IN",
+    },
     contactPoint: {
       "@type": "ContactPoint",
-      email: "contact@littleilmies.com",
+      email: BUSINESS.email,
+      telephone: BUSINESS.phone,
       contactType: "customer service",
     },
   };

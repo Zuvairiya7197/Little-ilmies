@@ -12,6 +12,7 @@ import {
   Users,
   ShoppingCart,
   Ticket,
+  Star,
   Download,
   Settings,
   LogOut,
@@ -31,6 +32,7 @@ const navItems = [
   { href: "/admin/buyers", label: "Buyers", icon: Users, color: "sunny" },
   { href: "/admin/abandoned", label: "Abandoned", icon: ShoppingCart, color: "blossom" },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket, color: "lemon" },
+  { href: "/admin/reviews", label: "Reviews", icon: Star, color: "gold" },
   { href: "/admin/downloads", label: "Downloads", icon: Download, color: "sage" },
   { href: "/admin/settings", label: "Settings", icon: Settings, color: "ink" },
 ] as const;

@@ -131,11 +131,16 @@ export async function getProductEntitlementForUser(userId: string, productId: st
 }
 
 export async function getDownloadsForUser(userId: string): Promise<DownloadRecord[]> {
-  const downloads = await prisma.download.findMany({
-    where: { order: { userId, status: "PAID" } },
-    orderBy: { createdAt: "desc" },
-    include: { product: true, order: true },
-  });
+  const [downloads, reviews] = await Promise.all([
+    prisma.download.findMany({
+      where: { order: { userId, status: "PAID" } },
+      orderBy: { createdAt: "desc" },
+      include: { product: true, order: true },
+    }),
+    // A rejected review can be fixed and resent, so it doesn't count.
+    prisma.review.findMany({ where: { userId, status: { not: "REJECTED" } }, select: { productId: true } }),
+  ]);
+  const reviewedProductIds = new Set(reviews.map((review) => review.productId));
 
   return downloads.map((download) => ({
     orderId: download.orderId,
@@ -149,5 +154,6 @@ export async function getDownloadsForUser(userId: string): Promise<DownloadRecor
     downloadHref: downloadHref(download.productId, isPdfFormat(download.format) ? download.format : "COLOUR_PDF"),
     purchasedAt: download.order.createdAt.toISOString(),
     downloadCount: download.downloadCount,
+    hasReviewed: reviewedProductIds.has(download.productId),
   }));
 }

@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { IndianRupee, ShoppingBag, Users, BookOpen, Clock, Download } from "lucide-react";
-import { getRevenueSummary, getRecentOrders, getMostDownloadedProducts } from "@/lib/db/admin-stats";
+import { IndianRupee, ShoppingBag, Users, BookOpen, Clock, Download, Star, Landmark, Mail } from "lucide-react";
+import {
+  getAttentionSummary,
+  getRevenueSummary,
+  getRecentOrders,
+  getMostDownloadedProducts,
+} from "@/lib/db/admin-stats";
+import { cn } from "@/lib/utils/cn";
 import { StatCard } from "@/components/admin/stat-card";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { formatPrice } from "@/lib/utils/format";
@@ -13,17 +19,68 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const [summary, recentOrders, mostDownloaded] = await Promise.all([
+  const [summary, recentOrders, mostDownloaded, attention] = await Promise.all([
     getRevenueSummary(),
     getRecentOrders(),
     getMostDownloadedProducts(),
+    getAttentionSummary(),
   ]);
+  const emailShare = attention.emailsSentToday / attention.emailDailyLimit;
+  const attentionItems = [
+    {
+      href: "/admin/reviews",
+      icon: Star,
+      label: "Reviews to approve",
+      value: attention.pendingReviews,
+      urgent: attention.pendingReviews > 0,
+    },
+    {
+      href: "/admin/orders",
+      icon: Landmark,
+      label: "Bank transfers awaiting money",
+      value: attention.awaitingBankTransfers,
+      urgent: attention.awaitingBankTransfers > 0,
+    },
+    {
+      href: null,
+      icon: Mail,
+      label: emailShare >= 0.7 ? "Emails today — only essential emails now" : "Emails sent today",
+      value: `${attention.emailsSentToday} / ${attention.emailDailyLimit}`,
+      urgent: emailShare >= 0.7,
+    },
+  ];
 
   const revenueEntries = Object.entries(summary.revenueByCurrency);
 
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold text-ink-700 xs:text-3xl">Dashboard</h1>
+
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {attentionItems.map(({ href, icon: Icon, label, value, urgent }) => {
+          const content = (
+            <div
+              className={cn(
+                "flex h-full items-center gap-3 rounded-2xl p-4 shadow-clay-sm",
+                urgent ? "bg-gold-50" : "bg-cream-50"
+              )}
+            >
+              <Icon className={cn("h-5 w-5 shrink-0", urgent ? "text-gold-600" : "text-ink-300")} aria-hidden="true" />
+              <div className="min-w-0">
+                <p className={cn("text-xs", urgent ? "font-semibold text-gold-700" : "text-ink-400")}>{label}</p>
+                <p className="font-display text-lg font-semibold text-ink-700">{value}</p>
+              </div>
+            </div>
+          );
+          return href ? (
+            <Link key={label} href={href} className="block">
+              {content}
+            </Link>
+          ) : (
+            <div key={label}>{content}</div>
+          );
+        })}
+      </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 xs:grid-cols-2 lg:grid-cols-5">
         {revenueEntries.length > 0 ? (

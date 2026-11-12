@@ -15,6 +15,7 @@ import { calculateCustomBundlePrice } from "@/lib/pricing/automatic-pricing";
 import { getPricingSettings, type PricingSettings } from "@/lib/settings/pricing-settings";
 import { getStorefrontSettings, type StorefrontSettings } from "@/lib/settings/storefront-settings";
 import { buildProductVariants, pricesForFormat, primaryPdfFormat, toRegionalPrices } from "@/lib/product-formats";
+import { getApprovedReviews } from "@/lib/reviews/queries";
 
 type CatalogSettings = PricingSettings & StorefrontSettings;
 
@@ -160,7 +161,7 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
 
   const summary = toProductSummary(product, settings);
   const extra = detailExtras[slug] ?? defaultExtra(product.title);
-  const related = await getRelatedProducts(summary, 4);
+  const [related, reviews] = await Promise.all([getRelatedProducts(summary, 4), getApprovedReviews(product.id)]);
 
   return {
     ...summary,
@@ -169,7 +170,7 @@ export async function getPublishedProductDetailBySlug(slug: string): Promise<Pro
     learningBenefits: product.learningObjectives.length > 0 ? product.learningObjectives : extra.learningBenefits,
     bestFor: product.suitableFor.length > 0 ? product.suitableFor : extra.bestFor,
     previewImages: summary.previewImages ?? extra.previewImages,
-    reviews: extra.reviews,
+    reviews,
     relatedSlugs: related.map((p) => p.slug),
   };
 }

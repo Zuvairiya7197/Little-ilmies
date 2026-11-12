@@ -13,7 +13,6 @@ import {
   Loader2,
   AlertTriangle,
   Mail,
-  Tag,
   ChevronRight,
   Smartphone,
   CreditCard,
@@ -29,6 +28,8 @@ import { cashfreeCheckoutSchema, checkoutSchema, type CheckoutFormValues } from 
 import { useCartLineItems } from "@/hooks/use-cart-line-items";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { BankTransferOption } from "@/components/store/bank-transfer-option";
+import { CouponField, type AppliedCoupon } from "@/components/store/coupon-field";
+import { couponDiscount } from "@/lib/coupons/discount";
 import { useCashfreeScript } from "@/hooks/use-cashfree-script";
 import { useRazorpayScript } from "@/hooks/use-razorpay-script";
 import { formatPrice } from "@/lib/utils/format";
@@ -158,6 +159,8 @@ export function CheckoutForm({
   const [showPaypalFallback, setShowPaypalFallback] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
   const [canUseApplePay, setCanUseApplePay] = useState(false);
+  const [isPlacingBankTransfer, setIsPlacingBankTransfer] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const isCashfree = paymentProvider === "cashfree";
   const isRazorpayReady = useRazorpayScript(!isCashfree);
   const isCashfreeReady = useCashfreeScript(isCashfree);
@@ -171,6 +174,14 @@ export function CheckoutForm({
   const subtotal = lineItems.reduce((sum, i) => sum + i.lineTotal, 0);
   const regularSubtotal = lineItems.reduce((sum, i) => sum + i.regularUnitPrice * i.quantity, 0);
   const savings = Math.max(0, regularSubtotal - subtotal);
+  // Removing books after applying a coupon can drop the order below the
+  // coupon minimum; the coupon is then dropped too (the server would refuse it).
+  useEffect(() => {
+    if (appliedCoupon && subtotal < appliedCoupon.minimum) setAppliedCoupon(null);
+  }, [appliedCoupon, subtotal]);
+  const couponAmount = appliedCoupon && subtotal >= appliedCoupon.minimum ? couponDiscount(appliedCoupon, subtotal) : 0;
+  const total = subtotal - couponAmount;
+  const totalSavings = savings + couponAmount;
   const currencyCode = lineItems[0]?.currencyCode;
   const isInrCheckout = currencyCode === "INR";
   const allowedPaymentMethodIds = getPaymentMethodIdsForCurrency(currencyCode, canUseApplePay);
@@ -188,6 +199,7 @@ export function CheckoutForm({
     handleSubmit,
     getValues,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(isCashfree ? cashfreeCheckoutSchema : checkoutSchema),
@@ -201,6 +213,13 @@ export function CheckoutForm({
     }
   }, [session?.user?.email, setValue]);
 
+  // Reward coupons are tied to an email, so a coupon checked against the old
+  // email has to be applied again.
+  const email = watch("email");
+  useEffect(() => {
+    setAppliedCoupon(null);
+  }, [email]);
+
   useEffect(() => {
     if (!availablePaymentMethods.some((method) => method.id === paymentMethod)) {
       setPaymentMethod(availablePaymentMethods[0]?.id ?? "card");
@@ -209,6 +228,55 @@ export function CheckoutForm({
 
   function goToPayment() {
     onMobilePhaseChange("payment");
+  }
+
+  // Only product identity, never an amount or currency — the server prices
+  // everything itself. See app/api/checkout/create-order.
+  const checkoutItems = lineItems.map((item) =>
+    item.type === "CUSTOM_BUNDLE"
+      ? {
+          type: "CUSTOM_BUNDLE",
+          bundleId: item.bundleId,
+          quantity: item.bundleSize,
+          selectedProductIds: item.selectedBooks?.map((book) => book.id) ?? [],
+        }
+      : item.type === "RENTAL"
+        ? { type: "RENTAL", productId: item.productId, quantity: 1 }
+      : item.type === "UPGRADE"
+        ? { type: "UPGRADE", productId: item.productId, format: item.format, quantity: 1 }
+      : { type: "PRODUCT", productId: item.productId, format: item.format, quantity: item.quantity }
+  );
+
+  /** Reserves the order (with any coupon) and opens its payment
+   * instructions; the books unlock once the shop confirms the transfer. */
+  async function placeBankTransferOrder(values: CheckoutFormValues) {
+    setIsPlacingBankTransfer(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/checkout/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buyerName: values.fullName,
+          buyerEmail: values.email,
+          buyerPhone: values.phone,
+          couponCode: appliedCoupon?.code,
+          paymentMethod: "BANK_TRANSFER",
+          items: checkoutItems,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSubmitError(data.error ?? "Could not place your order. Please try again.");
+        return;
+      }
+      clearCart();
+      router.push(`/bank-transfer/${data.orderId}`);
+    } catch {
+      setSubmitError("Something went wrong. Please check your connection and try again.");
+    } finally {
+      setIsPlacingBankTransfer(false);
+    }
   }
 
   async function onSubmit(values: CheckoutFormValues, { paypalFallback = false } = {}) {
@@ -225,21 +293,9 @@ export function CheckoutForm({
           buyerName: values.fullName,
           buyerEmail: values.email,
           buyerPhone: values.phone,
+          couponCode: appliedCoupon?.code,
           paypalFallback,
-          items: lineItems.map((item) =>
-            item.type === "CUSTOM_BUNDLE"
-              ? {
-                  type: "CUSTOM_BUNDLE",
-                  bundleId: item.bundleId,
-                  quantity: item.bundleSize,
-                  selectedProductIds: item.selectedBooks?.map((book) => book.id) ?? [],
-                }
-              : item.type === "RENTAL"
-                ? { type: "RENTAL", productId: item.productId, quantity: 1 }
-              : item.type === "UPGRADE"
-                ? { type: "UPGRADE", productId: item.productId, format: item.format, quantity: 1 }
-              : { type: "PRODUCT", productId: item.productId, format: item.format, quantity: item.quantity }
-          ),
+          items: checkoutItems,
         }),
       });
 
@@ -473,16 +529,13 @@ export function CheckoutForm({
               ))}
             </ul>
 
-            <button
-              type="button"
-              className="tap-target mt-3 flex w-full items-center justify-between gap-2 border-t border-ink-100 pt-3 text-sm font-semibold text-blossom-600"
-            >
-              <span className="flex items-center gap-2">
-                <Tag className="h-4 w-4" aria-hidden="true" />
-                Have a coupon code?
-              </span>
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </button>
+            <CouponField
+              applied={appliedCoupon}
+              onApply={setAppliedCoupon}
+              getEmail={() => getValues("email") ?? ""}
+              currencyCode={currencyCode}
+              subtotal={subtotal}
+            />
           </div>
         </div>
       )}
@@ -490,13 +543,13 @@ export function CheckoutForm({
       {/* Mobile & tablet: Payment phase — method picker + order summary + trust points, matches app-style checkout design */}
       {mobilePhase === "payment" && (
         <div className="flex flex-col gap-6">
-          {savings > 0 && (
+          {totalSavings > 0 && (
             <div className="flex items-center gap-4 rounded-3xl bg-sage-50 p-4">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream-50 text-sage-700 shadow-soft">
                 <ShieldCheck className="h-5 w-5" aria-hidden="true" />
               </span>
               <p className="text-sm font-semibold text-sage-800">
-                You&apos;re saving {formatPrice(savings, currencyCode)} on this order!
+                You&apos;re saving {formatPrice(totalSavings, currencyCode)} on this order!
               </p>
             </div>
           )}
@@ -575,10 +628,10 @@ export function CheckoutForm({
 
           {!isInrCheckout && bankTransfer && currencyCode && (
             <BankTransferOption
-              bankTransfer={bankTransfer}
-              total={formatPrice(subtotal, currencyCode)}
-              items={lineItems.map((item) => (item.formatLabel ? `${item.title} (${item.formatLabel})` : item.title))}
-              getBuyer={getValues}
+              total={formatPrice(total, currencyCode)}
+              onPlaceOrder={handleSubmit(placeBankTransferOrder)}
+              isPlacing={isPlacingBankTransfer}
+              accountEmail={isLoggedIn ? (session?.user?.email ?? null) : null}
             />
           )}
 
@@ -598,9 +651,17 @@ export function CheckoutForm({
                   <span>- {formatPrice(savings, currencyCode)}</span>
                 </div>
               )}
+              {appliedCoupon && couponAmount > 0 && (
+                <div className="flex items-center justify-between text-sage-700">
+                  <span>
+                    Coupon <span className="font-mono">{appliedCoupon.code}</span>
+                  </span>
+                  <span>- {formatPrice(couponAmount, currencyCode)}</span>
+                </div>
+              )}
               <div className="mt-2 flex items-center justify-between border-t border-ink-100 pt-3 font-display text-lg font-semibold text-ink-700">
                 <span>Total Amount</span>
-                <span>{currencyCode ? formatPrice(subtotal, currencyCode) : null}</span>
+                <span>{currencyCode ? formatPrice(total, currencyCode) : null}</span>
               </div>
             </div>
           </div>
@@ -633,11 +694,11 @@ export function CheckoutForm({
         <div className="min-w-0 shrink-0 lg:w-40">
           <p className="text-xs text-ink-300">Total Amount</p>
           <p className="font-display text-lg font-bold text-ink-700">
-            {currencyCode ? formatPrice(subtotal, currencyCode) : ""}
+            {currencyCode ? formatPrice(total, currencyCode) : ""}
           </p>
-          {savings > 0 && (
+          {totalSavings > 0 && (
             <p className="text-xs font-semibold text-sage-600">
-              You save {formatPrice(savings, currencyCode)}
+              You save {formatPrice(totalSavings, currencyCode)}
             </p>
           )}
         </div>
@@ -662,7 +723,7 @@ export function CheckoutForm({
             ) : (
               <>
                 <Lock className="h-4 w-4" aria-hidden="true" />
-                Pay Securely {currencyCode ? formatPrice(subtotal, currencyCode) : ""}
+                Pay Securely {currencyCode ? formatPrice(total, currencyCode) : ""}
               </>
             )}
           </button>

@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
-  const payment = order.payments.find((p) => p.providerOrderId === razorpayOrderId);
+  // Razorpay payments only: a bank transfer's providerOrderId is our own
+  // order id, which appears in the buyer's instructions link.
+  const payment = order.payments.find((p) => p.provider === "RAZORPAY" && p.providerOrderId === razorpayOrderId);
   if (!payment) {
     return NextResponse.json({ error: "Payment record not found for this order" }, { status: 404 });
   }
@@ -45,11 +47,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (!isValid) {
-    await prisma.payment.update({
-      where: { id: payment.id },
+    // Anyone can send a bad signature, so it may only fail an unpaid order —
+    // never revoke the downloads of one that's already paid.
+    await prisma.payment.updateMany({
+      where: { id: payment.id, status: { not: "VERIFIED" } },
       data: { status: "FAILED", providerPaymentId: razorpayPaymentId },
     });
-    await prisma.order.update({ where: { id: order.id }, data: { status: "FAILED" } });
+    await prisma.order.updateMany({ where: { id: order.id, status: "PENDING" }, data: { status: "FAILED" } });
     return NextResponse.json({ error: "Payment signature verification failed" }, { status: 400 });
   }
 

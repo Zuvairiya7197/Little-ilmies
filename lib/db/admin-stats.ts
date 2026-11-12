@@ -1,4 +1,25 @@
 import { prisma } from "@/lib/db/prisma";
+import { BANK_TRANSFER_PAYMENT_DAYS } from "@/lib/payments/bank-transfer";
+import { EMAIL_DAILY_LIMIT, getEmailsSentToday } from "@/lib/email/send-mail";
+
+/** What the shop needs to act on — shown on the dashboard so nothing depends
+ * on a notification email arriving. */
+export async function getAttentionSummary() {
+  const windowStart = new Date();
+  windowStart.setDate(windowStart.getDate() - BANK_TRANSFER_PAYMENT_DAYS);
+  const [pendingReviews, awaitingBankTransfers, emailsSentToday] = await Promise.all([
+    prisma.review.count({ where: { status: "PENDING" } }),
+    prisma.order.count({
+      where: {
+        status: "PENDING",
+        createdAt: { gte: windowStart },
+        payments: { some: { provider: "BANK_TRANSFER" } },
+      },
+    }),
+    getEmailsSentToday().catch(() => 0),
+  ]);
+  return { pendingReviews, awaitingBankTransfers, emailsSentToday, emailDailyLimit: EMAIL_DAILY_LIMIT };
+}
 
 export async function getRevenueSummary() {
   const [paidOrders, totalBuyers, totalProducts, pendingOrders] = await Promise.all([

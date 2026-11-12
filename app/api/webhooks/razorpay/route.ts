@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
       });
       if (payment && payment.status !== "VERIFIED") {
         await prisma.payment.update({ where: { id: payment.id }, data: { status: "FAILED" } });
-        await prisma.order.update({ where: { id: payment.orderId }, data: { status: "FAILED" } });
+        // Only an unpaid order: a late "failed" event must not undo a payment.
+        await prisma.order.updateMany({ where: { id: payment.orderId, status: "PENDING" }, data: { status: "FAILED" } });
       }
     }
   }

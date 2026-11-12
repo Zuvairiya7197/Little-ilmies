@@ -46,6 +46,14 @@ export async function createRazorpayOrder({
  * callback is genuine — the amount/status from the frontend must never be
  * trusted on their own. See app/api/checkout/verify-payment/route.ts.
  */
+/** timingSafeEqual throws on different lengths; a wrong-length (forged)
+ * signature is simply a mismatch, not a configuration error. */
+function safeEqual(expected: string, received: string) {
+  const a = Buffer.from(expected);
+  const b = Buffer.from(received);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 export function verifyPaymentSignature({
   orderId,
   paymentId,
@@ -63,7 +71,7 @@ export function verifyPaymentSignature({
     .update(`${orderId}|${paymentId}`)
     .digest("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  return safeEqual(expected, signature);
 }
 
 /**
@@ -86,5 +94,5 @@ export function verifyWebhookSignature({
     .update(body)
     .digest("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  return safeEqual(expected, signature);
 }

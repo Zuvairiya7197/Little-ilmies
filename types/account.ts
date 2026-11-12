@@ -39,6 +39,8 @@ export interface DownloadRecord {
   downloadHref: string;
   purchasedAt: string; // ISO date
   downloadCount: number;
+  /** The buyer has a pending or live review of this book. */
+  hasReviewed: boolean;
 }
 
 export interface RentalRecord {

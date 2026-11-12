@@ -15,6 +15,14 @@ import { RENTAL_CURRENCY_CODE } from "@/lib/rentals/config";
 import { isFormatAvailable, rentalPriceFor } from "@/lib/product-formats";
 import { formatName } from "@/lib/formats";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
+import { CouponError, findUsableCoupon } from "@/lib/coupons/apply-coupon";
+import { couponDiscount } from "@/lib/coupons/discount";
+import {
+  BANK_TRANSFER_PAYMENT_DAYS,
+  MAX_OPEN_BANK_TRANSFER_ORDERS,
+  getBankTransferInfo,
+} from "@/lib/payments/bank-transfer";
+import { sendBankTransferOrderEmails } from "@/lib/email/send-bank-transfer-emails";
 import type { Prisma } from "@prisma/client";
 
 /**
@@ -24,31 +32,38 @@ import type { Prisma } from "@prisma/client";
  * backend-verified region. See README "Checkout pricing contract".
  */
 export async function POST(request: NextRequest) {
-  // Fail fast, before touching the database, if payments aren't configured
-  // yet — avoids leaving orphaned PENDING orders with no Payment row.
-  const paymentProvider = getPaymentProvider();
-  try {
-    if (paymentProvider === "cashfree") assertCashfreeConfigured();
-    else getRazorpayClient();
-  } catch {
-    return NextResponse.json(
-      {
-        error:
-          paymentProvider === "cashfree"
-            ? "Payments are not configured yet. Add CASHFREE_APP_ID/CASHFREE_SECRET_KEY to .env."
-            : "Payments are not configured yet. Add RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET to .env.",
-      },
-      { status: 502 }
-    );
-  }
-
   const parsed = createOrderRequestSchema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
-  const { buyerName, buyerEmail, buyerPhone, items, paypalFallback } = parsed.data;
+  const { buyerName, buyerPhone, items, couponCode, paypalFallback, paymentMethod } = parsed.data;
+  let { buyerEmail } = parsed.data;
+  const isBankTransfer = paymentMethod === "BANK_TRANSFER";
+  if (isBankTransfer && !getBankTransferInfo()) {
+    return NextResponse.json({ error: "Bank transfer isn't available right now." }, { status: 422 });
+  }
 
-  if (paymentProvider === "cashfree" && !buyerPhone) {
+  // Fail fast, before touching the database, if payments aren't configured
+  // yet — avoids leaving orphaned PENDING orders with no Payment row.
+  const paymentProvider = getPaymentProvider();
+  if (!isBankTransfer) {
+    try {
+      if (paymentProvider === "cashfree") assertCashfreeConfigured();
+      else getRazorpayClient();
+    } catch {
+      return NextResponse.json(
+        {
+          error:
+            paymentProvider === "cashfree"
+              ? "Payments are not configured yet. Add CASHFREE_APP_ID/CASHFREE_SECRET_KEY to .env."
+              : "Payments are not configured yet. Add RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET to .env.",
+        },
+        { status: 502 }
+      );
+    }
+  }
+
+  if (!isBankTransfer && paymentProvider === "cashfree" && !buyerPhone) {
     return NextResponse.json({ error: "Please enter your mobile number." }, { status: 400 });
   }
 
@@ -70,6 +85,36 @@ export async function POST(request: NextRequest) {
 
   const session = await getAuthSession();
   const userId = session?.user?.id;
+
+  // Bank transfer orders email payment instructions, so they need a signed-
+  // in buyer and always go to that account's own (verified) email — never
+  // an address typed into the form, which would let anyone send our emails
+  // to strangers. Open orders per account are capped for the same reason.
+  if (isBankTransfer) {
+    if (!userId || !session?.user?.email) {
+      return NextResponse.json({ error: "Please sign in to pay by bank transfer." }, { status: 401 });
+    }
+    buyerEmail = session.user.email;
+    const windowStart = new Date();
+    windowStart.setDate(windowStart.getDate() - BANK_TRANSFER_PAYMENT_DAYS);
+    const openOrders = await prisma.order.count({
+      where: {
+        userId,
+        status: "PENDING",
+        createdAt: { gte: windowStart },
+        payments: { some: { provider: "BANK_TRANSFER" } },
+      },
+    });
+    if (openOrders >= MAX_OPEN_BANK_TRANSFER_ORDERS) {
+      return NextResponse.json(
+        {
+          error:
+            "You already have bank transfer orders waiting for payment. Please pay one of those (the details are in your email), or message us on WhatsApp.",
+        },
+        { status: 429 }
+      );
+    }
+  }
 
   if (hasUpgradeItems && !userId) {
     return NextResponse.json({ error: "Please log in to upgrade a rental." }, { status: 401 });
@@ -118,6 +163,15 @@ export async function POST(request: NextRequest) {
     : paypalFallback && PAYPAL_UNSUPPORTED_CURRENCIES.has(verifiedCurrency)
       ? PAYPAL_FALLBACK_CURRENCY
       : verifiedCurrency;
+
+  // Bank transfer is the fallback for international buyers whose cards are
+  // declined — the same buyers checkout offers it to.
+  if (isBankTransfer && (hasRentalItems || currency === "INR")) {
+    return NextResponse.json(
+      { error: "Bank transfer is only for international orders. Please pay online." },
+      { status: 422 }
+    );
+  }
 
   let subtotal = 0;
   const orderItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = [];
@@ -245,9 +299,17 @@ export async function POST(request: NextRequest) {
   }
 
   // Digital goods only — no shipping/tax logic beyond a flat 0 for now,
-  // matching the "no shipping calculation" requirement. Coupons apply here
-  // once the admin coupon system (Phase 6) exists.
-  const discountAmount = 0;
+  // matching the "no shipping calculation" requirement.
+  let coupon = null;
+  if (couponCode) {
+    try {
+      coupon = await findUsableCoupon(couponCode, buyerEmail, currency, subtotal, userId);
+    } catch (error) {
+      if (error instanceof CouponError) return NextResponse.json({ error: error.message }, { status: 422 });
+      throw error;
+    }
+  }
+  const discountAmount = coupon ? couponDiscount(coupon, subtotal) : 0;
   const taxAmount = 0;
   const totalAmount = subtotal - discountAmount + taxAmount;
 
@@ -261,10 +323,30 @@ export async function POST(request: NextRequest) {
       discountAmount,
       taxAmount,
       totalAmount,
+      couponId: coupon?.id,
       status: "PENDING",
       items: { create: orderItemsData },
     },
   });
+
+  // No payment provider: the order waits, coupon attached but not yet used
+  // up, until an admin confirms the transfer arrived.
+  if (isBankTransfer) {
+    await prisma.payment.create({
+      data: {
+        orderId: order.id,
+        provider: "BANK_TRANSFER",
+        providerOrderId: order.id,
+        amount: totalAmount,
+        currencyCode: currency,
+        status: "CREATED",
+      },
+    });
+    await sendBankTransferOrderEmails(order.id).catch((err) => {
+      console.error("Failed to send bank transfer order emails:", err);
+    });
+    return NextResponse.json({ orderId: order.id, provider: "bank_transfer", amount: totalAmount, currencyCode: currency });
+  }
 
   let providerOrderId: string;
   let checkout;

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
 import { linkGuestOrdersToUser } from "@/lib/db/orders";
 import { sendOrderConfirmationEmail } from "@/lib/email/send-order-confirmation";
+import { sendCouponOveruseAlert } from "@/lib/email/send-review-emails";
+import { findCouponOveruse } from "@/lib/coupons/apply-coupon";
 import { FORMAT_SOURCE_SELECT, primaryPdfFormat } from "@/lib/product-formats";
 import { isPdfFormat } from "@/lib/formats";
 import { RENTAL_DURATION_DAYS } from "@/lib/rentals/config";
@@ -27,6 +29,7 @@ export async function fulfillOrder({
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
+      coupon: { select: { code: true, maxRedemptions: true } },
       items: {
         include: {
           customSelections: { include: { product: { select: FORMAT_SOURCE_SELECT } } },
@@ -37,7 +40,11 @@ export async function fulfillOrder({
   });
   if (!order) return;
 
-  if (order.status === "PAID") return; // already fulfilled — no-op
+  // Only an unpaid order can become paid. PAID is already fulfilled, and a
+  // REFUNDED order must never come back — payment signatures don't expire,
+  // so an old confirmation replayed after a refund would otherwise restore
+  // the buyer's access.
+  if (order.status !== "PENDING" && order.status !== "FAILED") return;
 
   // A guest checkout whose email already belongs to a verified account
   // goes straight to that account, so a buyer still signed in elsewhere
@@ -54,7 +61,7 @@ export async function fulfillOrder({
     }
   }
 
-  const accessWrites: Prisma.PrismaPromise<unknown>[] = [];
+  const accessWrites: ((db: Prisma.TransactionClient) => Promise<unknown>)[] = [];
 
   for (const item of order.items) {
     if (item.itemType === "RENTAL" && item.productId) {
@@ -76,15 +83,16 @@ export async function fulfillOrder({
       const rentalExpiresAt = new Date(activeRental?.rentalExpiresAt ?? rentalStartedAt);
       rentalExpiresAt.setDate(rentalExpiresAt.getDate() + (item.product?.rentalDurationDays ?? RENTAL_DURATION_DAYS));
 
-      accessWrites.push(
-        prisma.rentalAccess.upsert({
+      const productId = item.productId;
+      accessWrites.push((db) =>
+        db.rentalAccess.upsert({
           where: {
-            orderId_productId: { orderId: order.id, productId: item.productId },
+            orderId_productId: { orderId: order.id, productId },
           },
           update: {},
           create: {
             orderId: order.id,
-            productId: item.productId,
+            productId,
             rentalStartedAt,
             rentalExpiresAt,
           },
@@ -106,8 +114,8 @@ export async function fulfillOrder({
           : [];
 
     for (const { productId, format } of grants) {
-      accessWrites.push(
-        prisma.download.upsert({
+      accessWrites.push((db) =>
+        db.download.upsert({
           where: { orderId_productId_format: { orderId: order.id, productId, format } },
           update: {},
           create: { orderId: order.id, productId, format },
@@ -116,19 +124,52 @@ export async function fulfillOrder({
     }
   }
 
-  await prisma.$transaction([
-    prisma.payment.update({
-      where: { id: paymentId },
-      data: {
-        status: "VERIFIED",
-        providerPaymentId,
-        providerSignature,
-        verifiedAt: new Date(),
-      },
-    }),
-    prisma.order.update({ where: { id: order.id }, data: { status: "PAID" } }),
-    ...accessWrites,
-  ]);
+  // One transaction that first claims the order (unpaid → PAID). When the
+  // browser confirmation and the webhook arrive together, only one claims
+  // it; the other does nothing, so access and the coupon are granted once.
+  // The coupon is used up only while it has uses left — a buyer who paid two
+  // checkouts with one code still gets the second order (the money is taken),
+  // but the shop is alerted to the over-use below.
+  const claimed = await prisma.$transaction(
+    async (tx) => {
+      const claim = await tx.order.updateMany({
+        where: { id: order.id, status: { in: ["PENDING", "FAILED"] } },
+        data: { status: "PAID" },
+      });
+      if (claim.count === 0) return false;
+
+      if (order.couponId) {
+        await tx.coupon.updateMany({
+          where: {
+            id: order.couponId,
+            ...(order.coupon?.maxRedemptions != null ? { redemptionCount: { lt: order.coupon.maxRedemptions } } : {}),
+          },
+          data: { redemptionCount: { increment: 1 } },
+        });
+      }
+      await tx.payment.update({
+        where: { id: paymentId },
+        data: { status: "VERIFIED", providerPaymentId, providerSignature, verifiedAt: new Date() },
+      });
+      for (const write of accessWrites) await write(tx);
+      return true;
+    },
+    // Large bundles mean many download rows.
+    { timeout: 20_000 }
+  );
+  if (!claimed) return;
+
+  const overuse = order.couponId ? await findCouponOveruse(order.couponId, order.id) : null;
+  if (overuse && order.coupon) {
+    await sendCouponOveruseAlert({
+      reason: overuse,
+      code: order.coupon.code,
+      orderId: order.id,
+      buyerEmail: order.buyerEmail,
+      discount: order.discountAmount,
+      currencyCode: order.currencyCode,
+    }).catch((err) => console.error("Failed to send coupon over-use alert:", err));
+  }
 
   await sendOrderConfirmationEmail(order.id).catch((err) => {
     // Email failure must never undo a verified payment — log and move on.

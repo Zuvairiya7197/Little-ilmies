@@ -110,6 +110,10 @@ export interface ProductReview {
   date: string; // ISO date
   title: string;
   body: string;
+  /** The book's first approved buyer review. */
+  isFirstReview?: boolean;
+  /** From a parent given a free copy, added by the shop. */
+  isGifted?: boolean;
 }
 
 export interface ProductDetail extends ProductSummary {

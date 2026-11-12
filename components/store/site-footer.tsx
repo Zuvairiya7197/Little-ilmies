@@ -1,5 +1,7 @@
 import Image from "@/components/ui/app-image";
 import Link from "next/link";
+import { CookieSettingsLink } from "@/components/seo/cookie-consent";
+import { BUSINESS } from "@/lib/business";
 import {
   Instagram,
   Facebook,
@@ -62,6 +64,7 @@ const helpLinks = [
   { label: "Printing Guide", href: "/digital-delivery-policy" },
   { label: "Terms of Use", href: "/terms-and-conditions" },
   { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Refund Policy", href: "/refund-policy" },
   { label: "Contact Us", href: "/contact" },
 ];
 
@@ -312,6 +315,9 @@ export function SiteFooter() {
                 </span>
                 . All rights reserved.
               </p>
+              <p className="mt-1 text-xs text-cream-100/80">
+                Operated by {BUSINESS.ownerName} · {BUSINESS.city}, Maharashtra, India
+              </p>
               <p className="mt-1 flex items-center gap-1 text-sm text-cream-100">
                 Made with{" "}
                 <Heart
@@ -421,6 +427,7 @@ export function SiteFooter() {
                     {link.label}
                   </Link>
                 ))}
+                <CookieSettingsLink className="text-left text-sm text-ink-500 transition-colors hover:text-ink-700" />
               </nav>
             </div>
 
@@ -497,6 +504,9 @@ export function SiteFooter() {
                   Little Ilmies
                 </span>
                 . All rights reserved.
+              </p>
+              <p className="mt-1 text-xs text-cream-100/80">
+                Operated by {BUSINESS.ownerName} · {BUSINESS.city}, Maharashtra, India
               </p>
               <p className="mt-1 flex items-center gap-1 text-sm text-cream-100">
                 Made with{" "}

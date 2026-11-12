@@ -37,6 +37,7 @@ export async function sendOrderConfirmationEmail(orderId: string) {
 
   const itemLines = displayItems
     .map((item) => `- ${item.title}${item.detail ? `: ${item.detail}` : ""} — ${formatPrice(item.unitPrice, currency)}`)
+    .concat(order.discountAmount > 0 ? [`- Coupon discount — -${formatPrice(order.discountAmount, currency)}`] : [])
     .join("\n");
 
   const itemRows = displayItems
@@ -44,7 +45,13 @@ export async function sendOrderConfirmationEmail(orderId: string) {
       (item) =>
         `<tr><td style="padding:8px 0;">${item.title}${item.detail ? `<br><span style="color:#777;font-size:12px;">${item.detail}</span>` : ""}</td><td style="padding:8px 0;text-align:right;">${formatPrice(item.unitPrice, currency)}</td></tr>`
     )
-    .join("");
+    .join("")
+    // Coupon discount, so the rows add up to the total.
+    .concat(
+      order.discountAmount > 0
+        ? `<tr><td style="padding:8px 0;color:#2f7a4f;">Coupon discount</td><td style="padding:8px 0;text-align:right;color:#2f7a4f;">- ${formatPrice(order.discountAmount, currency)}</td></tr>`
+        : ""
+    );
 
   if (isRentalOrder) {
     const rental = order.rentals[0];

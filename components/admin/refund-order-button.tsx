@@ -21,6 +21,10 @@ export function RefundOrderButton({ orderId }: { orderId: string }) {
         const body = await res.json().catch(() => null);
         throw new Error(body?.error ?? "Failed to refund order");
       }
+      const body = await res.json().catch(() => null);
+      if (body?.warnings?.length) {
+        window.alert(`Refunded. Note:\n\n${body.warnings.join("\n\n")}`);
+      }
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to refund order");

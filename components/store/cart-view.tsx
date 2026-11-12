@@ -21,6 +21,7 @@ import { useCartLineItems } from "@/hooks/use-cart-line-items";
 import { useCartStore } from "@/lib/store/use-cart-store";
 import { formatPrice } from "@/lib/utils/format";
 import { productHref } from "@/lib/formats";
+import { savePendingCouponCode } from "@/components/store/coupon-field";
 
 const benefitItems = [
   {
@@ -64,7 +65,8 @@ export function CartView() {
   function applyCoupon(e: React.FormEvent) {
     e.preventDefault();
     if (!couponCode.trim()) return;
-    setCouponMessage("Coupon codes will be validated at checkout.");
+    savePendingCouponCode(couponCode);
+    setCouponMessage("Saved — tap Apply at checkout to use it.");
   }
 
   if (lineItems.length === 0) {

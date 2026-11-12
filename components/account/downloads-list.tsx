@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "@/components/ui/app-image";
 import Link from "next/link";
-import { Download, MoreVertical, Search, ShoppingBag } from "lucide-react";
+import { Download, MoreVertical, Search, ShoppingBag, Star } from "lucide-react";
 import type { DownloadRecord } from "@/types/account";
 
 export function DownloadsList({ downloads }: { downloads: DownloadRecord[] }) {
@@ -123,6 +123,16 @@ export function DownloadsList({ downloads }: { downloads: DownloadRecord[] }) {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1 xl:gap-4">
+                      {!download.hasReviewed && (
+                        <Link
+                          href={`/product/${download.slug}#reviews`}
+                          aria-label={`Review ${download.title}`}
+                          className="tap-target flex items-center justify-center rounded-full border border-gold-300 bg-gold-50 p-2.5 text-gold-700 hover:bg-gold-100 xs:gap-2 xs:rounded-xl xs:px-4 xs:py-2.5 xl:gap-2 xl:px-4 xl:py-2"
+                        >
+                          <Star className="h-4 w-4" aria-hidden="true" />
+                          <span className="hidden text-xs font-black xs:inline xl:text-xs">Review</span>
+                        </Link>
+                      )}
                       <a
                         href={download.downloadHref}
                         aria-label={`Download ${download.title} (${download.formatName})`}

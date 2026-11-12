@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string }> }) {
+  const { callbackUrl } = await searchParams;
   return (
     <div className="relative isolate overflow-hidden bg-gradient-to-br from-cream via-blossom-50/40 to-ink-50/30 py-5 xl:min-h-[calc(100vh-9rem)] xl:py-6">
       <Image
@@ -56,7 +57,7 @@ export default function LoginPage() {
       <div className="container-content">
         <div className="mx-auto grid max-w-4xl overflow-hidden rounded-[2rem] border border-cream-50 bg-cream-50/90 shadow-lifted xl:grid-cols-2">
           <div className="flex items-center justify-center px-6 py-7 sm:px-9 xl:px-12 xl:py-8">
-            <BuyerLoginForm />
+            <BuyerLoginForm callbackUrl={callbackUrl} />
           </div>
 
           <div className="relative hidden min-h-[28rem] overflow-hidden bg-gradient-to-br from-blossom-50 via-cream-50 to-ink-50 xl:block xl:min-h-[30rem]">

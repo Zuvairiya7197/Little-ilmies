@@ -73,6 +73,9 @@ export const createOrderRequestSchema = z.object({
   // collect. Only a request to switch to the USD price — the server decides
   // whether that's allowed (see lib/payments/paypal.ts).
   paypalFallback: z.boolean().optional(),
+  /** Pay straight to the shop's bank account instead of online. The order
+   * waits until an admin confirms the money arrived. */
+  paymentMethod: z.enum(["ONLINE", "BANK_TRANSFER"]).default("ONLINE"),
 });
 
 export type CreateOrderRequest = z.infer<typeof createOrderRequestSchema>;

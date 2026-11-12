@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
+import { subscribeAdConsent, type AdConsent } from "@/lib/consent";
 
 const PIXEL_ID = "1439152594991313";
 
@@ -18,8 +19,17 @@ declare global {
  * changes send their own PageView. The first one comes from the inline
  * script, since this effect runs before the script has defined fbq.
  * Admin pages are skipped so staff browsing doesn't pollute ad audiences.
+ * Nothing loads until the visitor accepts advertising cookies in the
+ * consent banner (there's no no-JS fallback, as that couldn't ask first).
  */
 export function MetaPixel() {
+  const [consent, setConsent] = useState<AdConsent>("unset");
+  useEffect(() => subscribeAdConsent(setConsent), []);
+  if (consent !== "accepted") return null;
+  return <MetaPixelScript />;
+}
+
+function MetaPixelScript() {
   const pathname = usePathname();
   const isFirstRender = useRef(true);
 
@@ -33,20 +43,8 @@ export function MetaPixel() {
   }, [pathname]);
 
   return (
-    <>
-      <Script id="meta-pixel" strategy="afterInteractive">
-        {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${PIXEL_ID}');if(!location.pathname.startsWith('/admin'))fbq('track','PageView');`}
-      </Script>
-      <noscript>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          height="1"
-          width="1"
-          style={{ display: "none" }}
-          alt=""
-          src={`https://www.facebook.com/tr?id=${PIXEL_ID}&ev=PageView&noscript=1`}
-        />
-      </noscript>
-    </>
+    <Script id="meta-pixel" strategy="afterInteractive">
+      {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${PIXEL_ID}');if(!location.pathname.startsWith('/admin'))fbq('track','PageView');`}
+    </Script>
   );
 }

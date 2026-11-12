@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
+import { bankTransferDeadline } from "@/lib/payments/bank-transfer";
 
 export const metadata: Metadata = {
   title: "Orders",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default async function AdminOrdersPage() {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
-    include: { items: true },
+    include: { items: true, payments: { where: { provider: "BANK_TRANSFER" }, select: { id: true } } },
   });
 
   return (
@@ -34,6 +35,15 @@ export default async function AdminOrdersPage() {
                     {order.items.some((item) => item.itemType === "RENTAL") && (
                       <span className="shrink-0 rounded-full bg-sage-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sage-700">
                         Rental
+                      </span>
+                    )}
+                    {order.payments.length > 0 && (
+                      <span className="shrink-0 rounded-full bg-gold-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold-700">
+                        {order.status !== "PENDING"
+                          ? "Bank transfer"
+                          : bankTransferDeadline(order.createdAt) < new Date()
+                            ? "Bank transfer · expired"
+                            : "Bank transfer · awaiting money"}
                       </span>
                     )}
                   </div>

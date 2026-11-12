@@ -34,6 +34,7 @@ export default async function AdminCouponsPage() {
                   <p className="text-xs text-ink-300">
                     {coupon.type === "PERCENTAGE" ? `${coupon.value}% off` : `${(coupon.value / 100).toFixed(2)} off`}
                     {coupon.maxRedemptions ? ` · ${coupon.redemptionCount}/${coupon.maxRedemptions} used` : ` · ${coupon.redemptionCount} used`}
+                    {coupon.restrictedToEmail ? ` · only for ${coupon.restrictedToEmail}` : ""}
                   </p>
                 </div>
                 <span

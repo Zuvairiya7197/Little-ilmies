@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdminApi } from "@/lib/auth/require-admin-api";
+import { revokeReviewRewardsForRefund } from "@/lib/reviews/moderate-review";
 
 interface RouteParams {
   params: Promise<{ orderId: string }>;
@@ -30,6 +31,9 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   }
 
   await prisma.order.update({ where: { id: orderId }, data: { status: "REFUNDED" } });
+  // A refunded book can't keep earning (or showing) a buyer review. Coupons
+  // used on this order stay used, so a refund can't recycle a code.
+  const warnings = await revokeReviewRewardsForRefund(orderId);
 
-  return NextResponse.json({ status: "REFUNDED" });
+  return NextResponse.json({ status: "REFUNDED", warnings });
 }

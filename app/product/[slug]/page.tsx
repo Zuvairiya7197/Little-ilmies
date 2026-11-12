@@ -11,6 +11,10 @@ import { ProductHeader } from "@/components/store/product-header";
 import { ProductFormatSelector } from "@/components/store/product-format-selector";
 import { ProductMobileAbout } from "@/components/store/product-mobile-about";
 import { RelatedBooks } from "@/components/store/related-books";
+import { ProductReviews } from "@/components/store/product-reviews";
+import { getReviewRewardSettings } from "@/lib/settings/review-reward-settings";
+import { getRatingCounts, isFirstReviewerTaken } from "@/lib/reviews/queries";
+import { getCouponMinimums } from "@/lib/settings/coupon-settings";
 import { findPrice } from "@/lib/pricing/resolve-price";
 import { formatName } from "@/lib/formats";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -66,7 +70,13 @@ export default async function ProductPage({ params }: PageProps) {
 
   if (!product) notFound();
 
-  const relatedProducts = await getRelatedProductsBySlug(slug, 4);
+  const [relatedProducts, reviewRewards, ratingCounts, couponMinimums, firstReviewerTaken] = await Promise.all([
+    getRelatedProductsBySlug(slug, 4),
+    getReviewRewardSettings(),
+    getRatingCounts(product.id),
+    getCouponMinimums(),
+    isFirstReviewerTaken(product.id),
+  ]);
 
   // One offer per purchasable PDF format, each with its own INR price.
   const offers = product.variants.flatMap((variant) => {
@@ -92,11 +102,16 @@ export default async function ProductPage({ params }: PageProps) {
     bookFormat: "https://schema.org/EBook",
     inLanguage: product.language,
     numberOfPages: product.pageCount,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.rating,
-      reviewCount: product.reviewCount,
-    },
+    // Search engines reject a rating with no reviews behind it.
+    ...(product.reviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.reviewCount,
+          },
+        }
+      : {}),
     ...(offers.length > 0 ? { offers } : {}),
   };
 
@@ -134,6 +149,16 @@ export default async function ProductPage({ params }: PageProps) {
 
         <div className="mt-5 lg:mt-10">
           <ProductMobileAbout product={product} />
+        </div>
+
+        <div className="mt-9 lg:mt-16">
+          <ProductReviews
+            product={product}
+            rewards={reviewRewards}
+            ratingCounts={ratingCounts}
+            couponMinimums={couponMinimums}
+            firstReviewerTaken={firstReviewerTaken}
+          />
         </div>
 
         <div className="mt-9 lg:mt-16">

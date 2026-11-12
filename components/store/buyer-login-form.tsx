@@ -8,7 +8,12 @@ import { useForm } from "react-hook-form";
 import { Mail, Loader2, BookOpen, AlertTriangle, Send, ShieldCheck, Heart } from "lucide-react";
 import { buyerLoginSchema, type BuyerLoginFormValues } from "@/lib/validation/login";
 
-export function BuyerLoginForm() {
+/** Only same-site paths, so a crafted link can't send buyers elsewhere. */
+function safeCallbackUrl(url: string | undefined) {
+  return url && url.startsWith("/") && !url.startsWith("//") ? url : "/account";
+}
+
+export function BuyerLoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -26,7 +31,7 @@ export function BuyerLoginForm() {
       const result = await signIn("email", {
         email: values.email,
         redirect: false,
-        callbackUrl: "/account",
+        callbackUrl: safeCallbackUrl(callbackUrl),
       });
 
       if (result?.error) {

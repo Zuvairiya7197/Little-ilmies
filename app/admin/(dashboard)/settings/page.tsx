@@ -5,6 +5,10 @@ import { PricingSettingsForm } from "@/components/admin/pricing-settings-form";
 import { getPricingSettings } from "@/lib/settings/pricing-settings";
 import { StorefrontSettingsForm } from "@/components/admin/storefront-settings-form";
 import { getStorefrontSettings } from "@/lib/settings/storefront-settings";
+import { ReviewRewardSettingsForm } from "@/components/admin/review-reward-settings-form";
+import { getReviewRewardSettings } from "@/lib/settings/review-reward-settings";
+import { CouponMinimumsForm } from "@/components/admin/coupon-minimums-form";
+import { getCouponMinimums } from "@/lib/settings/coupon-settings";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -12,10 +16,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSettingsPage() {
-  const [session, pricingSettings, storefrontSettings] = await Promise.all([
+  const [session, pricingSettings, storefrontSettings, reviewRewardSettings, couponMinimums] = await Promise.all([
     getAdminSession(),
     getPricingSettings(),
     getStorefrontSettings(),
+    getReviewRewardSettings(),
+    getCouponMinimums(),
   ]);
 
   return (
@@ -33,6 +39,14 @@ export default async function AdminSettingsPage() {
 
       <div className="mb-8">
         <StorefrontSettingsForm settings={storefrontSettings} />
+      </div>
+
+      <div className="mb-8">
+        <ReviewRewardSettingsForm settings={reviewRewardSettings} />
+      </div>
+
+      <div className="mb-8">
+        <CouponMinimumsForm minimums={couponMinimums} />
       </div>
 
       <div className="max-w-md">

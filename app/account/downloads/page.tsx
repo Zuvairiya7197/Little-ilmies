@@ -12,12 +12,14 @@ import {
   Download,
   Heart,
   Mail,
+  Gift,
   Shield,
   Star,
 } from "lucide-react";
 import { getAuthSession } from "@/lib/auth/get-session";
 import { getDownloadsForUser } from "@/lib/db/orders";
 import { DownloadsList } from "@/components/account/downloads-list";
+import { getReviewRewardSettings } from "@/lib/settings/review-reward-settings";
 
 export const metadata: Metadata = {
   title: "Downloads",
@@ -36,7 +38,9 @@ export default async function DownloadsPage() {
   if (!session?.user) redirect("/login");
 
   const userId = session.user.id;
-  const downloads = await getDownloadsForUser(userId);
+  const [downloads, reviewRewards] = await Promise.all([getDownloadsForUser(userId), getReviewRewardSettings()]);
+  const bestReward = Math.max(reviewRewards.rewardPercentage, reviewRewards.firstReviewRewardPercentage);
+  const hasUnreviewed = downloads.some((download) => !download.hasReviewed);
   const lastDownloadDate = downloads[0]
     ? new Date(downloads[0].purchasedAt).toLocaleDateString("en-US", {
         month: "short",
@@ -92,6 +96,19 @@ export default async function DownloadsPage() {
             </div>
           ))}
         </section>
+
+        {hasUnreviewed && bestReward > 0 && (
+          <section className="mt-6 flex items-center gap-3 rounded-2xl bg-gold-50 p-4 shadow-clay-sm xl:mt-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream-50 text-gold-600 shadow-soft">
+              <Gift className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <p className="text-sm leading-relaxed text-ink-600">
+              <strong className="font-bold text-ink-700">Review your books, save on your next order.</strong> Review a
+              book from an order and get a discount code (one per order) — up to {bestReward}% off if you&apos;re the
+              first buyer to review that book.
+            </p>
+          </section>
+        )}
 
         <DownloadsList downloads={downloads} />
 

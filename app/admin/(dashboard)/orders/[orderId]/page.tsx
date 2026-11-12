@@ -6,6 +6,8 @@ import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { RefundOrderButton } from "@/components/admin/refund-order-button";
+import { ConfirmBankTransferButton } from "@/components/admin/confirm-bank-transfer-button";
+import { bankTransferDeadline, bankTransferReference } from "@/lib/payments/bank-transfer";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
 import { parseCustomBundleSnapshot } from "@/lib/bundles/order-snapshot";
@@ -30,11 +32,13 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
       items: { include: { product: true } },
       payments: true,
       user: true,
+      downloads: { include: { product: { select: { title: true } } } },
     },
   });
   if (!order) notFound();
 
   const currency = order.currencyCode as CurrencyCode;
+  const isBankTransfer = order.payments.some((payment) => payment.provider === "BANK_TRANSFER");
 
   return (
     <div>
@@ -61,6 +65,14 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <div className="flex flex-col items-end gap-2">
           <OrderStatusBadge status={order.status} />
           {order.status === "PAID" && <RefundOrderButton orderId={order.id} />}
+          {order.status === "PENDING" && isBankTransfer && (
+            <ConfirmBankTransferButton
+              orderId={order.id}
+              amount={formatPrice(order.totalAmount, currency)}
+              reference={bankTransferReference(order.id)}
+              isPastDeadline={bankTransferDeadline(order.createdAt) < new Date()}
+            />
+          )}
         </div>
       </div>
 
@@ -128,6 +140,41 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               </div>
             </div>
           </div>
+
+          {order.downloads.length > 0 && (
+            <div className="card-surface mt-6 p-5">
+              <h2 className="font-display text-lg font-semibold text-ink-700">Delivery evidence</h2>
+              <p className="mb-3 mt-1 text-xs text-ink-300">
+                Proof the books were delivered — useful if the buyer disputes the payment with their bank.
+              </p>
+              <ul className="flex flex-col divide-y divide-ink-100">
+                {order.downloads.map((download) => (
+                  <li key={download.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-ink-600">{download.product.title}</p>
+                      <p className="text-xs text-ink-300">{formatName(download.format)}</p>
+                    </div>
+                    <span className="shrink-0 text-right text-xs text-ink-400">
+                      {download.downloadCount > 0 ? (
+                        <>
+                          Downloaded {download.downloadCount}×
+                          {download.lastDownloadedAt && (
+                            <>
+                              <br />
+                              last{" "}
+                              {download.lastDownloadedAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        "Not downloaded yet"
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="card-surface mt-6 p-5">
             <h2 className="mb-4 font-display text-lg font-semibold text-ink-700">Payments</h2>

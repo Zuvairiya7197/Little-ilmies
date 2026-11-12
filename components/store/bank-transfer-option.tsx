@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Landmark, ShieldCheck } from "lucide-react";
-import type { BankTransferInfo } from "@/lib/payments/bank-transfer";
+import Link from "next/link";
+import { Check, Copy, Landmark, Loader2, ShieldCheck } from "lucide-react";
 
 /** Splits "Label: value" lines into rows, keeping any other line as a value. */
 function parseDetails(details: string) {
@@ -51,41 +51,29 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
+/**
+ * Checkout card for international buyers whose cards don't work. Placing
+ * the order reserves it (coupon included) and leads to the payment
+ * instructions page; the books unlock once the shop confirms the transfer.
+ */
 export function BankTransferOption({
-  bankTransfer,
   total,
-  items,
-  getBuyer,
+  onPlaceOrder,
+  isPlacing,
+  accountEmail,
 }: {
-  bankTransfer: BankTransferInfo;
   total: string;
-  items: string[];
-  getBuyer: () => { fullName?: string; email?: string };
+  onPlaceOrder: () => void;
+  isPlacing: boolean;
+  /** The signed-in buyer's email, where the instructions go. Bank transfer
+   * needs an account (the cart is kept through sign-in). */
+  accountEmail: string | null;
 }) {
-  function openWhatsApp() {
-    const { fullName, email } = getBuyer();
-    const message = [
-      "Hi Little Ilmies, I've paid by bank transfer.",
-      "",
-      `Name: ${fullName ?? ""}`,
-      `Email: ${email ?? ""}`,
-      `Total: ${total}`,
-      "Books:",
-      ...items.map((item) => `- ${item}`),
-      "",
-      "Payment proof:",
-    ].join("\n");
-    window.open(
-      `https://wa.me/${bankTransfer.whatsappNumber}?text=${encodeURIComponent(message)}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  }
-
   const steps = [
-    `Transfer ${total} to the account below.`,
-    "Share your payment proof with us on WhatsApp.",
-    "We'll send your books once we've confirmed your payment.",
+    "Place your order — your price and any coupon discount are held for 7 days.",
+    `Transfer ${total} from your bank, with your order reference in the note.`,
+    "Send us the payment proof on WhatsApp.",
+    "We confirm it and your books unlock in your account.",
   ];
 
   return (
@@ -96,7 +84,7 @@ export function BankTransferOption({
         </span>
         <div className="min-w-0">
           <h2 className="font-display text-lg font-bold text-ink-700">Pay by bank transfer</h2>
-          <p className="text-sm text-ink-400">If none of these payment options work for you</p>
+          <p className="text-sm text-ink-400">Card not working? Pay straight from your bank instead.</p>
         </div>
       </div>
 
@@ -111,8 +99,70 @@ export function BankTransferOption({
         ))}
       </ol>
 
-      <dl className="mt-4 divide-y divide-ink-100 rounded-2xl border border-ink-100 bg-white px-3.5">
-        {parseDetails(bankTransfer.details).map(({ label, value }) => (
+      {accountEmail ? (
+        <>
+          <button
+            type="button"
+            onClick={onPlaceOrder}
+            disabled={isPlacing}
+            className="btn-secondary mt-4 w-full disabled:opacity-60"
+          >
+            {isPlacing ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <>
+                <Landmark className="h-4 w-4" aria-hidden="true" />
+                Place order — pay {total} by bank transfer
+              </>
+            )}
+          </button>
+          <p className="mt-2 text-center text-xs text-ink-400">
+            Payment details will be emailed to <span className="font-semibold text-ink-500">{accountEmail}</span>
+          </p>
+        </>
+      ) : (
+        <Link href={`/login?callbackUrl=${encodeURIComponent("/checkout")}`} className="btn-secondary mt-4 w-full">
+          <Landmark className="h-4 w-4" aria-hidden="true" />
+          Sign in to pay by bank transfer
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/** Bank details, reference and WhatsApp button for a placed bank transfer order. */
+export function BankTransferInstructions({
+  details,
+  reference,
+  amount,
+  whatsappUrl,
+}: {
+  details: string;
+  reference: string;
+  amount: string;
+  whatsappUrl: string;
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-3 xs:grid-cols-2">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-ink-100 bg-white px-3.5 py-2.5">
+          <div className="min-w-0">
+            <p className="text-xs text-ink-400">Amount to transfer</p>
+            <p className="font-display text-xl font-bold text-ink-700">{amount}</p>
+          </div>
+          <CopyButton value={amount} label="amount" />
+        </div>
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-ink-100 bg-white px-3.5 py-2.5">
+          <div className="min-w-0">
+            <p className="text-xs text-ink-400">Reference (write in transfer note)</p>
+            <p className="font-mono text-xl font-bold tracking-wider text-ink-700">{reference}</p>
+          </div>
+          <CopyButton value={reference} label="reference" />
+        </div>
+      </div>
+
+      <dl className="divide-y divide-ink-100 rounded-2xl border border-ink-100 bg-white px-3.5">
+        {parseDetails(details).map(({ label, value }) => (
           <div key={`${label}${value}`} className="flex items-center justify-between gap-3 py-1.5">
             <div className="min-w-0">
               {label && <dt className="text-xs text-ink-400">{label}</dt>}
@@ -123,16 +173,17 @@ export function BankTransferOption({
         ))}
       </dl>
 
-      <button
-        type="button"
-        onClick={openWhatsApp}
-        className="tap-target mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3 text-sm font-bold text-[#06291B] transition-colors hover:bg-[#1FBD5A]"
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="tap-target flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3 text-sm font-bold text-[#06291B] transition-colors hover:bg-[#1FBD5A]"
       >
         <WhatsAppIcon />
-        Share payment details on WhatsApp
-      </button>
+        I&apos;ve paid — send proof on WhatsApp
+      </a>
 
-      <p className="mt-3 flex items-start gap-2 text-xs text-ink-400">
+      <p className="flex items-start gap-2 text-xs text-ink-400">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-sage-600" aria-hidden="true" />
         We&apos;ll never ask for your card details, PIN or OTP on WhatsApp.
       </p>

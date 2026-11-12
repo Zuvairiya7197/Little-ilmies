@@ -5,8 +5,9 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { linkGuestOrdersToUser } from "@/lib/db/orders";
+import { sendMail } from "@/lib/email/send-mail";
 
-const hasResendConfig = Boolean(process.env.RESEND_API_KEY);
+const MAGIC_LINK_MAX_AGE_MS = 15 * 60 * 1000;
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -36,30 +37,34 @@ export const authOptions: NextAuthOptions = {
       // fully overrides delivery, so this is a required-but-unused stub.
       server: { host: "localhost", port: 25 },
       from: process.env.EMAIL_FROM ?? "Little Ilmies <contact@littleilmies.com>",
-      maxAge: 15 * 60, // magic link valid for 15 minutes
+      maxAge: MAGIC_LINK_MAX_AGE_MS / 1000, // magic link valid for 15 minutes
       async sendVerificationRequest({ identifier, url }) {
-        if (!hasResendConfig) {
-          console.log("\n=================================================");
-          console.log(`Magic link for ${identifier}:`);
-          console.log(url);
-          console.log("=================================================\n");
+        // Anyone can ask for a link to any address, so cap them per address:
+        // stops one inbox being flooded and the shared daily email quota
+        // (order emails use it too) being burned. A token row exists per
+        // request, expiring 15 minutes after it was made.
+        const now = Date.now();
+        const [lastMinute, lastQuarterHour] = await Promise.all([
+          prisma.verificationToken.count({
+            where: { identifier, expires: { gt: new Date(now + MAGIC_LINK_MAX_AGE_MS - 60_000) } },
+          }),
+          prisma.verificationToken.count({ where: { identifier, expires: { gt: new Date(now) } } }),
+        ]);
+        // The count may already include this request's own token.
+        if (lastMinute > 2 || lastQuarterHour > 5) {
+          console.warn(`Magic link not sent to ${identifier}: too many requests`);
           return;
         }
 
-        const { Resend } = await import("resend");
-        const resend = new Resend(process.env.RESEND_API_KEY);
-
-        const { error } = await resend.emails.send({
+        // Via sendMail so it counts toward the daily email budget; sign-in
+        // links are essential and always sent. Without RESEND_API_KEY (local
+        // dev) the link is printed to the terminal instead.
+        await sendMail({
           to: identifier,
-          from: process.env.EMAIL_FROM ?? "Little Ilmies <contact@littleilmies.com>",
           subject: "Your Little Ilmies sign-in link",
           text: `Sign in to Little Ilmies: ${url}`,
           html: `<p>Tap below to sign in to Little Ilmies:</p><p><a href="${url}">Sign in to Little Ilmies</a></p><p>This link expires in 15 minutes.</p>`,
         });
-
-        if (error) {
-          throw new Error(`Resend failed to send magic link: ${error.message}`);
-        }
       },
     }),
 
