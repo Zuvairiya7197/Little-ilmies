@@ -13,7 +13,7 @@ const bulkDeleteSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const denied = await requireAdminApi();
+  const denied = await requireAdminApi({ allowApiToken: true });
   if (denied) return denied;
 
   const parsed = productFormSchema.safeParse(await request.json());

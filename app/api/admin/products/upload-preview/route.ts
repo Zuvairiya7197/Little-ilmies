@@ -25,7 +25,7 @@ const updatePreviewSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const denied = await requireAdminApi();
+    const denied = await requireAdminApi({ allowApiToken: true });
     if (denied) return denied;
 
     const contentType = request.headers.get("content-type") ?? "";
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const denied = await requireAdminApi();
+    const denied = await requireAdminApi({ allowApiToken: true });
     if (denied) return denied;
 
     const parsed = updatePreviewSchema.safeParse(await request.json());

@@ -45,7 +45,7 @@ const requestSchema = z
  */
 export async function POST(request: NextRequest) {
   try {
-    const denied = await requireAdminApi();
+    const denied = await requireAdminApi({ allowApiToken: true });
     if (denied) return denied;
 
     if (!isB2Configured()) {

@@ -10,8 +10,34 @@ interface RouteParams {
   params: Promise<{ productId: string }>;
 }
 
+/** A book's full stored record, for scripted edits (PATCH replaces every
+ * field, so a script reads the current values first). Prices are in minor
+ * units here, as stored; PATCH takes them in whole currency units. */
+export async function GET(_request: NextRequest, { params }: RouteParams) {
+  const denied = await requireAdminApi({ allowApiToken: true });
+  if (denied) return denied;
+
+  const { productId } = await params;
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: { categories: { select: { categoryId: true } }, prices: true },
+  });
+  if (!product) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
+
+  // Server-only storage paths stay on the server.
+  const { privatePdfPath, bwPrivatePdfPath, rentalPageImagePaths, ...safe } = product;
+  return NextResponse.json({
+    ...safe,
+    hasColourPdf: Boolean(privatePdfPath),
+    hasBwPdf: Boolean(bwPrivatePdfPath),
+    rentalPageCount: rentalPageImagePaths.length,
+  });
+}
+
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const denied = await requireAdminApi();
+  const denied = await requireAdminApi({ allowApiToken: true });
   if (denied) return denied;
 
   const { productId } = await params;
