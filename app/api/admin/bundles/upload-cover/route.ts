@@ -15,7 +15,7 @@ const attachedCoverSchema = z.object({ bundleId: z.string().min(1), pathname: z.
 
 export async function POST(request: NextRequest) {
   try {
-    const denied = await requireAdminApi();
+    const denied = await requireAdminApi({ allowApiToken: true });
     if (denied) return denied;
 
     if (request.headers.get("content-type")?.includes("application/json")) {
