@@ -54,7 +54,7 @@ const finalizeRentalPageSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const denied = await requireAdminApi();
+    const denied = await requireAdminApi({ allowApiToken: true });
     if (denied) return denied;
 
     const body = await request.json();
