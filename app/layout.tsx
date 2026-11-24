@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import "@/styles/globals.css";
+import { getPricingSettings } from "@/lib/settings/pricing-settings";
 import { StorefrontChrome } from "@/components/store/storefront-chrome";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { CartSync } from "@/components/store/cart-sync";
@@ -93,7 +94,12 @@ export default async function RootLayout({
   // If the DB is unreachable at build/render time, fall back to the
   // curated nav alone rather than breaking every page's chrome — same
   // philosophy as app/sitemap.ts and generateStaticParams elsewhere.
-  const categories = await getAllCategories().catch(() => []);
+  const [categories, activeSale] = await Promise.all([
+    getAllCategories().catch(() => []),
+    getPricingSettings()
+      .then((settings) => (settings.activeSale?.name ? settings.activeSale : null))
+      .catch(() => null),
+  ]);
 
   return (
     <html lang="en" className={`${baloo.variable} ${nunito.variable}`}>
@@ -111,7 +117,7 @@ export default async function RootLayout({
         </a>
         <AuthSessionProvider>
           <CartSync />
-          <StorefrontChrome categories={categories}>
+          <StorefrontChrome categories={categories} activeSale={activeSale}>
             {children}
           </StorefrontChrome>
         </AuthSessionProvider>

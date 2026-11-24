@@ -101,6 +101,8 @@ export function toRegionalPrices(prices: ProductPrice[], bookSaleDiscountPercent
   return prices.map((p) => ({
     currencyCode: p.currencyCode as CurrencyCode,
     regularPrice: p.regularPrice,
+    // With no sale running this equals the regular price, which the storefront
+    // treats as "not on sale" (no crossed-out price or badge).
     salePrice: calculateBookSalePrice(p.regularPrice, bookSaleDiscountPercentage, p.currencyCode as CurrencyCode),
     saleStartDate: p.saleStartDate?.toISOString(),
     saleEndDate: p.saleEndDate?.toISOString(),

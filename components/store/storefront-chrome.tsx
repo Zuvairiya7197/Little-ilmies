@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/store/site-footer";
 import { MobileBottomNav } from "@/components/store/mobile-bottom-nav";
 import { useRentalEligible } from "@/hooks/use-rental-eligible";
 import type { Category } from "@/types/catalog";
+import type { ActiveSale } from "@/lib/settings/pricing-settings";
 
 /**
  * Wraps every page in the storefront header/footer/mobile nav, except
@@ -21,9 +22,12 @@ import type { Category } from "@/types/catalog";
  */
 export function StorefrontChrome({
   categories,
+  activeSale = null,
   children,
 }: {
   categories: Pick<Category, "id" | "slug" | "name" | "parentId">[];
+  /** The named seasonal sale running now, shown in the announcement bar. */
+  activeSale?: ActiveSale | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -40,7 +44,7 @@ export function StorefrontChrome({
 
   return (
     <>
-      <SiteHeader showRentAndRead={showRentAndRead} categories={categories} />
+      <SiteHeader showRentAndRead={showRentAndRead} categories={categories} activeSale={activeSale} />
       <main id="main-content" className="flex-1">
         {children}
       </main>

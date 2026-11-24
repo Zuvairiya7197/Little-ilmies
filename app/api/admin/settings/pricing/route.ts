@@ -10,8 +10,9 @@ export async function PATCH(request: NextRequest) {
 
   const parsed = pricingSettingsSchema.safeParse(await request.json());
   if (!parsed.success) {
+    const firstIssue = parsed.error.issues[0]?.message;
     return NextResponse.json(
-      { error: "Invalid pricing settings", details: parsed.error.flatten() },
+      { error: firstIssue ? `Invalid pricing settings: ${firstIssue}` : "Invalid pricing settings", details: parsed.error.flatten() },
       { status: 400 }
     );
   }

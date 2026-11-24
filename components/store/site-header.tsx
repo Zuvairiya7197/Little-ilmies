@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Menu, ArrowLeft, Heart, ShoppingBag, User } from "lucide-react";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
+import type { ActiveSale } from "@/lib/settings/pricing-settings";
 import { Logo } from "@/components/store/logo";
 import { SearchOverlay } from "@/components/store/search-overlay";
 import { HeaderGooeySearch } from "@/components/store/header-gooey-search";
@@ -47,9 +48,11 @@ const printablesHref = shopNavLinks.find((item) => item.label === "Printables")?
 export function SiteHeader({
   showRentAndRead = false,
   categories = [],
+  activeSale = null,
 }: {
   showRentAndRead?: boolean;
   categories?: Pick<Category, "id" | "slug" | "name" | "parentId">[];
+  activeSale?: ActiveSale | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -80,7 +83,7 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-50">
-      <AnnouncementBar />
+      <AnnouncementBar activeSale={activeSale} />
       <div
         className={cn(
           "transition-all duration-200",

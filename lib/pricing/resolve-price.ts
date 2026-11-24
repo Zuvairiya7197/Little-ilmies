@@ -82,7 +82,9 @@ export function resolveProductPrice(
 }
 
 function activeSalePrice(price: ProductSummary["prices"][number]) {
-  if (price.salePrice != null) return price.salePrice;
+  // A sale price that is not lower than the regular price (e.g. the seasonal
+  // book sale is not running) means the book is not on sale.
+  if (price.salePrice != null) return price.salePrice < price.regularPrice ? price.salePrice : undefined;
   const now = Date.now();
   if (price.saleStartDate && now < new Date(price.saleStartDate).getTime()) return undefined;
   if (price.saleEndDate && now > new Date(price.saleEndDate).getTime()) return undefined;
