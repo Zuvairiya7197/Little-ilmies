@@ -4,7 +4,7 @@ import Image from "@/components/ui/app-image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Send, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
 import type { CurrencyCode } from "@/types/pricing";
 
@@ -26,6 +26,7 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [onlyIncomplete, setOnlyIncomplete] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
 
   // Coming back to this list (e.g. browser Back after uploading files on a
   // product) restores Next's cached copy, so the "Missing" checklist would
@@ -50,6 +51,35 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
   function toggleAll() {
     setMessage(null);
     setSelectedIds(allSelected ? [] : products.map((product) => product.id));
+  }
+
+  async function publishProduct(product: AdminProductListItem) {
+    if (publishingId) return;
+    if (
+      product.missing.length > 0 &&
+      !window.confirm(`"${product.title}" is still missing: ${product.missing.join(", ")}. Publish anyway?`)
+    ) {
+      return;
+    }
+
+    setPublishingId(product.id);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "PUBLISHED" }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setMessage(data?.error ?? "Could not publish this book.");
+        return;
+      }
+      setMessage(`Published "${product.title}".`);
+      router.refresh();
+    } finally {
+      setPublishingId(null);
+    }
   }
 
   async function deleteSelected() {
@@ -184,14 +214,28 @@ export function AdminProductsList({ products }: { products: AdminProductListItem
                   {" / "}
                   {usd ? formatPrice(usd.regularPrice, "USD" as CurrencyCode) : "-"}
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold shadow-clay-sm ${
-                    isPublished ? "bg-sage-500 text-cream-50" : "bg-gold-100 text-gold-700"
-                  }`}
-                >
-                  {product.status}
-                </span>
+                {isPublished && (
+                  <span className="shrink-0 rounded-full bg-sage-500 px-2.5 py-1 text-xs font-bold text-cream-50 shadow-clay-sm">
+                    {product.status}
+                  </span>
+                )}
               </Link>
+              {!isPublished && (
+                <button
+                  type="button"
+                  onClick={() => publishProduct(product)}
+                  disabled={publishingId !== null || isDeleting}
+                  title="Draft — click to publish"
+                  className="tap-target inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold-100 px-3 py-1 text-xs font-bold text-gold-700 shadow-clay-sm transition-colors hover:bg-gold-200 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {publishingId === product.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  Publish
+                </button>
+              )}
             </li>
           );
         })}
