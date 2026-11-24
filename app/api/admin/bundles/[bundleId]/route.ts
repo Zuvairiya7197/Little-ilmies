@@ -14,7 +14,7 @@ interface RouteParams {
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const denied = await requireAdminApi();
+  const denied = await requireAdminApi({ allowApiToken: true });
   if (denied) return denied;
 
   const { bundleId } = await params;
